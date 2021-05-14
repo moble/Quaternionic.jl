@@ -39,9 +39,6 @@ Base.iterate(q::Quaternion, state=1) = state > 4 ? nothing : (q[state], state+1)
 Base.IteratorSize(::Type{Quaternion{T}}) where {T} = Base.HasLength()
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
 Base.length(::Quaternion{T}) where {T} = 4
-# Base.IteratorSize(::Type{Quaternion{T}}) where {T} = Base.HasLength()
-# Base.eltype(::Type{Quaternion{T}}) where {T} = T
-# Base.length(::Quaternion{T}) where {T} = 4
 
 # function Base.setindex!(q::Quaternion, v, i::Int)
 #     q.components[i] = v
@@ -74,7 +71,6 @@ function Base.:/(q::Quaternion, p::Quaternion)
 end
 
 Base.:*(s::Number, p::Quaternion) = Quaternion(s*p.components)
-#Base.:*(s::T, p::Quaternion{T}) where T<:Real = Quaternion{T}(s*p.components)
 
 function Base.:/(s::Number, p::Quaternion)
     pnorm = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
@@ -85,29 +81,14 @@ function Base.:/(s::Number, p::Quaternion)
         -p.z * pnorm
     )
 end
-# function Base.:/(s::T, p::Quaternion{T}) where T<:Real
-#     pnorm = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
-#     Quaternion(
-#         p.w * pnorm,
-#         -p.x * pnorm,
-#         -p.y * pnorm,
-#         -p.z * pnorm
-#     )
-# end
 
 function Base.:*(q::Quaternion, s::Number)
     Quaternion(s*q.components)
 end
-# function Base.:*(q::Quaternion{T}, s::T) where T<:Real
-#     Quaternion{T}(s*q.components)
-# end
 
 function Base.:/(q::Quaternion, s::Number)
     Quaternion(q.components / s)
 end
-# function Base.:/(q::Quaternion{T}, s::T) where T<:Real
-#     Quaternion{T}(q.components / s)
-# end
 
 Base.float(q::Quaternion{T}) where T<:Real = convert(Quaternion{float(T)}, q)
 
@@ -156,9 +137,6 @@ Base.zero(q::Quaternion{T}) where {T<:Real} = Quaternion(zero(T), zero(T), zero(
 Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion(zero(T), zero(T), zero(T), zero(T))
 Base.one(q::Quaternion{T}) where {T<:Real} = Quaternion(one(T), zero(T), zero(T), zero(T))
 Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion(one(T), zero(T), zero(T), zero(T))
-# Base.oneunit(q::Quaternion{T}) where {T} = Quaternion(T(one(q)), zero(T), zero(T), zero(T))
-# Base.oneunit(::Type{Quaternion{T}}) where {T} = Quaternion(T(one(T)), zero(T), zero(T), zero(T))
-# Base.big(::Type{T}) where {T<:Number} = typeof(big(zero(T)))
 
 Base.isfinite(q::Quaternion) = (
     isfinite(q.w)
