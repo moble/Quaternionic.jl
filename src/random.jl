@@ -1,28 +1,39 @@
+"""
+    random_rotors()
+    random_rotors(17)
+    random_rotors((17, 3, 8))
+    random_rotors((17, 3, 8), normalize=false)
+    random_rotors(T=Quaternion{Float16})
 
-function Base.randn(r::AbstractRNG, T::Type{Quaternion{S}}, dims::Tuple{Vararg{Int64, N}} where N=()) where {S}
-    random_array = randn(r, S, (4, dims...))
-    as_quat_array(random_array)
-end
-# function Base.randn(r::AbstractRNG, T::Type{Quaternion{S}}) where {S}
-#     Quaternion(randn(r, S, (4,)))
-# end
-Base.randn(T::Type{Quaternion{S}}, dims::Tuple{Vararg{Int64, N}} where N=()) where {S} = Base.randn(default_rng(), T, dims...)
-# Base.randn(T::Type{Quaternion{S}}) where {S} = Base.randn(default_rng(), T)
 
-function random_rotors(T::Type{Quaternion{S}}=Quaternion{Float64}, normalize::Bool=true, dims::Tuple{Vararg{Int64, N}} where N=()) where {S}
+"""
+function random_rotors(
+    dims::Tuple{Vararg{Int64, N}} where N=();
+    normalize::Bool=true,
+    T::Type{Quaternion{S}}=Quaternion{Float64}
+) where {S}
     q = randn(T, dims...)
     if normalize
-        return q ./ abs.(q)
+        return @. q / abs(q)
     end
     q
 end
-#random_rotors(normalize::Bool, dims::Tuple{Vararg{Int64, N}} where N) = random_rotors(Quaternion{Float64}, normalize, dims)
-# random_rotors(dims::Tuple{Vararg{Int64, N}} where N) = random_rotors(Quaternion{Float64}, true, dims)
-# function random_rotors(T::Type{Quaternion{S}}, normalize::Bool=true) where {S}
-#     q = randn(T)
-#     if normalize
-#         return q / abs(q)
-#     end
-#     q
-# end
-# random_rotors(normalize::Bool=true) = random_rotors(Quaternion{Float64}, normalize)
+
+
+function Base.randn(rng::AbstractRNG, ::Type{Quaternion{T}}, dims::Dims                     ) where {T}
+    A = Array{T}(undef, (4, dims...))
+    randn!(rng, A)
+    collect(as_quat_array(A))
+end
+# Note that this method explicitly does not define randn(rng, T), in order to prevent an infinite recursion.
+function Base.randn(rng::AbstractRNG, ::Type{Quaternion{T}}, dim1::Integer, dims::Integer...) where {T}
+    A = Array{T}(undef, 4, dim1, dims...)
+    randn!(rng, A)
+    collect(as_quat_array(A))
+end
+function Base.randn(                  ::Type{Quaternion{T}}, dims::Dims                     ) where {T}
+    collect(as_quat_array(randn(default_rng(), T, (4, dims...))))
+end
+function Base.randn(                  ::Type{Quaternion{T}}, dims::Integer...               ) where {T}
+    collect(as_quat_array(randn(default_rng(), T, (4, dims...)...)))
+end
