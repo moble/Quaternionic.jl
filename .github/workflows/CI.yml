@@ -38,10 +38,13 @@ jobs:
         with:
           file: lcov.info
       - name: Install benchmark dependencies
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/main")'
       - name: Post benchmark results
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
