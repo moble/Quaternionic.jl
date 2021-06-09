@@ -6,3 +6,7 @@ makedocs(
     sitename="Quaternionic.jl",
     modules = [Quaternionic]
 )
+
+deploydocs(
+    repo="github.com/moble/Quaternionic.jl.git",
+)
