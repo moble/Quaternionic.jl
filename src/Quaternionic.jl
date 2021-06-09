@@ -256,7 +256,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::Quaternion) = sum(q.components[2:4].^2)
+abs2vec(q::Quaternion) = q.components[2]^2 + q.components[3]^2 + q.components[4]^2
 
 """
     absvec(q)
@@ -320,6 +320,18 @@ function Base.log(q::Quaternion{T}) where {T}
     f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
     Quaternion(log(abs2(q))/2, f*q.x, f*q.y, f*q.z)
 end
+# function Base.log(q::UnitQuaternion{T}) where {T}
+#     absolute2vec = abs2vec(q)
+#     if absolute2vec == zero(T)
+#         if q.w < 0
+#             return Quaternion{T}(0, 0, 0, π)
+#         end
+#         return Quaternion{T}(0, 0, 0, 0)
+#     end
+#     absolutevec = sqrt(absolute2vec)
+#     f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
+#     Quaternion(0, f*q.x, f*q.y, f*q.z)
+# end
 
 """
     exp(q)
@@ -342,6 +354,15 @@ function Base.exp(q::Quaternion{T}) where {T}
     e = exp(q.w)
     Quaternion(e*cos(absolutevec), e*s*q.x, e*s*q.y, e*s*q.z)
 end
+# function Base.exp(q::VectorQuaternion{T}) where {T}
+#     absolute2vec = abs2vec(q)
+#     if absolute2vec == zero(T)
+#         return Quaternion{T}(0, 0, 0, 0)
+#     end
+#     absolutevec = sqrt(absolute2vec)
+#     s = sin(absolutevec) / absolutevec
+#     Quaternion(cos(absolutevec), s*q.x, s*q.y, s*q.z)
+# end
 
 @doc raw"""
     sqrt(q)
@@ -398,6 +419,18 @@ function Base.sqrt(q::Quaternion{T}) where {T}
     c2 = sqrt(inv(2*c1))
     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
 end
+# function Base.sqrt(q::UnitQuaternion{T}) where {T}
+#     absolute2vec = abs2vec(q)
+#     if absolute2vec == zero(T)
+#         if q.w < 0
+#             return Quaternion{T}(0, 0, 0, 1)
+#         end
+#         return Quaternion{T}(1, 0, 0, 0)
+#     end
+#     c1 = 1 + q.w
+#     c2 = sqrt(inv(2*c1))
+#     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
+# end
 
 """
     angle(q)
@@ -427,6 +460,7 @@ julia> angle(R)
 ```
 """
 Base.angle(q::Quaternion) = 2 * absvec(log(q))
+# Base.angle(q::UnitQuaternion) = 2 * absvec(log(q))
 
 
 function Base.show(io::IO, q::Quaternion)
