@@ -71,8 +71,8 @@ function Quaternion{T}(sym::Symbol) where {T<:Real}
     elseif sym === :z
         return Quaternion{T}(zero(T), zero(T), zero(T), one(T))
     else
-        throw(ArgumentError("sym = $sym",
-            "Only :w, :x, :y, or :z are accepted"
+        throw(ArgumentError(
+            "Only :w, :x, :y, or :z are accepted, not `$sym`"
         ))
     end
 end
@@ -103,7 +103,7 @@ function Base.getproperty(q::Quaternion, sym::Symbol)
     end
 end
 
-Base.copy(q::Quaternion) = Quaternion(Base.copy(q.components))
+# Base.copy(q::Quaternion) = Quaternion(Base.copy(q.components))
 
 Base.getindex(q::Quaternion, i::Int) = q.components[i]
 Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
@@ -191,7 +191,7 @@ end
 
 
 Base.:(==)(q1::Quaternion, q2::Quaternion) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
-Base.float(q::Quaternion{T}) where T<:Real = convert(Quaternion{float(T)}, q)
+Base.float(q::Quaternion{T}) where T<:Real = Quaternion(float(q.components))
 Base.real(::Type{Quaternion{T}}) where {T<:Real} = real(T)
 Base.real(q::Quaternion) = q.w
 Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion(zero(T), zero(T), zero(T), zero(T))
@@ -394,9 +394,6 @@ function Base.sqrt(q::Quaternion{T}) where {T}
         return Quaternion(sqrt(q.w), zero(T), zero(T), zero(T))
     end
     absolute2 = absolute2vec + q.w^2
-    if absolute2 == zero(T)
-        return zero(q)
-    end
     c1 = sqrt(absolute2) + q.w
     c2 = sqrt(inv(2*c1))
     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
