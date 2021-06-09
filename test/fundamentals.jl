@@ -26,6 +26,7 @@ module FundamentalTests
     function test_identity(v::Quaternion)
         @test one(v) * v == v
         @test v * one(v) == v
+        @test typeof(v)(:w) == one(v)
     end
     function test_inverse(v::Quaternion)
         if !iszero(v)
@@ -65,6 +66,7 @@ end
                 for arg in args
                     f(arg...)
                 end
+                @test_throws ArgumentError Quaternion{T}(:garbage)
             end
         end
     end
