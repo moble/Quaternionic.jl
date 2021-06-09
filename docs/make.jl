@@ -9,4 +9,5 @@ makedocs(
 
 deploydocs(
     repo="github.com/moble/Quaternionic.jl.git",
+    devbranch="main"
 )
