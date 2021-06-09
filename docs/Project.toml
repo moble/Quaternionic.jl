@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Quaternionic = "0756cd96-85bf-4b6f-a009-b5012ea7a443"
+
+[compat]
+Documenter = "~0.26"
