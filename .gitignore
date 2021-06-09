@@ -27,3 +27,4 @@ Manifest.toml
 # Recommended by https://github.com/tkf/BenchmarkCI.jl
 /.benchmarkci
 /benchmark/*.json
+/benchmark/results.md
