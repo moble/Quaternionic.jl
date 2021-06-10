@@ -1,3 +1,8 @@
+[![Test Status](https://github.com/moble/Quaternionic.jl/workflows/test/badge.svg)](https://github.com/moble/Quaternionic.jl/actions)
+[![Test Coverage](https://codecov.io/gh/moble/Quaternionic.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/moble/Quaternionic.jl)
+[![Documentation Status](https://github.com/moble/Quaternionic.jl/workflows/docs/badge.svg)](https://moble.github.io/Quaternionic.jl/dev)
+
+
 # Quaternionic
 
 A simple project to build a quaternion type in Julia.  I am unhappy with certain choices made in

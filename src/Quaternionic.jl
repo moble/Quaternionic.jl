@@ -84,42 +84,31 @@ function Quaternion(q)
 end
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
-    if sym === :w
-        return q.components[1]
-    elseif sym === :x
-        return q.components[2]
-    elseif sym === :y
-        return q.components[3]
-    elseif sym === :z
-        return q.components[4]
-    elseif sym === :re
-        return q.components[1]
-    elseif sym === :im
-        return q.components[2:4]
-    elseif sym === :vec
-        return q.components[2:4]
-    else # fallback to getfield
-        return getfield(q, sym)
+    @inbounds begin
+        if sym === :w
+            return q.components[1]
+        elseif sym === :x
+            return q.components[2]
+        elseif sym === :y
+            return q.components[3]
+        elseif sym === :z
+            return q.components[4]
+        elseif sym === :re
+            return q.components[1]
+        elseif sym === :im
+            return q.components[2:4]
+        elseif sym === :vec
+            return q.components[2:4]
+        else # fallback to getfield
+            return getfield(q, sym)
+        end
     end
 end
 
-# Base.copy(q::Quaternion) = Quaternion(Base.copy(q.components))
-
 Base.getindex(q::Quaternion, i::Int) = q.components[i]
-Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
-Base.getindex(q::Quaternion, I) = [q[i] for i in I]
-
-Base.iterate(q::Quaternion, state=1) = state > 4 ? nothing : (q[state], state+1)
-Base.IteratorSize(::Type{Quaternion{T}}) where {T} = Base.HasLength()
+# Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
+# Base.getindex(q::Quaternion, I) = [q[i] for i in I]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
-Base.length(::Quaternion{T}) where {T} = 4
-
-# function Base.setindex!(q::Quaternion, v, i::Int)
-#     q.components[i] = v
-# end
-
-Base.firstindex(q::Quaternion) = 1
-Base.lastindex(q::Quaternion) = 4
 
 Base.:-(q::Quaternion) = Quaternion(-q.components)
 Base.:+(q::Quaternion, p::Quaternion) = Quaternion(q.components+p.components)
@@ -256,7 +245,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::Quaternion) = q.components[2]^2 + q.components[3]^2 + q.components[4]^2
+abs2vec(q::Quaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
 
 """
     absvec(q)

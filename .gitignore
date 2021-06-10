@@ -25,6 +25,7 @@ docs/site/
 Manifest.toml
 
 # Recommended by https://github.com/tkf/BenchmarkCI.jl
-/.benchmarkci
-/benchmark/*.json
-/benchmark/results.md
+.benchmarkci
+.benchmarkci/*.json
+benchmark/*.json
+benchmark/results.md
