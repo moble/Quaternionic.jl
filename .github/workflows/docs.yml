@@ -1,12 +1,6 @@
 name: docs
 
-on:
-  push:
-    branches:
-      - 'main'
-      - 'release-'
-    tags: '*'
-  pull_request:
+on: [push]
 
 jobs:
 
