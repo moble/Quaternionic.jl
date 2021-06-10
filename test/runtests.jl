@@ -15,7 +15,7 @@ removing files that aren't really there from the .info file.
 using Quaternionic
 using Test, Random, Symbolics
 
-@variables w x y z a b c d  # Symbolic variables
+@variables w x y z a b c d e  # Symbolic variables
 
 FloatTypes = [Float64, Float32, Float16, BigFloat]
 IntTypes = [Int128, Int64, Int32, Int16, Int8, BigInt]
