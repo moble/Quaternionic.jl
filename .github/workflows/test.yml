@@ -37,19 +37,19 @@ jobs:
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-processcoverage@latest
-        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest' && !contains(github.event.head_commit.message, '[skip coverage]')"
       - uses: codecov/codecov-action@v1
-        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest' && !contains(github.event.head_commit.message, '[skip coverage]')"
         with:
           file: lcov.info
       - name: Install benchmark dependencies
-        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest' && !contains(github.event.head_commit.message, '[skip benchmark]')"
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
-        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest' && !contains(github.event.head_commit.message, '[skip benchmark]')"
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/main")'
       - name: Post benchmark results
-        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest' && !contains(github.event.head_commit.message, '[skip benchmark]')"
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
