@@ -34,12 +34,15 @@ module FundamentalTests
             @test inv(v) * v == one(v)
         end
     end
+    test_involution(x::Quaternion) = @test conj(conj(x)) == x
+    test_involution_norm(x::Quaternion) = @test x * conj(x) ≈ abs2(x) rtol=eps(x)
 
     # Normed
     test_norm_maps_to_field(q::Quaternion) = @test typeof(abs2(q)) == eltype(q)
     test_norm_nondegenerate(v::Quaternion) = @test iszero(v) ⊻ !iszero(abs2(v))
     test_norm_quadratic(v::Quaternion) = @test abs2(2*v) ≈ 4*abs2(v) rtol=eps(v)
     test_norm_quadratic(a, v::Quaternion) = @test abs2(a*v) ≈ a^2*abs2(v) rtol=eps(v)
+    test_norm_composition(x::Quaternion, y::Quaternion) = @test abs2(x*y) ≈ abs2(x)*abs2(y) rtol=eps(x)
 
     # Associative
     test_associativity(u::Quaternion, v::Quaternion, w::Quaternion) = @test (u * v) * w ≈ u * (v * w) rtol=eps(v)
