@@ -84,22 +84,24 @@ function Quaternion(q)
 end
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
-    if sym === :w
-        return q.components[1]
-    elseif sym === :x
-        return q.components[2]
-    elseif sym === :y
-        return q.components[3]
-    elseif sym === :z
-        return q.components[4]
-    elseif sym === :re
-        return q.components[1]
-    elseif sym === :im
-        return q.components[2:4]
-    elseif sym === :vec
-        return q.components[2:4]
-    else # fallback to getfield
-        return getfield(q, sym)
+    @inbounds begin
+        if sym === :w
+            return q.components[1]
+        elseif sym === :x
+            return q.components[2]
+        elseif sym === :y
+            return q.components[3]
+        elseif sym === :z
+            return q.components[4]
+        elseif sym === :re
+            return q.components[1]
+        elseif sym === :im
+            return q.components[2:4]
+        elseif sym === :vec
+            return q.components[2:4]
+        else # fallback to getfield
+            return getfield(q, sym)
+        end
     end
 end
 
@@ -241,7 +243,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::Quaternion) = q.components[2]^2 + q.components[3]^2 + q.components[4]^2
+abs2vec(q::Quaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
 
 """
     absvec(q)
