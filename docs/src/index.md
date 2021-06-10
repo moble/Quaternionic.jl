@@ -35,6 +35,9 @@ julia> @variables a b c d e;
 julia> Quaternion(a-b, b*c, c/d, d+e)
 a - b + b*c𝐢 + {c*(d^-1)}𝐣 + {d + e}𝐤
 ```
+It is also possible to construct random quaternions using [`randn`](@ref) with a `Quaternion` type.
+In analogy with the complex types, the aliases `QuaternionF64`, `QuaternionF32`, and `QuaternionF16`
+are also provided.
 
 [^1]:
     Note that, mathematically speaking, quaternions can only be defined over a
@@ -69,7 +72,7 @@ julia> q.im
  4.0
 ```
 
-The basic algebraic operations work as you expect:
+The basic algebraic operations work as you would expect:
 ```jldoctest example
 julia> p + q
 5.0 + 5.0𝐢 + 5.0𝐣 + 5.0𝐤
@@ -82,7 +85,7 @@ julia> q * p  # Note the non-commutativity
 julia> q / p
 0.6666666666666666 + 0.3333333333333333𝐢 + 0.0𝐣 + 0.6666666666666666𝐤
 ```
-Several common mathematical functions are also available, including
+Several essential mathematical functions are also available, including
 - [`abs`](@ref)
 - [`abs2`](@ref)
 - [`conj`](@ref)
@@ -90,6 +93,7 @@ Several common mathematical functions are also available, including
 - [`log`](@ref)
 - [`sqrt`](@ref)
 - [`angle`](@ref)
+
 
 
 ## Functions

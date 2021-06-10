@@ -48,4 +48,5 @@ end
 addtests("basis.jl")
 addtests("fundamentals.jl")
 addtests("math.jl")
+addtests("random.jl")
 addtests("doctests.jl")
