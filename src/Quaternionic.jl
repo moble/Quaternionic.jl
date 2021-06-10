@@ -151,18 +151,25 @@ Base.real(::Type{Quaternion{T}}) where {T<:Real} = real(T)
 Base.real(q::Quaternion) = q.re
 Base.imag(q::Quaternion) = q.im
 
-Base.isreal(q::Quaternion) = iszero(q.x) & iszero(q.y) & iszero(q.z)
-Base.isinteger(q::Quaternion) = isreal(q) & isinteger(real(q))
-Base.isfinite(q::Quaternion) = isfinite(q.w) & isfinite(q.x) & isfinite(q.y) & isfinite(q.z)
-Base.isnan(q::Quaternion) = isnan(q.w) | isnan(q.x) | isnan(q.y) | isnan(q.z)
-Base.isinf(q::Quaternion) = isinf(q.w) | isinf(q.x) | isinf(q.y) | isinf(q.z)
-Base.iszero(q::Quaternion) = iszero(q.w) & iszero(q.x) & iszero(q.y) & iszero(q.z)
-Base.isone(q::Quaternion) = isone(q.w) & iszero(q.x) & iszero(q.y) & iszero(q.z)
+Base.isreal(q::Quaternion) = iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isinteger(q::Quaternion) = isreal(q) && isinteger(real(q))
+Base.isfinite(q::Quaternion) = isfinite(q.w) && isfinite(q.x) && isfinite(q.y) && isfinite(q.z)
+Base.isnan(q::Quaternion) = isnan(q.w) || isnan(q.x) || isnan(q.y) || isnan(q.z)
+Base.isinf(q::Quaternion) = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
+Base.iszero(q::Quaternion) = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isone(q::Quaternion) = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
 
 
 Base.:-(q::Quaternion) = Quaternion(-q.components)
+
 Base.:+(q::Quaternion, p::Quaternion) = Quaternion(q.components+p.components)
 Base.:-(q::Quaternion, p::Quaternion) = Quaternion(q.components-p.components)
+
+Base.:+(q::Quaternion, p::Number) = Quaternion(q.components.+p)
+Base.:-(q::Quaternion, p::Number) = Quaternion(q.components.-p)
+
+Base.:+(q::Number, p::Quaternion) = Quaternion(q.+p.components)
+Base.:-(q::Number, p::Quaternion) = Quaternion(q.-p.components)
 
 Base.flipsign(q::Quaternion, x::Real) = ifelse(signbit(x), -q, q)
 
@@ -227,13 +234,13 @@ end
 
 function Base.:(==)(q1::Quaternion{Symbolics.Num}, q2::Quaternion{Symbolics.Num})
     qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) & iszero(qdiff.x) & iszero(qdiff.y) & iszero(qdiff.z)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
 end
-Base.:(==)(q1::Quaternion, q2::Quaternion) = (q1.w==q2.w) & (q1.x==q2.x) & (q1.y==q2.y) & (q1.z==q2.z)
+Base.:(==)(q1::Quaternion, q2::Quaternion) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
 Base.:(==)(q::Quaternion, x::Real) = isreal(q) && real(q) == x
 Base.:(==)(x::Real, q::Quaternion) = isreal(q) && real(q) == x
 
-Base.isequal(q1::Quaternion, q2::Quaternion) = isequal(q1.w,q2.w) & isequal(q1.x,q2.x) & isequal(q1.y,q2.y) & isequal(q1.z,q2.z)
+Base.isequal(q1::Quaternion, q2::Quaternion) = isequal(q1.w,q2.w) && isequal(q1.x,q2.x) && isequal(q1.y,q2.y) && isequal(q1.z,q2.z)
 Base.in(q::Quaternion, r::AbstractRange{<:Real}) = isreal(q) && real(q) in r
 
 if UInt === UInt64
