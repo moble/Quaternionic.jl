@@ -21,6 +21,7 @@ FloatTypes = [Float64, Float32, Float16, BigFloat]
 IntTypes = [Int128, Int64, Int32, Int16, Int8, BigInt]
 SymbolicTypes = [Num]
 Types = [FloatTypes...; IntTypes...; SymbolicTypes...]
+PrimitiveTypes = [T for T in Types if isbitstype(T)]
 
 # Handy assignments for now
 Base.eps(::Quaternion{T}) where {T} = eps(T)

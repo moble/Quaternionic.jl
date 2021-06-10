@@ -61,8 +61,9 @@
         @test float(Quaternion{T}(1, 2, 3, 4)) == Quaternion(float(T)(1), float(T)(2), float(T)(3), float(T)(4))
     end
 
-    @testset "show" begin
+    @testset "io" begin
         io = IOBuffer()
+
         Base.show(io, MIME("text/plain"), Quaternion{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
         Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
@@ -75,5 +76,15 @@
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\{d + e\\right\\}\\,\\mathbf{k}\$"
+
+        for T in PrimitiveTypes
+            io = IOBuffer()
+            q = Quaternion{T}(1, 2, 3, 4)
+            write(io, q)
+            seekstart(io)
+            p = read(io, typeof(q))
+            @test typeof(q) == typeof(p)
+            @test q == p
+        end
     end
 end
