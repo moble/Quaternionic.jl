@@ -11,7 +11,9 @@ independent normal distribution with mean zero and variance 1/4).
 See also: [`randn_rotor`](@ref)
 
 # Examples
-```jldoctest; setup = :(using Random, Quaternionic; Random.seed!(1234);)
+```jldoctest
+julia> using Random; Random.seed!(1234);
+
 julia> randn(QuaternionF64)
 0.4336736009756228 - 0.45087190792840853𝐢 - 0.24723937675211696𝐣 - 0.4514571469326208𝐤
 julia> randn(QuaternionF16, 2, 2)
