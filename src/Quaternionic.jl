@@ -105,7 +105,9 @@ function Base.getproperty(q::Quaternion, sym::Symbol)
     end
 end
 
-Base.getindex(q::Quaternion, i) = q.components[i]
+Base.getindex(q::Quaternion, i::Int) = q.components[i]
+# Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
+# Base.getindex(q::Quaternion, I) = [q[i] for i in I]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
 
 Base.:-(q::Quaternion) = Quaternion(-q.components)
