@@ -37,7 +37,15 @@ a - b + b*c𝐢 + {c*(d^-1)}𝐣 + {d + e}𝐤
 ```
 It is also possible to construct random quaternions using [`randn`](@ref) with a `Quaternion` type.
 In analogy with the complex types, the aliases `QuaternionF64`, `QuaternionF32`, and `QuaternionF16`
-are also provided.
+are provided, along with the constants `imx`, `imy`, and `imz`:
+```jldoctest example
+julia> QuaternionF64
+QuaternionF64 (alias for Quaternion{Float64})
+julia> 0.1 + 2.3imx + 4.5imz
+0.1 + 2.3𝐢 + 0.0𝐣 + 4.5𝐤
+```
+As with the complex `im`, the result of multiplying `imx`, etc., with any real number will be a
+quaternion with the type of the other number.
 
 [^1]:
     Note that, mathematically speaking, quaternions can only be defined over a

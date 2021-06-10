@@ -105,8 +105,47 @@ Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(false, false, f
 Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
 Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(true, false, false, false)
 Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
+"""
+    imx
+
+The quaternionic unit associated with rotation about the `x` axis.
+
+# Examples
+```jldoctest
+julia> imx * imx
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imx
+0.0 + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
+```
+"""
 const imx = Quaternion(false, true, false, false)
+"""
+    imy
+
+The quaternionic unit associated with rotation about the `y` axis.
+
+# Examples
+```jldoctest
+julia> imy * imy
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imy
+0.0 + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
+```
+"""
 const imy = Quaternion(false, false, true, false)
+"""
+    imz
+
+The quaternionic unit associated with rotation about the `z` axis.
+
+# Examples
+```jldoctest
+julia> imz * imz
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imz
+0.0 + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
+```
+"""
 const imz = Quaternion(false, false, false, true)
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
@@ -159,17 +198,16 @@ Base.isinf(q::Quaternion) = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
 Base.iszero(q::Quaternion) = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
 Base.isone(q::Quaternion) = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
 
-
 Base.:-(q::Quaternion) = Quaternion(-q.components)
 
 Base.:+(q::Quaternion, p::Quaternion) = Quaternion(q.components+p.components)
 Base.:-(q::Quaternion, p::Quaternion) = Quaternion(q.components-p.components)
 
-Base.:+(q::Quaternion, p::Number) = Quaternion(q.components.+p)
-Base.:-(q::Quaternion, p::Number) = Quaternion(q.components.-p)
+Base.:+(q::Quaternion, p::Number) = Quaternion(q.w+p, q.x, q.y, q.z)
+Base.:-(q::Quaternion, p::Number) = Quaternion(q.w-p, q.x, q.y, q.z)
 
-Base.:+(q::Number, p::Quaternion) = Quaternion(q.+p.components)
-Base.:-(q::Number, p::Quaternion) = Quaternion(q.-p.components)
+Base.:+(q::Number, p::Quaternion) = Quaternion(q+p.w, p.x, p.y, p.z)
+Base.:-(q::Number, p::Quaternion) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
 
 Base.flipsign(q::Quaternion, x::Real) = ifelse(signbit(x), -q, q)
 
