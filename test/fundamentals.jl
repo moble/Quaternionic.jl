@@ -13,7 +13,22 @@ module FundamentalTests
         @test zero(v) + v == v
     end
     test_vector_inverse(v::Quaternion) = @test v + (-v) == zero(v)
-    test_vector_scalar_identity(v::Quaternion) = @test one(eltype(v)) * v == v
+    function test_vector_scalar_identity(v::Quaternion)
+        @test one(eltype(v)) * v == v
+        @test v * one(eltype(v)) == v
+    end
+    function test_vector_scalar_multiplication(a, v::Quaternion)
+        @test a * v == Quaternion(a*v.w, a*v.x, a*v.y, a*v.z)
+        @test v * a == Quaternion(a*v.w, a*v.x, a*v.y, a*v.z)
+    end
+    function test_vector_scalar_division(a, v::Quaternion)
+        if !iszero(a)
+            @test v / a == Quaternion(v.w / a, v.x / a, v.y / a, v.z / a)
+        end
+        if !iszero(v)
+            @test a / v ≈ a * conj(v) / abs2(v) rtol=eps(v)
+        end
+    end
     test_vector_scalar_associativity(a, b, v::Quaternion) = @test a*(b*v) ≈ (a*b)*v rtol=eps(v)
     test_vector_scalar_distributivity1(a, u::Quaternion, v::Quaternion) = @test a*(u+v) ≈ (a*u) + (a*v) rtol=eps(v)
     test_vector_scalar_distributivity2(a, b, v::Quaternion) = @test (a+b)*v ≈ (a*v) + (b*v) rtol=eps(v)
