@@ -13,7 +13,7 @@ Random.seed!(1234)
 
 const SUITE = BenchmarkGroup()
 
-const N = 100_000
+const N = 1_000_000
 
 SUITE["algebra"] = BenchmarkGroup()
 for T in [Float64, Float32, Float16]
