@@ -103,23 +103,8 @@ function Base.getproperty(q::Quaternion, sym::Symbol)
     end
 end
 
-# Base.copy(q::Quaternion) = Quaternion(Base.copy(q.components))
-
-Base.getindex(q::Quaternion, i::Int) = q.components[i]
-Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
-Base.getindex(q::Quaternion, I) = [q[i] for i in I]
-
-Base.iterate(q::Quaternion, state=1) = state > 4 ? nothing : (q[state], state+1)
-Base.IteratorSize(::Type{Quaternion{T}}) where {T} = Base.HasLength()
+Base.getindex(q::Quaternion, i) = q.components[i]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
-Base.length(::Quaternion{T}) where {T} = 4
-
-# function Base.setindex!(q::Quaternion, v, i::Int)
-#     q.components[i] = v
-# end
-
-Base.firstindex(q::Quaternion) = 1
-Base.lastindex(q::Quaternion) = 4
 
 Base.:-(q::Quaternion) = Quaternion(-q.components)
 Base.:+(q::Quaternion, p::Quaternion) = Quaternion(q.components+p.components)
