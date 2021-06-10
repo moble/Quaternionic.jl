@@ -34,7 +34,9 @@ jobs:
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-processcoverage@latest
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
       - uses: codecov/codecov-action@v1
+        if: "matrix.version == 'nightly' && matrix.os == 'ubuntu-latest'"
         with:
           file: lcov.info
       - name: Install benchmark dependencies
