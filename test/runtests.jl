@@ -48,16 +48,18 @@ enabled_tests = lowercase.(ARGS)
 function addtests(fname)
     key = lowercase(splitext(fname)[1])
     if isempty(enabled_tests) || key in enabled_tests
+        println("Running $key.jl")
         Random.seed!(42)
         include(fname)
     end
 end
 
-
-addtests("infrastructure.jl")
-addtests("basis.jl")
-addtests("fundamentals.jl")
-addtests("math.jl")
-addtests("random.jl")
-addtests("conversion.jl")
-addtests("doctests.jl")
+@testset verbose=true "All tests" begin
+    addtests("infrastructure.jl")
+    addtests("basis.jl")
+    addtests("fundamentals.jl")
+    addtests("math.jl")
+    addtests("random.jl")
+    addtests("conversion.jl")
+    addtests("doctests.jl")
+end
