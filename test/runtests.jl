@@ -10,6 +10,13 @@ Then, if you have `lcov` installed, you should also have `genhtml`, and you can 
 to view the coverage locally as HTML.  I find that this sometimes requires
 removing files that aren't really there from the .info file.
 
+It's a well-hidden fact that you can turn coverage on and off by adding certain comments around the
+code you don't want to measure:
+
+    # COV_EXCL_START
+    untested_code_that_wont_show_up_in_coverage()
+    # COV_EXCL_STOP
+
 """
 
 using Quaternionic
@@ -17,6 +24,7 @@ using Test, Random, Symbolics
 
 @variables w x y z a b c d e  # Symbolic variables
 
+# NOTE: `FloatTypes` and `IntTypes` must be in descending order of width
 FloatTypes = [BigFloat, Float64, Float32, Float16]
 IntTypes = [BigInt, Int128, Int64, Int32, Int16, Int8]
 SymbolicTypes = [Num]
@@ -46,8 +54,10 @@ function addtests(fname)
 end
 
 
+addtests("infrastructure.jl")
 addtests("basis.jl")
 addtests("fundamentals.jl")
 addtests("math.jl")
 addtests("random.jl")
+addtests("conversion.jl")
 addtests("doctests.jl")

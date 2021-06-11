@@ -1,4 +1,3 @@
-
 @testset verbose=true "Random" begin
     using Random
     Random.seed!(1234)

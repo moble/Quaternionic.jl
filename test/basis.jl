@@ -5,10 +5,6 @@
         # because of signed zeros in the float types, we have to take the
         # absolute value of the difference before comparing to zero.
 
-        # Test facts about this type
-        @test Quaternion(T) === Quaternion{T}
-        @test Quaternion(Quaternion{T}) === Quaternion{T}
-
         # Define basis elements
         u = Quaternion(one(T), zero(T), zero(T), zero(T))
         i = Quaternion(zero(T), one(T), zero(T), zero(T))
@@ -27,11 +23,17 @@
             end
         end
 
+        # Check equality with constants; note that these are *equal*, but not the same
+        @test u == one(T) + zero(T)*𝐢 == one(T)
+        @test i == 𝐢 == imx
+        @test j == 𝐣 == imy
+        @test k == 𝐤 == imz
+
         # Test copy constructor and self-equality
-        @test Quaternion(u) == u
-        @test Quaternion(i) == i
-        @test Quaternion(j) == j
-        @test Quaternion(k) == k
+        @test Quaternion(u) == Quaternion{T}(u) == u
+        @test Quaternion(i) == Quaternion{T}(i) == i
+        @test Quaternion(j) == Quaternion{T}(j) == j
+        @test Quaternion(k) == Quaternion{T}(k) == k
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
@@ -84,7 +86,7 @@
         @test !isinteger(j)
         @test !isinteger(k)
 
-        if T ∈ FloatTypes
+        if T<:AbstractFloat
             # Check "isnan"
             @test !isnan(u)
             @test !isnan(i)
@@ -156,57 +158,5 @@
         @test abs(k * i - (j)) == zero(T)
         @test abs(k * j - (-i)) == zero(T)
         @test abs(k * k - (-u)) == zero(T)
-    end
-
-    @testset "float($T)" for T in IntTypes
-        @test float(Quaternion{T}) === Quaternion{float(T)}
-        @test float(Quaternion{T}(1, 2, 3, 4)) == Quaternion(float(T)(1), float(T)(2), float(T)(3), float(T)(4))
-    end
-
-    @testset "io" begin
-        io = IOBuffer()
-
-        Base.show(io, MIME("text/plain"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "a - b + b*c𝐢 + {c*(d^-1)}𝐣 + {d + e}𝐤"
-        Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\{d + e\\right\\}\\,\\mathbf{k}\$"
-
-        for T in PrimitiveTypes
-            io = IOBuffer()
-            q = Quaternion{T}(1, 2, 3, 4)
-            write(io, q)
-            seekstart(io)
-            p = read(io, typeof(q))
-            @test q == p
-        end
-    end
-
-    @testset "hash" begin
-        for T1 in [FloatTypes...; IntTypes...]
-            for T2 in [FloatTypes...; IntTypes...]
-                q1 = Quaternion{T1}(1, 2, 3, 4)
-                q2 = Quaternion{T2}(1, 2, 3, 4)
-                @test isequal(q1, q2) && hash(q1)==hash(q2)
-            end
-        end
-
-        for T1 in FloatTypes
-            for T2 in FloatTypes
-                q1 = Quaternion(T1(0.0))
-                q2 = Quaternion(T2(-0.0))
-                @test !isequal(q1, q2) && hash(q1)!=hash(q2)
-                q1 = Quaternion(T1(NaN))
-                q2 = Quaternion(T2(NaN))
-                @test isequal(q1, q2) && hash(q1)==hash(q2)
-            end
-        end
     end
 end
