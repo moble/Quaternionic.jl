@@ -23,6 +23,12 @@
                     @test all(q .== dumb_as_quat_array(f))
                     @test all(q .== as_quat_array(f))
                 end
+                q = randn(Quaternion{T})
+                f = as_float_array(q)
+                @test f isa Vector{T}
+                @test eltype(f) === T
+                @test size(f) == (4,)
+                @test f == q.components
             end
         end
 
