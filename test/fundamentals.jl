@@ -6,6 +6,12 @@ module FundamentalTests
 
     # Algebra
     ## Vector space
+    function test_vector_promotion(a, v::Quaternion)
+        @test a + v == typeof(v)(a) + v
+        @test v + a == v + typeof(v)(a)
+        @test a - v == typeof(v)(a) - v
+        @test v - a == v - typeof(v)(a)
+    end
     test_vector_associativity(u::Quaternion, v::Quaternion, w::Quaternion) = @test u + (v + w) ≈ (u + v) + w rtol=eps(v)
     test_vector_commutativity(u::Quaternion, v::Quaternion) = @test u + v ≈ v + u rtol=eps(v)
     function test_vector_identity(v::Quaternion)

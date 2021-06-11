@@ -17,8 +17,8 @@ using Test, Random, Symbolics
 
 @variables w x y z a b c d e  # Symbolic variables
 
-FloatTypes = [Float64, Float32, Float16, BigFloat]
-IntTypes = [Int128, Int64, Int32, Int16, Int8, BigInt]
+FloatTypes = [BigFloat, Float64, Float32, Float16]
+IntTypes = [BigInt, Int128, Int64, Int32, Int16, Int8]
 SymbolicTypes = [Num]
 Types = [FloatTypes...; IntTypes...; SymbolicTypes...]
 PrimitiveTypes = [T for T in Types if isbitstype(T)]

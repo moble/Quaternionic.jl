@@ -1,10 +1,13 @@
-
 @testset verbose=true "Basis" begin
     @testset "$T" for T in Types
         # Note that, because `Num` from Symbolics is a weird type, we have to
         # be a little more explicit below than we normally would be.  Also,
         # because of signed zeros in the float types, we have to take the
         # absolute value of the difference before comparing to zero.
+
+        # Test facts about this type
+        @test Quaternion(T) === Quaternion{T}
+        @test Quaternion(Quaternion{T}) === Quaternion{T}
 
         # Define basis elements
         u = Quaternion(one(T), zero(T), zero(T), zero(T))
@@ -24,11 +27,110 @@
             end
         end
 
+        # Test copy constructor and self-equality
+        @test Quaternion(u) == u
+        @test Quaternion(i) == i
+        @test Quaternion(j) == j
+        @test Quaternion(k) == k
+        @test u == one(T)
+        @test one(T) == u
+        @test i != one(T)
+        @test one(T) != i
+        @test j != one(T)
+        @test one(T) != j
+        @test k != one(T)
+        @test one(T) != k
+        @test isequal(u, u)
+        @test !isequal(u, i)
+        @test !isequal(u, j)
+        @test !isequal(u, k)
+        @test !isequal(i, u)
+        @test isequal(i, i)
+        @test !isequal(i, j)
+        @test !isequal(i, k)
+        @test !isequal(j, u)
+        @test !isequal(j, i)
+        @test isequal(j, j)
+        @test !isequal(j, k)
+        @test !isequal(k, u)
+        @test !isequal(k, i)
+        @test !isequal(k, j)
+        @test isequal(k, k)
+
         # Check "real" part
         @test real(u) == one(T)
         @test real(i) == zero(T)
         @test real(j) == zero(T)
         @test real(k) == zero(T)
+
+        # Check "imag" part
+        @test imag(u) == [zero(T), zero(T), zero(T)]
+        @test imag(i) == [one(T), zero(T), zero(T)]
+        @test imag(j) == [zero(T), one(T), zero(T)]
+        @test imag(k) == [zero(T), zero(T), one(T)]
+
+        # Check "isreal"
+        @test isreal(u)
+        @test !isreal(i)
+        @test !isreal(j)
+        @test !isreal(k)
+
+        # Check "isinteger"
+        if T != Num
+            @test isinteger(u)
+            @test !isinteger(1.2u)
+        end
+        @test !isinteger(i)
+        @test !isinteger(j)
+        @test !isinteger(k)
+
+        if T ∈ FloatTypes
+            # Check "isnan"
+            @test !isnan(u)
+            @test !isnan(i)
+            @test !isnan(j)
+            @test !isnan(k)
+            @test isnan(T(NaN) + 0imx)
+            @test isnan(T(NaN)imx)
+            @test isnan(T(NaN)imy)
+            @test isnan(T(NaN)imz)
+
+            # Check "isinf"
+            @test !isinf(u)
+            @test !isinf(i)
+            @test !isinf(j)
+            @test !isinf(k)
+            @test isinf(T(Inf) + 0imx)
+            @test isinf(T(Inf)imx)
+            @test isinf(T(Inf)imy)
+            @test isinf(T(Inf)imz)
+        end
+
+        # Check "isone"
+        @test isone(u)
+        @test !isone(2u)
+        @test !isone(i)
+        @test !isone(j)
+        @test !isone(k)
+
+        # Check "flipsign"
+        @test flipsign(u, 1) == u
+        @test flipsign(u, -1) == -u
+        @test flipsign(i, 1) == i
+        @test flipsign(i, -1) == -i
+        @test flipsign(j, 1) == j
+        @test flipsign(j, -1) == -j
+        @test flipsign(k, 1) == k
+        @test flipsign(k, -1) == -k
+
+        if T != Num
+            # Check "in"
+            @test u ∈ 0:2
+            @test u ∉ 2:4
+            @test i ∉ 0:2
+            @test j ∉ 0:2
+            @test k ∉ 0:2
+        end
 
         # Standard expressions
         @test abs(u * u - (u)) == zero(T)
@@ -83,8 +185,28 @@
             write(io, q)
             seekstart(io)
             p = read(io, typeof(q))
-            @test typeof(q) == typeof(p)
             @test q == p
+        end
+    end
+
+    @testset "hash" begin
+        for T1 in [FloatTypes...; IntTypes...]
+            for T2 in [FloatTypes...; IntTypes...]
+                q1 = Quaternion{T1}(1, 2, 3, 4)
+                q2 = Quaternion{T2}(1, 2, 3, 4)
+                @test isequal(q1, q2) && hash(q1)==hash(q2)
+            end
+        end
+
+        for T1 in FloatTypes
+            for T2 in FloatTypes
+                q1 = Quaternion(T1(0.0))
+                q2 = Quaternion(T2(-0.0))
+                @test !isequal(q1, q2) && hash(q1)!=hash(q2)
+                q1 = Quaternion(T1(NaN))
+                q2 = Quaternion(T2(NaN))
+                @test isequal(q1, q2) && hash(q1)==hash(q2)
+            end
         end
     end
 end

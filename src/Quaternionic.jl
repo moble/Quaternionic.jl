@@ -175,12 +175,14 @@ Base.getindex(q::Quaternion, i::Int) = q.components[i]
 # Base.getindex(q::Quaternion, I) = [q[i] for i in I]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
 
+# COV_EXCL_START
 Base.promote_rule(::Type{Quaternion{T}}, ::Type{S}) where {T<:Real,S<:Real} =
     Quaternion{promote_type(T,S)}
 Base.promote_rule(::Type{Quaternion{T}}, ::Type{Quaternion{S}}) where {T<:Real,S<:Real} =
     Quaternion{promote_type(T,S)}
-
 Base.widen(::Type{Quaternion{T}}) where {T} = Quaternion{widen(T)}
+Base.bswap(q::Quaternion) = Quaternion(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
+# COV_EXCL_STOP
 
 Base.float(::Type{Quaternion{T}}) where {T<:AbstractFloat} = Quaternion{T}
 Base.float(::Type{Quaternion{T}}) where {T} = Quaternion{float(T)}
@@ -277,6 +279,8 @@ end
 Base.:(==)(q1::Quaternion, q2::Quaternion) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
 Base.:(==)(q::Quaternion, x::Real) = isreal(q) && real(q) == x
 Base.:(==)(x::Real, q::Quaternion) = isreal(q) && real(q) == x
+Base.:(==)(q::Quaternion, x::Symbolics.Num) = isreal(q) && real(q) == x
+Base.:(==)(x::Symbolics.Num, q::Quaternion) = isreal(q) && real(q) == x
 
 Base.isequal(q1::Quaternion, q2::Quaternion) = isequal(q1.w,q2.w) && isequal(q1.x,q2.x) && isequal(q1.y,q2.y) && isequal(q1.z,q2.z)
 Base.in(q::Quaternion, r::AbstractRange{<:Real}) = isreal(q) && real(q) in r
@@ -618,9 +622,6 @@ end
 function Base.write(s::IO, q::Quaternion)
     write(s,q.w,q.x,q.y,q.z)
 end
-
-## byte order swaps: each component is swapped individually
-Base.bswap(q::Quaternion) = Quaternion(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
 
 
 Broadcast.broadcasted(f, q::Quaternion, args...; kwargs...) = Quaternion(f.(q.components, args...; kwargs...))
