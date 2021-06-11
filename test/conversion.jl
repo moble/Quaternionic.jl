@@ -49,11 +49,11 @@
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_euler_angles(to_euler_angles(q1))
-                @test q1 ≈ q2 atol=20eps(T)
+                @test q1 ≈ q2 atol=80eps(T)
             end
             q1 = random_rotors
             q2 = from_euler_angles.(to_euler_angles.(random_rotors))
-            @test maximum(abs, q1 .- q2) < 20eps(T)
+            @test maximum(abs, q1 .- q2) < 80eps(T)
         end
 
         @testset "Euler phases" begin
