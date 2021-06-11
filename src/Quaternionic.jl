@@ -1,9 +1,10 @@
 module Quaternionic
 
-export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz
+export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
 export abs2vec, absvec
 export randn_rotor
-export as_quat_array, as_float_array, to_euler_phases!, to_euler_phases
+export as_quat_array, as_float_array, from_euler_angles, to_euler_angles,
+    to_euler_phases!, to_euler_phases, from_euler_phases
 
 using StaticArrays, Latexify, LaTeXStrings
 import Random: AbstractRNG, default_rng, randn!
@@ -25,9 +26,9 @@ See also: [`Quaternion`](@ref)
 struct Quaternion{T<:Real} <: AbstractQuaternion{T}
     components::SVector{4, T}
 end
-function Quaternion{T}(w, x, y, z) where {T<:Real}
-    Quaternion(T.([w, x, y, z])...)
-end
+Quaternion{T}(q::Quaternion) where {T<:Real} = Quaternion{T}(q.components)
+Quaternion{T}(w, x, y, z) where {T<:Real} = Quaternion(T.([w, x, y, z])...)
+
 
 """
     Quaternion(w, x, y, z)
@@ -119,6 +120,7 @@ julia> 1.2imx
 ```
 """
 const imx = Quaternion(false, true, false, false)
+const 𝐢 = imx
 """
     imy
 
@@ -133,6 +135,7 @@ julia> 1.2imy
 ```
 """
 const imy = Quaternion(false, false, true, false)
+const 𝐣 = imy
 """
     imz
 
@@ -147,6 +150,7 @@ julia> 1.2imz
 ```
 """
 const imz = Quaternion(false, false, false, true)
+const 𝐤 = imz
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
     @inbounds begin
@@ -175,14 +179,12 @@ Base.getindex(q::Quaternion, i::Int) = q.components[i]
 # Base.getindex(q::Quaternion, I) = [q[i] for i in I]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
 
-# COV_EXCL_START
 Base.promote_rule(::Type{Quaternion{T}}, ::Type{S}) where {T<:Real,S<:Real} =
     Quaternion{promote_type(T,S)}
 Base.promote_rule(::Type{Quaternion{T}}, ::Type{Quaternion{S}}) where {T<:Real,S<:Real} =
     Quaternion{promote_type(T,S)}
 Base.widen(::Type{Quaternion{T}}) where {T} = Quaternion{widen(T)}
 Base.bswap(q::Quaternion) = Quaternion(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
-# COV_EXCL_STOP
 
 Base.float(::Type{Quaternion{T}}) where {T<:AbstractFloat} = Quaternion{T}
 Base.float(::Type{Quaternion{T}}) where {T} = Quaternion{float(T)}
