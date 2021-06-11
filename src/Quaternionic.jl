@@ -1,7 +1,10 @@
 module Quaternionic
 
-export Quaternion, random_rotors, abs2vec, absvec
-export as_quat_array, as_float_array, to_euler_phases!, to_euler_phases
+export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
+export abs2vec, absvec
+export randn_rotor
+export as_quat_array, as_float_array, from_euler_angles, to_euler_angles,
+    to_euler_phases!, to_euler_phases, from_euler_phases
 
 using StaticArrays, Latexify, LaTeXStrings
 import Random: AbstractRNG, default_rng, randn!
@@ -10,12 +13,22 @@ import Symbolics
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
+"""
+    Quaternion{T<:Real} <: Number
+
+Quaternionic number type with elements of type `T`.
+
+`QuaternionF16`, `QuaternionF32` and `QuaternionF64` are aliases for `Quaternion{Float16}`,
+`Quaternion{Float32}` and `Quaternion{Float64}` respectively.
+
+See also: [`Quaternion`](@ref)
+"""
 struct Quaternion{T<:Real} <: AbstractQuaternion{T}
     components::SVector{4, T}
 end
-function Quaternion{T}(w, x, y, z) where {T<:Real}
-    Quaternion(T.([w, x, y, z])...)
-end
+Quaternion{T}(q::Quaternion) where {T<:Real} = Quaternion{T}(q.components)
+Quaternion{T}(w, x, y, z) where {T<:Real} = Quaternion(T.([w, x, y, z])...)
+
 
 """
     Quaternion(w, x, y, z)
@@ -50,7 +63,6 @@ julia> Quaternion(:z)
 0.0 + 0.0𝐢 + 0.0𝐣 + 1.0𝐤
 
 ```
-
 """
 function Quaternion(w::Real, x::Real, y::Real, z::Real)
     Quaternion(SVector{4}(w, x, y, z))
@@ -77,11 +89,68 @@ function Quaternion{T}(sym::Symbol) where {T<:Real}
     end
 end
 Quaternion(sym::Symbol) = Quaternion{Float64}(sym)
-
+Quaternion(q::Quaternion) = q
 function Quaternion(q)
     v = SVector{4}(q)
     Quaternion{eltype(v)}(v)
 end
+
+Quaternion(::Type{T}) where {T<:Real} = Quaternion{T}
+Quaternion(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}
+
+const QuaternionF64 = Quaternion{Float64}
+const QuaternionF32 = Quaternion{Float32}
+const QuaternionF16 = Quaternion{Float16}
+
+Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(false, false, false, false)
+Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
+Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(true, false, false, false)
+Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
+"""
+    imx
+
+The quaternionic unit associated with rotation about the `x` axis.
+
+# Examples
+```jldoctest
+julia> imx * imx
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imx
+0.0 + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
+```
+"""
+const imx = Quaternion(false, true, false, false)
+const 𝐢 = imx
+"""
+    imy
+
+The quaternionic unit associated with rotation about the `y` axis.
+
+# Examples
+```jldoctest
+julia> imy * imy
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imy
+0.0 + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
+```
+"""
+const imy = Quaternion(false, false, true, false)
+const 𝐣 = imy
+"""
+    imz
+
+The quaternionic unit associated with rotation about the `z` axis.
+
+# Examples
+```jldoctest
+julia> imz * imz
+-1 + 0𝐢 + 0𝐣 + 0𝐤
+julia> 1.2imz
+0.0 + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
+```
+"""
+const imz = Quaternion(false, false, false, true)
+const 𝐤 = imz
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
     @inbounds begin
@@ -110,9 +179,47 @@ Base.getindex(q::Quaternion, i::Int) = q.components[i]
 # Base.getindex(q::Quaternion, I) = [q[i] for i in I]
 Base.eltype(::Type{Quaternion{T}}) where {T} = T
 
+Base.promote_rule(::Type{Quaternion{T}}, ::Type{S}) where {T<:Real,S<:Real} =
+    Quaternion{promote_type(T,S)}
+Base.promote_rule(::Type{Quaternion{T}}, ::Type{Quaternion{S}}) where {T<:Real,S<:Real} =
+    Quaternion{promote_type(T,S)}
+Base.widen(::Type{Quaternion{T}}) where {T} = Quaternion{widen(T)}
+Base.bswap(q::Quaternion) = Quaternion(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
+
+Base.float(::Type{Quaternion{T}}) where {T<:AbstractFloat} = Quaternion{T}
+Base.float(::Type{Quaternion{T}}) where {T} = Quaternion{float(T)}
+Base.float(q::Quaternion{T}) where T<:Real = Quaternion(float(q.components))
+
+Base.real(::Type{Quaternion{T}}) where {T<:Real} = real(T)
+Base.real(q::Quaternion) = q.re
+Base.imag(q::Quaternion) = q.im
+
+Base.isreal(q::Quaternion) = iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isinteger(q::Quaternion) = isreal(q) && isinteger(real(q))
+Base.isfinite(q::Quaternion) = isfinite(q.w) && isfinite(q.x) && isfinite(q.y) && isfinite(q.z)
+Base.isnan(q::Quaternion) = isnan(q.w) || isnan(q.x) || isnan(q.y) || isnan(q.z)
+Base.isinf(q::Quaternion) = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
+Base.iszero(q::Quaternion) = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isone(q::Quaternion) = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
+
 Base.:-(q::Quaternion) = Quaternion(-q.components)
+
 Base.:+(q::Quaternion, p::Quaternion) = Quaternion(q.components+p.components)
 Base.:-(q::Quaternion, p::Quaternion) = Quaternion(q.components-p.components)
+
+Base.:+(q::Quaternion, p::Number) = Quaternion(q.w+p, q.x, q.y, q.z)
+Base.:-(q::Quaternion, p::Number) = Quaternion(q.w-p, q.x, q.y, q.z)
+
+Base.:+(q::Number, p::Quaternion) = Quaternion(q+p.w, p.x, p.y, p.z)
+Base.:-(q::Number, p::Quaternion) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
+
+Base.:+(q::Quaternion, p::Symbolics.Num) = Quaternion(q.w+p, q.x, q.y, q.z)
+Base.:-(q::Quaternion, p::Symbolics.Num) = Quaternion(q.w-p, q.x, q.y, q.z)
+
+Base.:+(q::Symbolics.Num, p::Quaternion) = Quaternion(q+p.w, p.x, p.y, p.z)
+Base.:-(q::Symbolics.Num, p::Quaternion) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
+
+Base.flipsign(q::Quaternion, x::Real) = ifelse(signbit(x), -q, q)
 
 function Base.:*(q::Quaternion, p::Quaternion)
     Quaternion(
@@ -177,22 +284,33 @@ function Base.:(==)(q1::Quaternion{Symbolics.Num}, q2::Quaternion{Symbolics.Num}
     qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
     iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
 end
-
-
 Base.:(==)(q1::Quaternion, q2::Quaternion) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
-Base.float(q::Quaternion{T}) where T<:Real = Quaternion(float(q.components))
-Base.real(::Type{Quaternion{T}}) where {T<:Real} = real(T)
-Base.real(q::Quaternion) = q.w
-Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion(zero(T), zero(T), zero(T), zero(T))
-Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
-Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion(one(T), zero(T), zero(T), zero(T))
-Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
-Base.isfinite(q::Quaternion) = (
-    isfinite(q.w)
-    && isfinite(q.x)
-    && isfinite(q.y)
-    && isfinite(q.z)
-)
+Base.:(==)(q::Quaternion, x::Real) = isreal(q) && real(q) == x
+Base.:(==)(x::Real, q::Quaternion) = isreal(q) && real(q) == x
+Base.:(==)(q::Quaternion, x::Symbolics.Num) = isreal(q) && real(q) == x
+Base.:(==)(x::Symbolics.Num, q::Quaternion) = isreal(q) && real(q) == x
+
+Base.isequal(q1::Quaternion, q2::Quaternion) = isequal(q1.w,q2.w) && isequal(q1.x,q2.x) && isequal(q1.y,q2.y) && isequal(q1.z,q2.z)
+Base.in(q::Quaternion, r::AbstractRange{<:Real}) = isreal(q) && real(q) in r
+
+if UInt === UInt64
+    const h_imagx = 0xdf13da9384000582
+    const h_imagy = 0x437d0726f1028bcd
+    const h_imagz = 0xcf13f7ab1f367e01
+else
+    const h_imagx = 0x27a4bf84
+    const h_imagy = 0xccefdeeb
+    const h_imagz = 0x1683854f
+end
+const hash_0_imagx = hash(0, h_imagx)
+const hash_0_imagy = hash(0, h_imagy)
+const hash_0_imagz = hash(0, h_imagz)
+
+function Base.hash(q::Quaternion, h::UInt)
+    # TODO: with default argument specialization, this would be better:
+    # hash(q.w, h ⊻ hash(q.x, h ⊻ h_imagx) ⊻ hash(0, h ⊻ h_imagx) ⊻ hash(q.y, h ⊻ h_imagy) ⊻ hash(0, h ⊻ h_imagy) ⊻ hash(q.z, h ⊻ h_imagz) ⊻ hash(0, h ⊻ h_imagz))
+    hash(q.w, h ⊻ hash(q.x, h_imagx) ⊻ hash_0_imagx ⊻ hash(q.y, h_imagy) ⊻ hash_0_imagy ⊻ hash(q.z, h_imagz) ⊻ hash_0_imagz)
+end
 
 """
     conj(q)
@@ -298,8 +416,9 @@ julia> log(Quaternion(-exp(7)))
 
 """
 function Base.log(q::Quaternion{T}) where {T}
+    q = float(q)
     absolute2vec = abs2vec(q)
-    if absolute2vec == zero(T)
+    if iszero(absolute2vec)
         if q.w < 0
             return Quaternion(log(-q.w), 0, 0, π)
         end
@@ -310,8 +429,9 @@ function Base.log(q::Quaternion{T}) where {T}
     Quaternion(log(abs2(q))/2, f*q.x, f*q.y, f*q.z)
 end
 # function Base.log(q::UnitQuaternion{T}) where {T}
+#     q = float(q)
 #     absolute2vec = abs2vec(q)
-#     if absolute2vec == zero(T)
+#     if iszero(absolute2vec)
 #         if q.w < 0
 #             return Quaternion{T}(0, 0, 0, π)
 #         end
@@ -334,9 +454,10 @@ julia> exp(π/4*Quaternion(:x))  # Rotation by π/2 about the x axis
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}
+    q = float(q)
     absolute2vec = abs2vec(q)
-    if absolute2vec == zero(T)
-        return Quaternion(exp(q.w), zero(T), zero(T), zero(T))
+    if iszero(absolute2vec)
+        return Quaternion(exp(q.w), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
     s = sin(absolutevec) / absolutevec
@@ -344,8 +465,9 @@ function Base.exp(q::Quaternion{T}) where {T}
     Quaternion(e*cos(absolutevec), e*s*q.x, e*s*q.y, e*s*q.z)
 end
 # function Base.exp(q::VectorQuaternion{T}) where {T}
+#     q = float(q)
 #     absolute2vec = abs2vec(q)
-#     if absolute2vec == zero(T)
+#     if iszero(absolute2vec)
 #         return Quaternion{T}(0, 0, 0, 0)
 #     end
 #     absolutevec = sqrt(absolute2vec)
@@ -396,12 +518,13 @@ julia> √Quaternion(-4)
 ```
 """
 function Base.sqrt(q::Quaternion{T}) where {T}
+    q = float(q)
     absolute2vec = abs2vec(q)
-    if absolute2vec == zero(T)
+    if iszero(absolute2vec)
         if q.w < 0
-            return Quaternion(zero(T), zero(T), zero(T), sqrt(-q.w))
+            return Quaternion(0, 0, 0, sqrt(-q.w))
         end
-        return Quaternion(sqrt(q.w), zero(T), zero(T), zero(T))
+        return Quaternion(sqrt(q.w), 0, 0, 0)
     end
     absolute2 = absolute2vec + q.w^2
     c1 = sqrt(absolute2) + q.w
@@ -409,6 +532,7 @@ function Base.sqrt(q::Quaternion{T}) where {T}
     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
 end
 # function Base.sqrt(q::UnitQuaternion{T}) where {T}
+#     q = float(q)
 #     absolute2vec = abs2vec(q)
 #     if absolute2vec == zero(T)
 #         if q.w < 0
@@ -496,8 +620,19 @@ function Base.show(io::IO, ::MIME"text/latex", q::Quaternion)
     print(io, s)
 end
 
+function Base.read(s::IO, ::Type{Quaternion{T}}) where T<:Real
+    w = read(s,T)
+    x = read(s,T)
+    y = read(s,T)
+    z = read(s,T)
+    Quaternion{T}(w,x,y,z)
+end
+function Base.write(s::IO, q::Quaternion)
+    write(s,q.w,q.x,q.y,q.z)
+end
 
-Broadcast.broadcasted(f, q::Quaternion, args...) = Quaternion(f.(q.components, args...))
+
+Broadcast.broadcasted(f, q::Quaternion, args...; kwargs...) = Quaternion(f.(q.components, args...; kwargs...))
 
 
 include("conversion.jl")

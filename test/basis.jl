@@ -1,4 +1,3 @@
-
 @testset verbose=true "Basis" begin
     @testset "$T" for T in Types
         # Note that, because `Num` from Symbolics is a weird type, we have to
@@ -24,11 +23,116 @@
             end
         end
 
+        # Check equality with constants; note that these are *equal*, but not the same
+        @test u == one(T) + zero(T)*𝐢 == one(T)
+        @test i == 𝐢 == imx
+        @test j == 𝐣 == imy
+        @test k == 𝐤 == imz
+
+        # Test copy constructor and self-equality
+        @test Quaternion(u) == Quaternion{T}(u) == u
+        @test Quaternion(i) == Quaternion{T}(i) == i
+        @test Quaternion(j) == Quaternion{T}(j) == j
+        @test Quaternion(k) == Quaternion{T}(k) == k
+        @test u == one(T)
+        @test one(T) == u
+        @test i != one(T)
+        @test one(T) != i
+        @test j != one(T)
+        @test one(T) != j
+        @test k != one(T)
+        @test one(T) != k
+        @test isequal(u, u)
+        @test !isequal(u, i)
+        @test !isequal(u, j)
+        @test !isequal(u, k)
+        @test !isequal(i, u)
+        @test isequal(i, i)
+        @test !isequal(i, j)
+        @test !isequal(i, k)
+        @test !isequal(j, u)
+        @test !isequal(j, i)
+        @test isequal(j, j)
+        @test !isequal(j, k)
+        @test !isequal(k, u)
+        @test !isequal(k, i)
+        @test !isequal(k, j)
+        @test isequal(k, k)
+
         # Check "real" part
         @test real(u) == one(T)
         @test real(i) == zero(T)
         @test real(j) == zero(T)
         @test real(k) == zero(T)
+
+        # Check "imag" part
+        @test imag(u) == [zero(T), zero(T), zero(T)]
+        @test imag(i) == [one(T), zero(T), zero(T)]
+        @test imag(j) == [zero(T), one(T), zero(T)]
+        @test imag(k) == [zero(T), zero(T), one(T)]
+
+        # Check "isreal"
+        @test isreal(u)
+        @test !isreal(i)
+        @test !isreal(j)
+        @test !isreal(k)
+
+        # Check "isinteger"
+        if T != Num
+            @test isinteger(u)
+            @test !isinteger(1.2u)
+        end
+        @test !isinteger(i)
+        @test !isinteger(j)
+        @test !isinteger(k)
+
+        if T<:AbstractFloat
+            # Check "isnan"
+            @test !isnan(u)
+            @test !isnan(i)
+            @test !isnan(j)
+            @test !isnan(k)
+            @test isnan(T(NaN) + 0imx)
+            @test isnan(T(NaN)imx)
+            @test isnan(T(NaN)imy)
+            @test isnan(T(NaN)imz)
+
+            # Check "isinf"
+            @test !isinf(u)
+            @test !isinf(i)
+            @test !isinf(j)
+            @test !isinf(k)
+            @test isinf(T(Inf) + 0imx)
+            @test isinf(T(Inf)imx)
+            @test isinf(T(Inf)imy)
+            @test isinf(T(Inf)imz)
+        end
+
+        # Check "isone"
+        @test isone(u)
+        @test !isone(2u)
+        @test !isone(i)
+        @test !isone(j)
+        @test !isone(k)
+
+        # Check "flipsign"
+        @test flipsign(u, 1) == u
+        @test flipsign(u, -1) == -u
+        @test flipsign(i, 1) == i
+        @test flipsign(i, -1) == -i
+        @test flipsign(j, 1) == j
+        @test flipsign(j, -1) == -j
+        @test flipsign(k, 1) == k
+        @test flipsign(k, -1) == -k
+
+        if T != Num
+            # Check "in"
+            @test u ∈ 0:2
+            @test u ∉ 2:4
+            @test i ∉ 0:2
+            @test j ∉ 0:2
+            @test k ∉ 0:2
+        end
 
         # Standard expressions
         @test abs(u * u - (u)) == zero(T)
@@ -54,26 +158,5 @@
         @test abs(k * i - (j)) == zero(T)
         @test abs(k * j - (-i)) == zero(T)
         @test abs(k * k - (-u)) == zero(T)
-    end
-
-    @testset "float($T)" for T in IntTypes
-        @test float(Quaternion{T}) === Quaternion{float(T)}
-        @test float(Quaternion{T}(1, 2, 3, 4)) == Quaternion(float(T)(1), float(T)(2), float(T)(3), float(T)(4))
-    end
-
-    @testset "show" begin
-        io = IOBuffer()
-        Base.show(io, MIME("text/plain"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "a - b + b*c𝐢 + {c*(d^-1)}𝐣 + {d + e}𝐤"
-        Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\{d + e\\right\\}\\,\\mathbf{k}\$"
     end
 end
