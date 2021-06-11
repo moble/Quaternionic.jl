@@ -63,11 +63,12 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 - [`to_euler_phases`](@ref): Convert quaternion to Euler phases
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
 """
-function to_euler_angles(q)
-    a1 = atan(s.z, s.w)
-    a2 = atan(-s.x, s.y)
-    [a1+a2, 2*acos(√((s.w^2+s.z^2)/abs2vec(q))), a1-a2]
+function to_euler_angles(q::Quaternion)
+    a1 = atan(q.z, q.w)
+    a2 = atan(-q.x, q.y)
+    [a1+a2, 2*acos(√((q.w^2+q.z^2)/abs2vec(q))), a1-a2]
 end
+to_euler_angles(q) = to_euler_angles(q...)
 
 
 """
@@ -105,6 +106,7 @@ function from_euler_angles(α, β, γ)
         cos(β/2)*sin((α+γ)/2)
     )
 end
+from_euler_angles(αβγ) = from_euler_angles(αβγ...)
 
 
 function to_euler_phases!(z::Array{Complex{T}}, R::Quaternion{T}) where {T}
