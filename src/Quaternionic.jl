@@ -211,6 +211,12 @@ Base.:-(q::Quaternion, p::Number) = Quaternion(q.w-p, q.x, q.y, q.z)
 Base.:+(q::Number, p::Quaternion) = Quaternion(q+p.w, p.x, p.y, p.z)
 Base.:-(q::Number, p::Quaternion) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
 
+Base.:+(q::Quaternion, p::Symbolics.Num) = Quaternion(q.w+p, q.x, q.y, q.z)
+Base.:-(q::Quaternion, p::Symbolics.Num) = Quaternion(q.w-p, q.x, q.y, q.z)
+
+Base.:+(q::Symbolics.Num, p::Quaternion) = Quaternion(q+p.w, p.x, p.y, p.z)
+Base.:-(q::Symbolics.Num, p::Quaternion) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
+
 Base.flipsign(q::Quaternion, x::Real) = ifelse(signbit(x), -q, q)
 
 function Base.:*(q::Quaternion, p::Quaternion)
