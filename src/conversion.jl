@@ -19,7 +19,8 @@ This function is fast because no data is copied; the returned quantity is just
 a "view" of the original.  The output view will have an extra initial dimension
 (of size 4), but is otherwise the same shape as the input array.
 """
-as_float_array(A::AbstractArray{Quaternion{T}}) where {T} = reinterpret(reshape, T, A)
+as_float_array(A::AbstractArray{Quaternion{T}}) where {T<:AbstractFloat} = reinterpret(reshape, T, A)
+as_float_array(q::Quaternion) = collect(float(q).components)
 
 
 """
@@ -64,11 +65,13 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
 """
 function to_euler_angles(q::Quaternion)
+    q = float(q)
+    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
     a1 = atan(q.z, q.w)
     a2 = atan(-q.x, q.y)
-    [a1+a2, 2*acos(√((q.w^2+q.z^2)/abs2vec(q))), a1-a2]
+    [a1+a2, a0, a1-a2]
 end
-to_euler_angles(q) = to_euler_angles(q...)
+to_euler_angles(q) = to_euler_angles(q...)  # Accept single-element iterables
 
 
 """
@@ -167,6 +170,7 @@ end
 
 
 """
+    from_euler_phases(zₐ, zᵦ, zᵧ)
     from_euler_phases(z)
 
 Return the quaternion corresponding to these Euler phases.
@@ -198,13 +202,14 @@ computed from the components of the corresponding quaternion algebraically
 - [`from_euler_angles`](@ref): Create quaternion from Euler angles
 
 """
-function from_euler_phases(z)
-    zb = √(z[2])  # exp[iβ/2]
-    zp = √(z[1] * z[3])  # exp[i(α+γ)/2]
-    zm = √(z[1] * conj(z[3]))  # exp[i(α-γ)/2]
-    if abs(z[1] - zp * zm) > abs(z[1] + zp * zm)
+function from_euler_phases(zₐ, zᵦ, zᵧ)
+    zb = √(zᵦ)  # exp[iβ/2]
+    zp = √(zₐ * zᵧ)  # exp[i(α+γ)/2]
+    zm = √(zₐ * conj(zᵧ))  # exp[i(α-γ)/2]
+    if abs(zₐ - zp * zm) > abs(zₐ + zp * zm)
         zp *= -1
     end
     Quaternion(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
 end
+from_euler_phases(z) = from_euler_phases(z...)
                        
