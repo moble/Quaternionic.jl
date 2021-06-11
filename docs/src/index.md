@@ -45,7 +45,8 @@ julia> 0.1 + 2.3imx + 4.5imz
 0.1 + 2.3𝐢 + 0.0𝐣 + 4.5𝐤
 ```
 As with the complex `im`, the result of multiplying `imx`, etc., with any real number will be a
-quaternion with the type of the other number.
+quaternion with the type of the other number.  For copy-paste convenience, it is also possible to
+use the aliases 𝐢, 𝐣, and 𝐤 (as Unicode bold character).
 
 [^1]:
     Note that, mathematically speaking, quaternions can only be defined over a
