@@ -71,7 +71,6 @@ function to_euler_angles(q::Quaternion)
     a2 = atan(-q.x, q.y)
     [a1+a2, a0, a1-a2]
 end
-to_euler_angles(q) = to_euler_angles(q...)  # Accept single-element iterables
 
 
 """
