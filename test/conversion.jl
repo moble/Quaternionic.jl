@@ -139,7 +139,7 @@
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_spherical_coordinates(to_spherical_coordinates(q1))
-                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=80eps(T)
+                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=150eps(T)
             end
         end
 
