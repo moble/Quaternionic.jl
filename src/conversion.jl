@@ -212,3 +212,114 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
 end
 from_euler_phases(z) = from_euler_phases(z...)
                        
+
+"""
+    to_spherical_coordinates(q)
+
+Return the spherical coordinates corresponding to this quaternion.
+
+We can treat the quaternion as a transformation taking the ``z`` axis to some direction ``n̂``.  This
+direction can be described in terms of spherical coordinates (θ, ϕ).  Here, we use the standard
+commonly used in physics: θ represents the "polar angle" between the ``z`` axis and the direction
+``n̂``, while ϕ represents the "azimuthal angle" between the ``x`` axis and the projection of ``n̂``
+into the ``x``-``y`` plane.  Both angles are given in radians.
+
+"""
+function to_spherical_coordinates(q::Quaternion)
+    q = float(q)
+    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
+    a1 = atan(q.z, q.w)
+    a2 = atan(-q.x, q.y)
+    [a0, a1+a2]
+end
+
+
+"""
+    from_spherical_coordinates(θ, ϕ)
+
+Return a quaternion corresponding to these spherical coordinates.
+
+Considering (θ, ϕ) as a point ``n̂`` on the sphere, we can also construct a quaternion that rotates
+the ``z`` axis onto that point.  Here, we use the standard commonly used in physics: θ represents
+the "polar angle" between the ``z`` axis and the direction ``n̂``, while ϕ represents the "azimuthal
+angle" between the ``x`` axis and the projection of ``n̂`` into the ``x``-``y`` plane.  Both angles
+must be given in radians.
+
+"""
+function from_spherical_coordinates(θ, ϕ)
+    sϕ, cϕ = sincos(ϕ/2)
+    sθ, cθ = sincos(θ/2)
+    Quaternion(cθ*cϕ, -sθ*sϕ, sθ*cϕ, cθ*sϕ)
+end
+from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
+
+
+"""
+    from_rotation_matrix(ℛ)
+
+Convert 3x3 rotation matrix to quaternion.
+
+Assuming the 3x3 matrix `ℛ` rotates a vector `v` according to
+
+    v' = ℛ * v,
+
+we can also express this rotation in terms of a quaternion `R` such that
+
+    v' = R * v * R⁻¹.
+
+This function returns that quaternion, using Bar-Itzhack's algorithm to allow for non-orthogonal
+matrices.  [J. Guidance, Vol. 23, No. 6, p. 1085](http://dx.doi.org/10.2514/2.4654)
+
+"""
+function from_rotation_matrix(ℛ)
+    K = Array{eltype(ℛ), 2}(undef, (4, 4))
+    K[1, 1] = (ℛ[1, 1] - ℛ[2, 2] - ℛ[3, 3])/3
+    K[1, 2] = (ℛ[2, 1] + ℛ[1, 2])/3
+    K[1, 3] = (ℛ[3, 1] + ℛ[1, 3])/3
+    K[1, 4] = (ℛ[2, 3] - ℛ[3, 2])/3
+    K[2, 2] = (ℛ[2, 2] - ℛ[1, 1] - ℛ[3, 3])/3
+    K[2, 3] = (ℛ[3, 2] + ℛ[2, 3])/3
+    K[2, 4] = (ℛ[3, 1] - ℛ[1, 3])/3
+    K[3, 3] = (ℛ[3, 3] - ℛ[1, 1] - ℛ[2, 2])/3
+    K[3, 4] = (ℛ[1, 2] - ℛ[2, 1])/3
+    K[4, 4] = (ℛ[1, 1] + ℛ[2, 2] + ℛ[3, 3])/3
+    H = Hermitian(K)
+
+    # compute the *dominant* (largest eigenvalue) eigenvector
+    eigenvec = eigen(transpose(H), 4:4).vectors[:, 1]
+
+    # convert it into a quaternion
+    Quaternion(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
+end
+
+
+"""
+    to_rotation_matrix(q)
+
+Convert quaternion to 3x3 rotation matrix.
+
+Assuming the quaternion `R` rotates a vector `v` according to
+
+    v' = R * v * R⁻¹,
+
+we can also express this rotation in terms of a 3x3 matrix `ℛ` such that
+
+    v' = ℛ * v.
+
+This function returns that matrix.
+
+"""
+function to_rotation_matrix(q)
+    m = Array{eltype(q)}(undef, 3, 3)
+    n = inv(abs2(q))
+    m[1, 1] = 1 - 2*(q.y^2 + q.z^2) * n
+    m[1, 2] = 2*(q.x*q.y - q.z*q.w) * n
+    m[1, 3] = 2*(q.x*q.z + q.y*q.w) * n
+    m[2, 1] = 2*(q.x*q.y + q.z*q.w) * n
+    m[2, 2] = 1 - 2*(q.x^2 + q.z^2) * n
+    m[2, 3] = 2*(q.y*q.z - q.x*q.w) * n
+    m[3, 1] = 2*(q.x*q.z - q.y*q.w) * n
+    m[3, 2] = 2*(q.y*q.z + q.x*q.w) * n
+    m[3, 3] = 1 - 2*(q.x^2 + q.y^2) * n
+    m
+end

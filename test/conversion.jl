@@ -1,5 +1,5 @@
 @testset verbose=true "Conversion" begin
-    @testset "$T" for T in FloatTypes
+    @testset verbose=true "$T" for T in FloatTypes
         using EllipsisNotation
         using Random
         Random.seed!(4321)
@@ -116,6 +116,40 @@
                 z7 = to_euler_phases(q7)
                 @test z7[2] == -one(T)
                 @test z7[1]*conj(z7[3]) ≈ exp((α-γ)*im) atol=10eps(T)
+            end
+        end
+
+        @testset "Spherical coordinates" begin
+            N = 5000
+
+            random_angles = [2π .* rand(T, 3) .- π for _ in 1:5000]
+            for i in 1:N
+                α, β, γ = random_angles[i]
+                q1 = from_spherical_coordinates(β, α)
+                q2 = exp(imz*α/2) * exp(imy*β/2) * exp(imz*γ/2)
+                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=10eps(T)
+            end
+
+            if isbitstype(T)
+                random_rotors = randn_rotor(T, N)
+            else
+                q = [Quaternion((2 .* rand(T, 4) .- 1)...) for _ in 1:N]
+                random_rotors = @. q / abs(q)
+            end
+            for i in 1:N
+                q1 = random_rotors[i]
+                q2 = from_spherical_coordinates(to_spherical_coordinates(q1))
+                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=80eps(T)
+            end
+        end
+
+        @testset "Rotation matrices" begin
+            if isbitstype(T)
+                for _ in 1:5000
+                    q1 = randn_rotor(T)
+                    q2 = from_rotation_matrix(to_rotation_matrix(q1))
+                    @test min(abs(q1-q2), abs(q1+q2)) < 50eps(T)
+                end
             end
         end
     end

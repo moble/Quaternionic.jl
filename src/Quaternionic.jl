@@ -4,9 +4,11 @@ export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, ð
 export abs2vec, absvec
 export randn_rotor
 export as_quat_array, as_float_array, from_euler_angles, to_euler_angles,
-    to_euler_phases!, to_euler_phases, from_euler_phases
+    from_euler_phases, to_euler_phases!, to_euler_phases,
+    from_spherical_coordinates, to_spherical_coordinates,
+    from_rotation_matrix, to_rotation_matrix
 
-using StaticArrays, Latexify, LaTeXStrings
+using StaticArrays, Latexify, LaTeXStrings, LinearAlgebra
 import Random: AbstractRNG, default_rng, randn!
 import Symbolics
 
