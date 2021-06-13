@@ -23,7 +23,7 @@
             end
         end
 
-        # Check equality with constants; note that these are *equal*, but not the same
+        # Check equality with constants; note that these are *equal*, but not *identical*
         @test u == one(T) + zero(T)*𝐢 == one(T)
         @test i == 𝐢 == imx
         @test j == 𝐣 == imy
