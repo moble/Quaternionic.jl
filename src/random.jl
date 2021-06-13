@@ -27,8 +27,9 @@ Base.randn(rng::AbstractRNG, ::Type{Quaternion{T}}) where {T<:AbstractFloat} =
 """
     randn_rotor([rng=GLOBAL_RNG], [T=Quaternion{Float64}], [dims...])
 
-Generate a normally distributed random quaternion of type `T` with mean 0 and norm 1.
-The result is spherically symmetric, and gives rise a truly random rotation.
+Generate a normally distributed random quaternion of type `T` with mean 0 and norm 1.  (Note that
+the *norm* is always precisely 1 with this function, but otherwise the individual components are
+randomly distributed.)  The result is spherically symmetric, and gives rise a truly random rotation.
 
 See also: [`randn`](@ref)
 """
