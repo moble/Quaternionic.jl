@@ -104,7 +104,7 @@ end
             xvar[1]
         end
         function next_quaternion!(chars)
-            x = popfirst!(chars)
+            x = Symbol(popfirst!(chars))
             xvar = @variables $x[1:4]
             Quaternion(xvar...)
         end
