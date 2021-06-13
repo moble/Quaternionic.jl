@@ -1,13 +1,33 @@
 """
     as_quat_array(A)
 
-View a real array as an array of quaternions
+Reinterpret a real array as an array of quaternions
 
-The input array must have an initial dimension whose size is divisible by four
-(or better yet *is* 4), because successive indices in that last dimension will
-be considered successive components of the output quaternion.
+The input array must have an initial dimension whose size is 4, because
+successive indices in that dimension will be considered successive components
+of the output quaternion.
+
+Note that this returns a view of the original data only if the base type of the
+input array `isbitstype`; otherwise, a new array of `Quaternion`s must be
+created, and the memory copied.
+
+See also [`as_float_array`](@ref).
+
 """
-as_quat_array(A::AbstractArray{T}) where {T<:Real} = reinterpret(reshape, Quaternion{T}, A)
+function as_quat_array(A::AbstractArray{T}) where {T<:Real}
+    isbitstype(T) ? as_quat_array(Val(true), A) : as_quat_array(Val(false), A)
+end
+function as_quat_array(::Val{true}, A::AbstractArray{T}) where {T<:Real}
+    reinterpret(reshape, Quaternion{T}, A)
+end
+function as_quat_array(::Val{false}, A::AbstractArray{T}) where {T<:Real}
+    @assert size(A, 1)==4 "First dimension of `A` must be 4, not $(size(A, 1))"
+    Q = Array{Quaternion{T}}(undef, size(A)[2:end])
+    @inbounds for (i, j) in zip(eachindex(Q), Base.Iterators.partition(eachindex(A), 4))
+        @views Q[i] = Quaternion{T}(A[j])
+    end
+    Q
+end
 
 
 """
@@ -15,11 +35,29 @@ as_quat_array(A::AbstractArray{T}) where {T<:Real} = reinterpret(reshape, Quater
 
 View a quaternion array as an array of real numbers
 
-This function is fast because no data is copied; the returned quantity is just
-a "view" of the original.  The output view will have an extra initial dimension
-(of size 4), but is otherwise the same shape as the input array.
+The output array will have an extra initial dimension whose size is 4, because
+successive indices in that dimension correspond to successive components of the
+quaternion.
+
+Note that this returns a view of the original data only if the base type of the
+input array `isbitstype`; otherwise, a new array of that type must be created,
+and the memory copied.
+
+See also [`as_quat_array`](@ref).
 """
-as_float_array(A::AbstractArray{Quaternion{T}}) where {T<:AbstractFloat} = reinterpret(reshape, T, A)
+function as_float_array(A::AbstractArray{Quaternion{T}}) where {T<:Real}
+    isbitstype(T) ? as_float_array(Val(true), A) : as_float_array(Val(false), A)
+end
+function as_float_array(::Val{true}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+    reinterpret(reshape, T, A)
+end
+function as_float_array(::Val{false}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+    F = Array{T}(undef, (4, size(A)...))
+    @inbounds for (i, j) in zip(eachindex(A), Base.Iterators.partition(eachindex(F), 4))
+        @views F[j] .= A[i].components[:]
+    end
+    F
+end
 as_float_array(q::Quaternion) = collect(float(q).components)
 
 
@@ -37,15 +75,16 @@ the right direction.  But to go the other way?!  It's just not right.
 
 Assumes the Euler angles correspond to the quaternion `R` via
 
-    R = exp(α 𝐤/2) * exp(β 𝐣/2) * exp(γ 𝐤/2)
+    R = exp(α𝐤/2) * exp(β𝐣/2) * exp(γ𝐤/2)
 
 where 𝐣 and 𝐤 rotate about the fixed ``y`` and ``z`` axes, respectively, so
-this reprents an initial rotation about the ``z`` axis (in the positive sense)
-through an angle γ, followed by a rotation about the ``y`` axis by β, and a
-final rotation about the ``z`` axis by α.  This is equivalent to performing an
-initial rotation about ``z`` by α, followed by a rotation about *the rotated*
-``y'`` axis by β, followed by a rotation about *the twice-rotated* ``z''`` axis
-by γ.  The angles are naturally in radians.
+this reprents an initial rotation (in the positive sense) through an angle
+``γ`` about the axis ``z``, followed by a rotation through ``β`` about the axis
+``y``, and a final rotation through ``α`` about the axis ``z``.  This is
+equivalent to performing an initial rotation through ``α`` about the axis
+``z``, followed by a rotation through ``β`` about the *rotated* axis ``y'``,
+followed by a rotation through ``γ`` about the *twice-rotated* axis ``z''``.
+The angles are naturally assumed to be in radians.
 
 NOTE: Before opening an issue reporting something "wrong" with this function,
 be sure to read all of [this
@@ -76,19 +115,20 @@ end
 """
     from_euler_angles(α, β, γ)
 
-Improve your life drastically.
+Come over from the dark side.
 
 Assumes the Euler angles correspond to the quaternion `R` via
 
-    R = exp(α 𝐤/2) * exp(β 𝐣/2) * exp(γ 𝐤/2)
+    R = exp(α𝐤/2) * exp(β𝐣/2) * exp(γ𝐤/2)
 
 where 𝐣 and 𝐤 rotate about the fixed ``y`` and ``z`` axes, respectively, so
-this reprents an initial rotation about the ``z`` axis (in the positive sense)
-through an angle γ, followed by a rotation about the ``y`` axis by β, and a
-final rotation about the ``z`` axis by α.  This is equivalent to performing an
-initial rotation about ``z`` by α, followed by a rotation about *the rotated*
-``y'`` axis by β, followed by a rotation about *the twice-rotated* ``z''`` axis
-by γ.  The angles naturally must be in radians for this to make any sense.
+this reprents an initial rotation (in the positive sense) through an angle
+``γ`` about the axis ``z``, followed by a rotation through ``β`` about the axis
+``y``, and a final rotation through ``α`` about the axis ``z``.  This is
+equivalent to performing an initial rotation through ``α`` about the axis
+``z``, followed by a rotation through ``β`` about the *rotated* axis ``y'``,
+followed by a rotation through ``γ`` about the *twice-rotated* axis ``z''``.
+The angles are naturally assumed to be in radians.
 
 NOTE: Before opening an issue reporting something "wrong" with this function,
 be sure to read all of [this
@@ -218,11 +258,13 @@ from_euler_phases(z) = from_euler_phases(z...)
 
 Return the spherical coordinates corresponding to this quaternion.
 
-We can treat the quaternion as a transformation taking the ``z`` axis to some direction ``n̂``.  This
-direction can be described in terms of spherical coordinates (θ, ϕ).  Here, we use the standard
-commonly used in physics: θ represents the "polar angle" between the ``z`` axis and the direction
-``n̂``, while ϕ represents the "azimuthal angle" between the ``x`` axis and the projection of ``n̂``
-into the ``x``-``y`` plane.  Both angles are given in radians.
+We can treat the quaternion as a transformation taking the ``z`` axis to some
+direction ``n̂``.  This direction can be described in terms of spherical
+coordinates (θ, ϕ).  Here, we use the standard commonly used in physics: θ
+represents the "polar angle" between the ``z`` axis and the direction ``n̂``,
+while ϕ represents the "azimuthal angle" between the ``x`` axis and the
+projection of ``n̂`` into the ``x``-``y`` plane.  Both angles are given in
+radians.
 
 """
 function to_spherical_coordinates(q::Quaternion)
@@ -239,11 +281,12 @@ end
 
 Return a quaternion corresponding to these spherical coordinates.
 
-Considering (θ, ϕ) as a point ``n̂`` on the sphere, we can also construct a quaternion that rotates
-the ``z`` axis onto that point.  Here, we use the standard commonly used in physics: θ represents
-the "polar angle" between the ``z`` axis and the direction ``n̂``, while ϕ represents the "azimuthal
-angle" between the ``x`` axis and the projection of ``n̂`` into the ``x``-``y`` plane.  Both angles
-must be given in radians.
+Considering (θ, ϕ) as a point ``n̂`` on the sphere, we can also construct a
+quaternion that rotates the ``z`` axis onto that point.  Here, we use the
+standard commonly used in physics: θ represents the "polar angle" between the
+``z`` axis and the direction ``n̂``, while ϕ represents the "azimuthal angle"
+between the ``x`` axis and the projection of ``n̂`` into the ``x``-``y`` plane.
+Both angles must be given in radians.
 
 """
 function from_spherical_coordinates(θ, ϕ)
@@ -267,8 +310,9 @@ we can also express this rotation in terms of a quaternion `R` such that
 
     v' = R * v * R⁻¹.
 
-This function returns that quaternion, using Bar-Itzhack's algorithm to allow for non-orthogonal
-matrices.  [J. Guidance, Vol. 23, No. 6, p. 1085](http://dx.doi.org/10.2514/2.4654)
+This function returns that quaternion, using Bar-Itzhack's algorithm to allow
+for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6,
+p. 1085](http://dx.doi.org/10.2514/2.4654)
 
 """
 function from_rotation_matrix(ℛ)

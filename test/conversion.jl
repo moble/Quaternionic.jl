@@ -5,35 +5,45 @@
         Random.seed!(4321)
 
         @testset "Array types" begin
-            if isbitstype(T)
-                dumb_as_quat_array(f) = mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
-                function dumb_as_float_array(q)
-                    f = Array{Float64}(undef, (4, size(q)...))
-                    f[1, ..] = getproperty.(q, :w)
-                    f[2, ..] = getproperty.(q, :x)
-                    f[3, ..] = getproperty.(q, :y)
-                    f[4, ..] = getproperty.(q, :z)
-                    f
-                end
-                for dims in [(), (5,), (4, 3), (2, 3, 4)]
-                    q = randn(Quaternion{T}, dims)
-                    f = as_float_array(q)
-                    @test size(f) == (4, size(q)...)
-                    @test all(f .== dumb_as_float_array(q))
-                    @test all(q .== dumb_as_quat_array(f))
-                    @test all(q .== as_quat_array(f))
-                end
-                q = randn(Quaternion{T})
-                f = as_float_array(q)
-                @test f isa Vector{T}
-                @test eltype(f) === T
-                @test size(f) == (4,)
-                @test f == q.components
+            # function dumb_as_quat_array(f)
+            #     println(typeof(f))
+            #     # q = mapslices(x->Quaternion{T}(x...), f, dims=(1,))
+            #     # if length(size(q))
+            #     # [1, ..]
+            #     mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
+            # end
+            dumb_as_quat_array(f) = mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
+            dumb_as_quat_array(f::Vector) = Quaternion{T}(f...)
+            function dumb_as_float_array(q)
+                f = Array{T}(undef, (4, size(q)...))
+                f[1, ..] = getproperty.(q, :w)
+                f[2, ..] = getproperty.(q, :x)
+                f[3, ..] = getproperty.(q, :y)
+                f[4, ..] = getproperty.(q, :z)
+                f
             end
+            for dims in [(), (5,), (4, 3), (2, 3, 4)]
+                if dims == ()
+                    q = [randn(Quaternion{T})]
+                else
+                    q = randn(Quaternion{T}, dims)
+                end
+                f = as_float_array(q)
+                @test size(f) == (4, size(q)...)
+                @test f == dumb_as_float_array(q)
+                @test q == dumb_as_quat_array(f)
+                @test q == as_quat_array(f)
+            end
+            q = randn(Quaternion{T})
+            f = as_float_array(q)
+            @test f isa Vector{T}
+            @test eltype(f) === T
+            @test size(f) == (4,)
+            @test f == q.components
         end
 
         @testset "Euler angles" begin
-            N = 5000
+            N = 5_000
 
             random_angles = [2π .* rand(T, 3) .- π for _ in 1:5000]
             for i in 1:N
@@ -46,12 +56,7 @@
             q2 = broadcast((αβγ)->(exp(αβγ[1]*imz/2)*exp(αβγ[2]*imy/2)*exp(αβγ[3]*imz/2)), random_angles)
             @test maximum(abs, q1 .- q2) < 10eps(T)
 
-            if isbitstype(T)
-                random_rotors = randn_rotor(T, N)
-            else
-                q = [Quaternion((2 .* rand(T, 4) .- 1)...) for _ in 1:N]
-                random_rotors = @. q / abs(q)
-            end
+            random_rotors = randn_rotor(T, N)
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_euler_angles(to_euler_angles(q1))
@@ -63,7 +68,7 @@
         end
 
         @testset "Euler phases" begin
-            N = 5000
+            N = 5_000
             ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
 
             dumb_to_euler_phases(α, β, γ) = [exp(α*im), exp(β*im), exp(γ*im)]
@@ -120,7 +125,7 @@
         end
 
         @testset "Spherical coordinates" begin
-            N = 5000
+            N = 5_000
 
             random_angles = [2π .* rand(T, 3) .- π for _ in 1:5000]
             for i in 1:N
@@ -130,12 +135,7 @@
                 @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=10eps(T)
             end
 
-            if isbitstype(T)
-                random_rotors = randn_rotor(T, N)
-            else
-                q = [Quaternion((2 .* rand(T, 4) .- 1)...) for _ in 1:N]
-                random_rotors = @. q / abs(q)
-            end
+            random_rotors = randn_rotor(T, N)
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_spherical_coordinates(to_spherical_coordinates(q1))
@@ -145,7 +145,7 @@
 
         @testset "Rotation matrices" begin
             if isbitstype(T)
-                for _ in 1:5000
+                for _ in 1:5_000
                     q1 = randn_rotor(T)
                     q2 = from_rotation_matrix(to_rotation_matrix(q1))
                     @test min(abs(q1-q2), abs(q1+q2)) < 50eps(T)
