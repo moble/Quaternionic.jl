@@ -47,7 +47,6 @@ module FundamentalTests
     function test_identity(v::Quaternion)
         @test one(v) * v == v
         @test v * one(v) == v
-        @test typeof(v)(:w) == one(v)
     end
     function test_inverse(v::Quaternion)
         if !iszero(v)
