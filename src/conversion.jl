@@ -327,7 +327,7 @@ function from_rotation_matrix(ℛ)
     K[3, 3] = (ℛ[3, 3] - ℛ[1, 1] - ℛ[2, 2])/3
     K[3, 4] = (ℛ[1, 2] - ℛ[2, 1])/3
     K[4, 4] = (ℛ[1, 1] + ℛ[2, 2] + ℛ[3, 3])/3
-    H = Hermitian(K)
+    H = Symmetric(K)
 
     # compute the *dominant* (largest eigenvalue) eigenvector
     eigenvec = eigen(transpose(H), 4:4).vectors[:, 1]
