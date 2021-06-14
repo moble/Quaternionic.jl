@@ -22,6 +22,16 @@
                 end
             end
         end
+        @test u.w==one(T) && u.x==zero(T) && u.y==zero(T) && u.z==zero(T)
+        @test i.w==zero(T) && i.x==one(T) && i.y==zero(T) && i.z==zero(T)
+        @test j.w==zero(T) && j.x==zero(T) && j.y==one(T) && j.z==zero(T)
+        @test k.w==zero(T) && k.x==zero(T) && k.y==zero(T) && k.z==one(T)
+        q = Quaternion(T(1), T(2), T(3), T(4))
+        @test q[[1, 2]] == [T(1), T(2)]
+        @test q[[3, 4]] == [T(3), T(4)]
+        @test q[[4, 2]] == [T(4), T(2)]
+        @test q[[4, 2, 3]] == [T(4), T(2), T(3)]
+        @test q[[4, 2, 3, 1]] == [T(4), T(2), T(3), T(1)]
 
         # Check equality with constants; note that these are *equal*, but not the same
         @test u == one(T) + zero(T)*𝐢 == one(T)
