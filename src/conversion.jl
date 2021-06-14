@@ -1,5 +1,5 @@
 """
-    as_quat_array(A)
+    from_float_array(A)
 
 Reinterpret a real array as an array of quaternions
 
@@ -11,16 +11,16 @@ Note that this returns a view of the original data only if the base type of the
 input array `isbitstype`; otherwise, a new array of `Quaternion`s must be
 created, and the memory copied.
 
-See also [`as_float_array`](@ref).
+See also [`to_float_array`](@ref).
 
 """
-function as_quat_array(A::AbstractArray{T}) where {T<:Real}
-    isbitstype(T) ? as_quat_array(Val(true), A) : as_quat_array(Val(false), A)
+function from_float_array(A::AbstractArray{T}) where {T<:Real}
+    isbitstype(T) ? from_float_array(Val(true), A) : from_float_array(Val(false), A)
 end
-function as_quat_array(::Val{true}, A::AbstractArray{T}) where {T<:Real}
+function from_float_array(::Val{true}, A::AbstractArray{T}) where {T<:Real}
     reinterpret(reshape, Quaternion{T}, A)
 end
-function as_quat_array(::Val{false}, A::AbstractArray{T}) where {T<:Real}
+function from_float_array(::Val{false}, A::AbstractArray{T}) where {T<:Real}
     @assert size(A, 1)==4 "First dimension of `A` must be 4, not $(size(A, 1))"
     Q = Array{Quaternion{T}}(undef, size(A)[2:end])
     @inbounds for (i, j) in zip(eachindex(Q), Base.Iterators.partition(eachindex(A), 4))
@@ -31,7 +31,7 @@ end
 
 
 """
-    as_float_array(A)
+    to_float_array(A)
 
 View a quaternion array as an array of real numbers
 
@@ -43,22 +43,22 @@ Note that this returns a view of the original data only if the base type of the
 input array `isbitstype`; otherwise, a new array of that type must be created,
 and the memory copied.
 
-See also [`as_quat_array`](@ref).
+See also [`from_float_array`](@ref).
 """
-function as_float_array(A::AbstractArray{Quaternion{T}}) where {T<:Real}
-    isbitstype(T) ? as_float_array(Val(true), A) : as_float_array(Val(false), A)
+function to_float_array(A::AbstractArray{Quaternion{T}}) where {T<:Real}
+    isbitstype(T) ? to_float_array(Val(true), A) : to_float_array(Val(false), A)
 end
-function as_float_array(::Val{true}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+function to_float_array(::Val{true}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
     reinterpret(reshape, T, A)
 end
-function as_float_array(::Val{false}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+function to_float_array(::Val{false}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
     F = Array{T}(undef, (4, size(A)...))
     @inbounds for (i, j) in zip(eachindex(A), Base.Iterators.partition(eachindex(F), 4))
         @views F[j] .= A[i].components[:]
     end
     F
 end
-as_float_array(q::Quaternion) = collect(float(q).components)
+to_float_array(q::Quaternion) = collect(float(q).components)
 
 
 """

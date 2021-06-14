@@ -5,16 +5,16 @@
         Random.seed!(4321)
 
         @testset "Array types" begin
-            # function dumb_as_quat_array(f)
+            # function dumb_from_float_array(f)
             #     println(typeof(f))
             #     # q = mapslices(x->Quaternion{T}(x...), f, dims=(1,))
             #     # if length(size(q))
             #     # [1, ..]
             #     mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
             # end
-            dumb_as_quat_array(f) = mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
-            dumb_as_quat_array(f::Vector) = Quaternion{T}(f...)
-            function dumb_as_float_array(q)
+            dumb_from_float_array(f) = mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
+            dumb_from_float_array(f::Vector) = Quaternion{T}(f...)
+            function dumb_to_float_array(q)
                 f = Array{T}(undef, (4, size(q)...))
                 f[1, ..] = getproperty.(q, :w)
                 f[2, ..] = getproperty.(q, :x)
@@ -28,14 +28,14 @@
                 else
                     q = randn(Quaternion{T}, dims)
                 end
-                f = as_float_array(q)
+                f = to_float_array(q)
                 @test size(f) == (4, size(q)...)
-                @test f == dumb_as_float_array(q)
-                @test q == dumb_as_quat_array(f)
-                @test q == as_quat_array(f)
+                @test f == dumb_to_float_array(q)
+                @test q == dumb_from_float_array(f)
+                @test q == from_float_array(f)
             end
             q = randn(Quaternion{T})
-            f = as_float_array(q)
+            f = to_float_array(q)
             @test f isa Vector{T}
             @test eltype(f) === T
             @test size(f) == (4,)
