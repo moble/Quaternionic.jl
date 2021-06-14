@@ -25,12 +25,13 @@ Pages   = ["quaternion.jl"]
 
 ## Algebra and mathematical functions
 
-The essential mathematical features of quaternions are implemented as functions like [`conj`](@ref),
-[`abs`](@ref), [`abs2`](@ref), [`exp`](@ref), [`log`](@ref), etc.  Most of these functions are
-elements of the `Base` module, and are simply overloaded methods of functions that should also be
-familiar from `Complex` types.  We also have [`absvec`](@ref) and [`abs2vec`](@ref), which are not
-useful in a `Complex` context, but compute the relevant quantities for the "vector" component of a
-`Quaternion`.
+Along with the basic binary operators, the essential mathematical functions like [`conj`](@ref),
+[`abs`](@ref), [`abs2`](@ref), [`exp`](@ref), [`log`](@ref), etc., are implemented.  Most of these
+functions are found in the `Base` module, and are simply overloaded methods of functions that should
+also be familiar from `Complex` types.  Note that we use a slightly different interpretation of
+[`angle`](@ref) for `Quaternion`, compared to `Complex`.  We also have [`absvec`](@ref) and
+[`abs2vec`](@ref), which are not useful in a `Complex` context, but compute the relevant quantities
+for the "vector" component of a `Quaternion`.
 
 ```@autodocs
 Modules = [Quaternionic]
