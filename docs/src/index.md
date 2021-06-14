@@ -1,10 +1,12 @@
-# Quaternionic.jl
+# Introduction
 
 *Quaternions for Julia*
 
 The goal of this package is to provide a simple but flexible and complete implementation of
 quaternions, without restricting the interpretation of quaternions to being rotations, but also
 providing extensive support for rotations.
+
+## Examples
 
 There are numerous ways to construct a [`Quaternion`](@ref) — the simplest being to just give the
 components:
@@ -52,11 +54,11 @@ quaternion with the type of the other number.
 
 [^1]:
     Note that, mathematically speaking, quaternions can only be defined over a
-    [field](https://en.wikipedia.org/wiki/Field_(mathematics)#Definition), which necessarily
-    cannot be an integer type (because the multiplicative inverse of an integer is not generally
-    an integer).  Nonetheless, it is possible to define a `Quaternion{<:Integer}`, which should
-    behave as expected.  However, many functions (such as [`exp`](@ref), [`log`](@ref), etc.)
-    will then return a `Quaternion` of some different type.
+    [field](https://en.wikipedia.org/wiki/Field_(mathematics)#Definition), which necessarily cannot
+    be an integer type (because the multiplicative inverse of an integer is not generally an
+    integer).  Nonetheless, it is possible to define a `Quaternion{<:Integer}`, which should behave
+    as expected.  However, many functions (such as [`exp`](@ref), [`log`](@ref), etc.)  will then
+    return a `Quaternion` of some different type, just as is the case for `Complex{<:Integer}`.
 
 Components of a quaternion can be accessed as fields:
 ```jldoctest example
@@ -81,6 +83,32 @@ julia> q.im
  2.0
  3.0
  4.0
+julia> real(q)
+1.0
+julia> imag(q)
+3-element Vector{Float64}:
+ 2.0
+ 3.0
+ 4.0
+```
+It is also possible to index an individual `Quaternion` just as you would an array (of length 4):
+```jldoctest example
+julia> q[1]
+1.0
+julia> q[[3, 2]]
+2-element Vector{Float64}:
+ 3.0
+ 2.0
+```
+Functions may also be broadcast to *each component* of a `Quaternion`.  For example, this can be
+particularly helpful when simplifying `Symbolics` expressions:
+```jldoctest symbolics
+julia> @variables q[1:4];
+
+julia> Q = Quaternion(q);
+
+julia> simplify.(Q * imz * conj(Q))
+0 + {2q₁*q₃ + 2q₂*q₄}𝐢 + {2q₃*q₄ - (2q₁*q₂)}𝐣 + {q₁^2 + q₄^2 - (q₂^2) - (q₃^2)}𝐤
 ```
 
 The basic algebraic operations work as you would expect:
@@ -96,24 +124,21 @@ julia> q * p  # Note the non-commutativity
 julia> q / p
 0.6666666666666666 + 0.3333333333333333𝐢 + 0.0𝐣 + 0.6666666666666666𝐤
 ```
-Several essential mathematical functions are also available, including
-- [`abs`](@ref)
-- [`abs2`](@ref)
-- [`conj`](@ref)
-- [`exp`](@ref)
-- [`log`](@ref)
-- [`sqrt`](@ref)
-- [`angle`](@ref)
+Essential mathematical functions familiar from complex math, such as [`conj`](@ref), [`abs`](@ref),
+[`abs2`](@ref), [`log`](@ref), [`exp`](@ref), etc., are also available.
 
 
+## Contents
 
-## Functions
-
-```@autodocs
-Modules = [Quaternionic]
+```@contents
+Depth = 4
 ```
 
-## Index
+## Function list
+
+The following list contains the public functions inside the `Quaternionic` module.  Note that there
+are also many standard math functions defined for `Quaternion`s that live in the `Base` module, as
+noted above.
 
 ```@index
 Modules = [Quaternionic]
