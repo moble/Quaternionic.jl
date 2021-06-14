@@ -44,9 +44,6 @@ julia> Quaternion(2, 3, 4)
 0 + 2𝐢 + 3𝐣 + 4𝐤
 julia> Quaternion(1)
 1 + 0𝐢 + 0𝐣 + 0𝐤
-julia> Quaternion(:z)
-0.0 + 0.0𝐢 + 0.0𝐣 + 1.0𝐤
-
 ```
 """
 function Quaternion(w::Real, x::Real, y::Real, z::Real)
