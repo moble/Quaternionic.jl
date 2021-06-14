@@ -84,11 +84,6 @@ const QuaternionF64 = Quaternion{Float64}
 const QuaternionF32 = Quaternion{Float32}
 const QuaternionF16 = Quaternion{Float16}
 
-Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(false, false, false, false)
-Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
-Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(true, false, false, false)
-Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
-
 """
     imx
 
@@ -139,6 +134,11 @@ julia> 1.2imz
 """
 const imz = Quaternion(false, false, false, true)
 const 𝐤 = imz
+
+Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(false, false, false, false)
+Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
+Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(true, false, false, false)
+Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
 
 function Base.getproperty(q::Quaternion, sym::Symbol)
     @inbounds begin
