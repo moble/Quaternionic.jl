@@ -131,3 +131,26 @@ their default arguments, are likely to be the most commonly needed functions.
 Modules = [Quaternionic]
 Pages   = ["distance.jl"]
 ```
+
+
+# Interpolation
+
+Component-wise interpolation of quaternions does not generally yield good
+results when the quaternions are interpreted as rotations.  The basic reason is
+that rotations correspond to *unit* quaternions, but component-wise
+interpolation does not respect this constraint.  There are two specialized
+functions for dealing with this problem.  The first is [`slerp`](@ref), which
+is an abbreviation of "Spherical Linear intERPolation", and is the direct
+analog of standard linear interpolation of functions ℝ → ℝ.  The second is
+[`squad`](@ref), which is an abbreviation of "Spherical QUADratic
+interpolation", and is more analogous to cubic splines.
+
+In both cases, it is important for extraneous sign flips to be eliminated
+before passing quaternions to the interpolating functions.  For this purpose,
+there is the [`unflip`](@ref) utility function, which can also be called
+automatically by passing the corresponding keywords to `slerp` and `squad`.
+
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["interpolation.jl"]
+```
