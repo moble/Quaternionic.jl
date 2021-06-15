@@ -82,6 +82,12 @@
                             else
                                 @test (q₁==q₂) ⊻ (d₁₂>0)
                             end
+                            if multiplicative==true && rotation==true
+                                @test distance_rotation(q₁, q₁; sqrt=return_sqrt) == d(q₁, q₁)
+                                @test distance_rotation(q₁, q₂; sqrt=return_sqrt) == d(q₁, q₂)
+                                @test distance_rotation(q₂, q₁; sqrt=return_sqrt) == d(q₂, q₁)
+                                @test distance_rotation(q₂, q₂; sqrt=return_sqrt) == d(q₂, q₂)
+                            end
                         end
                     end
                 end
