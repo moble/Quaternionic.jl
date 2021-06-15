@@ -17,6 +17,7 @@ makedocs(
         "Introduction" => "index.md",
         "Manual" => "manual.md",
     ],
+    # doctest = false
 )
 
 deploydocs(
