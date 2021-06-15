@@ -1,0 +1,81 @@
+# This requires a little more understanding of acting along certain axes of an
+# array.  The only useful references I can find for that are
+# https://julialang.org/blog/2016/02/iteration/#filtering_along_a_specified_dimension_exploiting_multiple_indexes
+# and
+# https://discourse.julialang.org/t/crazy-allocations-using-cartesianindices/42262/2
+
+
+@inline @fastmath function _inner_product(q1::Quaternion, q2::Quaternion)
+    q1.w*q2.w + q1.x*q2.x + q1.y*q2.y + q1.z*q2.z
+end
+
+function _unflip!(q, Rpre, R, Rpost) where T
+    @inbounds for Ipost in Rpost
+        for i in R
+            for Ipre in Rpre
+                if _inner_product(q[Ipre, i-1, Ipost], q[Ipre, i, Ipost]) < 0
+                    q[Ipre, i, Ipost] *= -1
+                end
+            end
+        end
+    end
+end
+
+function _unflip!(q, p, Rpre, R, Rpost) where T
+    @inbounds for Ipost in Rpost
+        let i = 1
+            for Ipre in Rpre
+                p[Ipre, i, Ipost] = q[Ipre, i, Ipost]
+            end
+        end
+        for i in R
+            for Ipre in Rpre
+                if _inner_product(p[Ipre, i-1, Ipost], q[Ipre, i, Ipost]) < 0
+                    p[Ipre, i, Ipost] = -q[Ipre, i, Ipost]
+                else
+                    p[Ipre, i, Ipost] = q[Ipre, i, Ipost]
+                end
+            end
+        end
+    end
+end
+
+"""
+    unflip(q, [dim=1])
+    unflip!(q, [dim=1])
+
+Flip the signs of successive quaternions along dimension `dim` so that they are
+as continuous as possible.
+
+If `q` represents a series of rotations, the sign of each element is arbitrary.
+However, for certain purposes — such as interpolation and differentiation — the
+continuity of the quaternions matters, and so we want the *quaternions* to be
+as continuous as possible without changing the *rotations* that they represent.
+
+# Examples
+```jldoctest
+julia> q = [imx, -imx, imx, -imx];
+
+julia> unflip(q)
+4-element Vector{Quaternion{Int64}}:
+ 0 + 1𝐢 + 0𝐣 + 0𝐤
+ 0 + 1𝐢 + 0𝐣 + 0𝐤
+ 0 + 1𝐢 + 0𝐣 + 0𝐤
+ 0 + 1𝐢 + 0𝐣 + 0𝐤
+```
+"""
+function unflip!(q::AbstractArray{Quaternion{T}}; dim::Integer=1) where T
+    Rpre = CartesianIndices(size(q)[1:dim-1])
+    R = 2:size(q, dim)
+    Rpost = CartesianIndices(size(q)[dim+1:end])
+    _unflip!(q, Rpre, R, Rpost)
+end
+
+function unflip(q::AbstractArray{Quaternion{T}}; dim::Integer=1) where T
+    p = similar(q)
+    Rpre = CartesianIndices(size(q)[1:dim-1])
+    R = 2:size(q, dim)
+    Rpost = CartesianIndices(size(q)[dim+1:end])
+    _unflip!(q, p, Rpre, R, Rpost)
+    p
+end

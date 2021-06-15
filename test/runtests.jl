@@ -62,5 +62,6 @@ end
     addtests("random.jl")
     addtests("conversion.jl")
     addtests("distance.jl")
+    addtests("interpolation.jl")
     addtests("doctests.jl")
 end
