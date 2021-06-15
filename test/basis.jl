@@ -44,6 +44,12 @@
         @test Quaternion(i) == Quaternion{T}(i) == i == Quaternion{T}(:x)
         @test Quaternion(j) == Quaternion{T}(j) == j == Quaternion{T}(:y)
         @test Quaternion(k) == Quaternion{T}(k) == k == Quaternion{T}(:z)
+        if T === Float64
+            @test u == Quaternion(:w)
+            @test i == Quaternion(:x)
+            @test j == Quaternion(:y)
+            @test k == Quaternion(:z)
+        end
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
