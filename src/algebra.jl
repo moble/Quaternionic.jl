@@ -27,24 +27,27 @@ function Base.:*(q::Quaternion, p::Quaternion)
 end
 
 function Base.:/(q::Quaternion, p::Quaternion)
-    pnorm = p.w^2 + p.x^2 + p.y^2 + p.z^2
+    if p == q
+        return one(promote_type(typeof(q), float(typeof(p))))
+    end
+    den = (p.w^2 + p.x^2 + p.y^2 + p.z^2)
     Quaternion(
-        (+q.w*p.w + q.x*p.x + q.y*p.y + q.z*p.z) / pnorm,
-        (-q.w*p.x + q.x*p.w - q.y*p.z + q.z*p.y) / pnorm,
-        (-q.w*p.y + q.x*p.z + q.y*p.w - q.z*p.x) / pnorm,
-        (-q.w*p.z - q.x*p.y + q.y*p.x + q.z*p.w) / pnorm
+        (+q.w*p.w + q.x*p.x + q.y*p.y + q.z*p.z) / den,
+        (-q.w*p.x + q.x*p.w - q.y*p.z + q.z*p.y) / den,
+        (-q.w*p.y + q.x*p.z + q.y*p.w - q.z*p.x) / den,
+        (-q.w*p.z - q.x*p.y + q.y*p.x + q.z*p.w) / den
     )
 end
 
 Base.:*(s::Number, p::Quaternion) = Quaternion(s*p.components)
 
 function Base.:/(s::Number, p::Quaternion)
-    pnorm = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
+    f = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
     Quaternion(
-        p.w * pnorm,
-        -p.x * pnorm,
-        -p.y * pnorm,
-        -p.z * pnorm
+        p.w * f,
+        -p.x * f,
+        -p.y * f,
+        -p.z * f
     )
 end
 
@@ -59,12 +62,12 @@ end
 Base.:*(s::Symbolics.Num, p::Quaternion) = Quaternion(s*p.components)
 
 function Base.:/(s::Symbolics.Num, p::Quaternion)
-    pnorm = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
+    f = s / (p.w^2 + p.x^2 + p.y^2 + p.z^2)
     Quaternion(
-        p.w * pnorm,
-        -p.x * pnorm,
-        -p.y * pnorm,
-        -p.z * pnorm
+        p.w * f,
+        -p.x * f,
+        -p.y * f,
+        -p.z * f
     )
 end
 
