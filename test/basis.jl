@@ -22,6 +22,16 @@
                 end
             end
         end
+        @test u.w==one(T) && u.x==zero(T) && u.y==zero(T) && u.z==zero(T)
+        @test i.w==zero(T) && i.x==one(T) && i.y==zero(T) && i.z==zero(T)
+        @test j.w==zero(T) && j.x==zero(T) && j.y==one(T) && j.z==zero(T)
+        @test k.w==zero(T) && k.x==zero(T) && k.y==zero(T) && k.z==one(T)
+        q = Quaternion(T(1), T(2), T(3), T(4))
+        @test q[[1, 2]] == [T(1), T(2)]
+        @test q[[3, 4]] == [T(3), T(4)]
+        @test q[[4, 2]] == [T(4), T(2)]
+        @test q[[4, 2, 3]] == [T(4), T(2), T(3)]
+        @test q[[4, 2, 3, 1]] == [T(4), T(2), T(3), T(1)]
 
         # Check equality with constants; note that these are *equal*, but not *identical*
         @test u == one(T) + zero(T)*𝐢 == one(T)
@@ -30,10 +40,16 @@
         @test k == 𝐤 == imz
 
         # Test copy constructor and self-equality
-        @test Quaternion(u) == Quaternion{T}(u) == u
-        @test Quaternion(i) == Quaternion{T}(i) == i
-        @test Quaternion(j) == Quaternion{T}(j) == j
-        @test Quaternion(k) == Quaternion{T}(k) == k
+        @test Quaternion(u) == Quaternion{T}(u) == u == Quaternion{T}(:w)
+        @test Quaternion(i) == Quaternion{T}(i) == i == Quaternion{T}(:x)
+        @test Quaternion(j) == Quaternion{T}(j) == j == Quaternion{T}(:y)
+        @test Quaternion(k) == Quaternion{T}(k) == k == Quaternion{T}(:z)
+        if T === Float64
+            @test u == Quaternion(:w)
+            @test i == Quaternion(:x)
+            @test j == Quaternion(:y)
+            @test k == Quaternion(:z)
+        end
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
