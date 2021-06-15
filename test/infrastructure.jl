@@ -55,13 +55,13 @@
         Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
         Base.show(io, MIME("text/plain"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "a - b + b*c𝐢 + {c*(d^-1)}𝐣 + {d + e}𝐤"
+        @test String(take!(io)) == "a - b + b*c𝐢 + (c*(d^-1))𝐣 + (d + e)𝐤"
         Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\{d + e\\right\\}\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\(d + e\\right\\)\\,\\mathbf{k}\$"
 
         for T in PrimitiveTypes
             io = IOBuffer()
