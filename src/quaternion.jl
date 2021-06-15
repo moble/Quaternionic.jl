@@ -217,7 +217,7 @@ function Base.show(io::IO, q::Quaternion)
             s = "+" * s
         end
         if occursin(r"[+-]", s[2:end])
-            s = " " * s[1] * " " * "{" * s[2:end] * "}"
+            s = " " * s[1] * " " * "(" * s[2:end] * ")"
         else
             s = " " * s[1] * " " * s[2:end]
         end
@@ -239,7 +239,7 @@ function Base.show(io::IO, ::MIME"text/latex", q::Quaternion)
             s = "+" * s
         end
         if occursin(r"[+-]", s[2:end])
-            s = " " * s[1] * " " * "\\left\\{" * s[2:end] * "\\right\\}"
+            s = " " * s[1] * " " * "\\left\\(" * s[2:end] * "\\right\\)"
         else
             s = " " * s[1] * " " * s[2:end]
         end
