@@ -8,9 +8,9 @@ currently provides an implementation for the types `QuaternionF16`, `QuaternionF
 quaternionic normal distribution of variance 1 (corresponding to each component having
 independent normal distribution with mean zero and variance 1/4).
 
-Note that this function works with any `Quaternion{<:AbstractFloat}`, including
-`Quaternion{BigFloat}`, even though `Base.randn` does not work with BigFloat; we just use the
-[Box-Muller transform](https://en.wikipedia.org/wiki/Box–Muller_transform) to obtain the desired
+Note that this function works with `Quaternion{BigFloat}`, even though `Base.randn` does
+not work with `BigFloat`; we just use the [Box-Muller
+transform](https://en.wikipedia.org/wiki/Box–Muller_transform) to obtain the desired
 result.
 
 See also: [`randn_rotor`](@ref)
@@ -28,6 +28,7 @@ julia> randn(QuaternionF16, 2, 2)
 """
 Base.randn(rng::AbstractRNG, ::Type{Quaternion{T}}) where {T<:AbstractFloat} =
     Quaternion{T}(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
+
 function Base.randn(rng::AbstractRNG, ::Type{Quaternion{BigFloat}})
     # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
     c = rand(rng, BigFloat, 4)
