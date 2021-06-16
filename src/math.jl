@@ -141,7 +141,7 @@ end
 #     q = float(q)
 #     absolute2vec = abs2vec(q)
 #     if iszero(absolute2vec)
-#         return Quaternion{T}(0, 0, 0, 0)
+#         return Quaternion{T}(1, 0, 0, 0)
 #     end
 #     absolutevec = sqrt(absolute2vec)
 #     s = sin(absolutevec) / absolutevec
