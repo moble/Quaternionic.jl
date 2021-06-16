@@ -142,8 +142,11 @@ interpolation does not respect this constraint.  There are two specialized
 functions for dealing with this problem.  The first is [`slerp`](@ref), which
 is an abbreviation of "Spherical Linear intERPolation", and is the direct
 analog of standard linear interpolation of functions ℝ → ℝ.  The second is
-[`squad`](@ref), which is an abbreviation of "Spherical QUADratic
-interpolation", and is more analogous to cubic splines.
+[`squad`](@ref), which is an abbreviation of "Spherical QUADrangle
+interpolation", and is more analogous to cubic interpolation by Bézier splines.
+The first is relatively fast but has discontinuous first derivatives at the
+input points, while the second is somewhat slower but has continuous first and
+second derivatives.
 
 In both cases, it is important for extraneous sign flips to be eliminated
 before passing quaternions to the interpolating functions.  For this purpose,
