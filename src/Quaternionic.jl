@@ -13,6 +13,7 @@ export from_float_array, to_float_array, from_euler_angles, to_euler_angles,
     from_spherical_coordinates, to_spherical_coordinates,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance_rotation
+export unflip, unflip!
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
@@ -22,5 +23,6 @@ include("math.jl")
 include("random.jl")
 include("conversion.jl")
 include("distance.jl")
+include("interpolation.jl")
 
 end  # module
