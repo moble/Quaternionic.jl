@@ -9,7 +9,6 @@ export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, ð
 export Rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, QuatVecF64, QuatVecF32, QuatVecF16
 export abs2vec, absvec
-export randn_rotor
 export from_float_array, to_float_array, from_euler_angles, to_euler_angles,
     from_euler_phases, to_euler_phases!, to_euler_phases,
     from_spherical_coordinates, to_spherical_coordinates,
@@ -20,6 +19,7 @@ export unflip, unflip!
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
 include("quaternion.jl")
+include("base.jl")
 include("algebra.jl")
 include("math.jl")
 include("random.jl")
