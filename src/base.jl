@@ -1,5 +1,41 @@
 # Useful functions from Base
 
+function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:AbstractQuaternion,S<:Number}
+    Base.rtoldefault(eltype(x), y, atol)
+end
+function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:Number,S<:AbstractQuaternion}
+    Base.rtoldefault(x, eltype(y), atol)
+end
+function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:AbstractQuaternion,S<:AbstractQuaternion}
+    Base.rtoldefault(eltype(x), eltype(y), atol)
+end
+
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
+    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Real)
+    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+end
+function Base.:(==)(q1::Real, q2::AbstractQuaternion{Symbolics.Num})
+    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Symbolics.Num)
+    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+end
+function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
+    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
+    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+end
+Base.:(==)(q1::AbstractQuaternion{<:Real}, q2::AbstractQuaternion{<:Real}) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
+Base.:(==)(q::AbstractQuaternion{<:Real}, x::Real) = isreal(q) && real(q) == x
+Base.:(==)(x::Real, q::AbstractQuaternion) = isreal(q) && real(q) == x
+
+Base.isequal(q1::AbstractQuaternion, q2::AbstractQuaternion) = isequal(q1.w,q2.w) && isequal(q1.x,q2.x) && isequal(q1.y,q2.y) && isequal(q1.z,q2.z)
+
 Base.isreal(q::AbstractQuaternion{T}) where {T<:Real} = iszero(q.x) && iszero(q.y) && iszero(q.z)
 Base.isinteger(q::AbstractQuaternion{T}) where {T<:Real} = isreal(q) && isinteger(real(q))
 Base.isfinite(q::AbstractQuaternion{T}) where {T<:Real} = isfinite(q.w) && isfinite(q.x) && isfinite(q.y) && isfinite(q.z)
@@ -7,6 +43,8 @@ Base.isnan(q::AbstractQuaternion{T}) where {T<:Real} = isnan(q.w) || isnan(q.x) 
 Base.isinf(q::AbstractQuaternion{T}) where {T<:Real} = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
 Base.iszero(q::AbstractQuaternion{T}) where {T<:Real} = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
 Base.isone(q::AbstractQuaternion{T}) where {T<:Real} = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
+
+Base.in(q::AbstractQuaternion, r::AbstractRange{<:Real}) = isreal(q) && real(q) in r
 
 Base.bswap(q::Q) where {T<:Real, Q<:AbstractQuaternion{T}} = Q(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
 
