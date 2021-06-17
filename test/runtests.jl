@@ -37,6 +37,11 @@ Base.eps(T::Type{<:Integer}) = zero(T)
 Base.eps(n::Num) = zero(n)
 Base.:≈(a::Num, b::Num; kwargs...) = Symbolics.simplify(a-b; expand=true) == 0
 
+enabled_tests = lowercase.(ARGS)
+
+help = ("help" ∈ enabled_tests || "--help" ∈ enabled_tests)
+helptests = []
+    
 # This block is cribbed from StaticArrays.jl/test/runtests.jl
 #
 # Hook into Pkg.test so that tests from a single file can be run.  For example,
@@ -44,13 +49,16 @@ Base.:≈(a::Num, b::Num; kwargs...) = Symbolics.simplify(a-b; expand=true) == 0
 #
 #   Pkg.test("StaticArrays", test_args=["MVector", "SVector"])
 #
-enabled_tests = lowercase.(ARGS)
 function addtests(fname)
     key = lowercase(splitext(fname)[1])
-    if isempty(enabled_tests) || key in enabled_tests
-        println("Running $key.jl")
-        Random.seed!(42)
-        include(fname)
+    if help
+        push!(helptests, key)
+    else
+        if isempty(enabled_tests) || key in enabled_tests
+            println("Running $key.jl")
+            Random.seed!(42)
+            include(fname)
+        end
     end
 end
 
@@ -64,4 +72,12 @@ end
     addtests("distance.jl")
     addtests("interpolation.jl")
     addtests("doctests.jl")
+end
+
+if help
+    println()
+    println("Pass no args to run all tests, or select one or more of the following:")
+    for helptest in helptests
+        println("    ", helptest)
+    end
 end
