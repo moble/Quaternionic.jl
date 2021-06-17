@@ -56,7 +56,7 @@
             q2 = broadcast((αβγ)->(exp(αβγ[1]*imz/2)*exp(αβγ[2]*imy/2)*exp(αβγ[3]*imz/2)), random_angles)
             @test maximum(abs, q1 .- q2) < 10eps(T)
 
-            random_rotors = randn_rotor(T, N)
+            random_rotors = randn(Rotor{T}, N)
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_euler_angles(to_euler_angles(q1))
@@ -135,7 +135,7 @@
                 @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=10eps(T)
             end
 
-            random_rotors = randn_rotor(T, N)
+            random_rotors = randn(Rotor{T}, N)
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_spherical_coordinates(to_spherical_coordinates(q1))
@@ -146,7 +146,7 @@
         @testset "Rotation matrices" begin
             if isbitstype(T)
                 for _ in 1:5_000
-                    q1 = randn_rotor(T)
+                    q1 = randn(Rotor{T})
                     q2 = from_rotation_matrix(to_rotation_matrix(q1))
                     @test min(abs(q1-q2), abs(q1+q2)) < 50eps(T)
                 end
