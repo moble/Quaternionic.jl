@@ -107,10 +107,10 @@ cases.)
 
 It is not hard to see that these criteria can be satisfied by any of
 
-  * `abs2(q₁ - q₂)`
   * `abs(q₁ - q₂)`
-  * `abs2(log(q₁ / q₂)`
+  * `abs2(q₁ - q₂)`
   * `abs(log(q₁ / q₂))`
+  * `abs2(log(q₁ / q₂)`
 
 If ``q_1`` and ``q_2`` are interpreted as rotations, we frequently don't care
 about their signs, and just want the *smallest* distance between them, for any
@@ -120,12 +120,9 @@ which should be 1.  In this case, we relax the "positive-definiteness"
 criterion to allow ``d(q_1, q_2)`` to equal zero when ``q_1`` and ``q_2`` are
 related by a nonzero scalar multiple.
 
-While these functions are simple to implement as needed, it is also useful to
-have a single function to remind us of all the possibilities.  The
-[`distance`](@ref) function implements all these possible choices with keyword
-arguments.  The [`distance_rotation`](@ref) function is similar, but restricts
-to the multiplicative case, and assumes rotations.  These two functions, with
-their default arguments, are likely to be the most commonly needed functions.
+For `Rotor` types, the latter two multiplicative options are most relevant, while for
+other types the additive options are more relevant.  These are the default
+behaviors of the `distance` and `distance2` functions.
 
 ```@autodocs
 Modules = [Quaternionic]
