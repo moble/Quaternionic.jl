@@ -6,6 +6,8 @@ import Symbolics
 
 export AbstractQuaternion
 export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
+export Rotor, RotorF64, RotorF32, RotorF16
+export Quat3Vec, Quat3VecF64, Quat3VecF32, Quat3VecF16
 export abs2vec, absvec
 export randn_rotor
 export from_float_array, to_float_array, from_euler_angles, to_euler_angles,

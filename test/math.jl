@@ -7,7 +7,7 @@
     end
 
     function c_to_q(c::Complex, component)
-        Quaternion([c.re; [comp_i == component ? c.im : zero(real(c)) for comp_i in components]...])
+        Quaternion(c.re, [comp_i == component ? c.im : zero(real(c)) for comp_i in components]...)
     end
 
     basic_functions = [conj, abs2, abs, inv, log, exp, sqrt]

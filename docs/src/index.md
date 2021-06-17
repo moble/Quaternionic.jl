@@ -105,7 +105,7 @@ particularly helpful when simplifying `Symbolics` expressions:
 ```jldoctest symbolics
 julia> @variables q[1:4];
 
-julia> Q = Quaternion(q);
+julia> Q = Quaternion(q...);
 
 julia> simplify.(Q * imz * conj(Q))
 0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (2q[3]*q[4] - (2q[1]*q[2]))𝐣 + (q[1]^2 + q[4]^2 - (q[2]^2) - (q[3]^2))𝐤

@@ -90,7 +90,6 @@ end
                 for arg in args
                     f(arg...)
                 end
-                @test_throws ArgumentError Quaternion{T}(:garbage)
             end
         end
     end
@@ -105,7 +104,7 @@ end
         function next_quaternion!(chars)
             x = Symbol(popfirst!(chars))
             xvar = @variables $x[1:4]
-            Quaternion(xvar...)
+            Quaternion(xvar[1]...)
         end
 
         # Iterate over all tests above

@@ -10,7 +10,7 @@ julia> abs2(Quaternion(1,2,4,10))
 121
 ```
 """
-Base.abs2(q::Quaternion) = sum(q.components.^2)
+Base.abs2(q::AbstractQuaternion) = sum(q.components.^2)
 
 """
     abs(q)
@@ -23,7 +23,7 @@ julia> abs(Quaternion(1,2,4,10))
 11.0
 ```
 """
-Base.abs(q::Quaternion) = sqrt(abs2(q))
+Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
 
 """
     abs2vec(q)
@@ -36,7 +36,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::Quaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
+abs2vec(q::AbstractQuaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
 
 """
     absvec(q)
@@ -49,9 +49,11 @@ julia> absvec(Quaternion(1,2,3,6))
 7.0
 ```
 """
-absvec(q::Quaternion) = sqrt(abs2vec(q))
+absvec(q::AbstractQuaternion) = sqrt(abs2vec(q))
+
 # norm(q::Quaternion) = Base.abs2(q)  ## This might just be confusing
-Base.inv(q::Quaternion) = conj(q) / abs2(q)
+
+Base.inv(q::AbstractQuaternion) = conj(q) / abs2(q)
 
 """
     log(q)
@@ -101,19 +103,19 @@ function Base.log(q::Quaternion{T}) where {T}
     f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
     Quaternion(log(abs2(q))/2, f*q.x, f*q.y, f*q.z)
 end
-# function Base.log(q::UnitQuaternion{T}) where {T}
-#     q = float(q)
-#     absolute2vec = abs2vec(q)
-#     if iszero(absolute2vec)
-#         if q.w < 0
-#             return Quaternion{T}(0, 0, 0, π)
-#         end
-#         return Quaternion{T}(0, 0, 0, 0)
-#     end
-#     absolutevec = sqrt(absolute2vec)
-#     f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
-#     Quaternion(0, f*q.x, f*q.y, f*q.z)
-# end
+function Base.log(q::Rotor{T}) where {T}
+    q = float(q)
+    absolute2vec = abs2vec(q)
+    if iszero(absolute2vec)
+        if q.w < 0
+            return Quat3Vec{float(T)}(0, 0, 0, π)
+        end
+        return Quat3Vec{float(T)}(0, 0, 0, 0)
+    end
+    absolutevec = sqrt(absolute2vec)
+    f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
+    Quat3Vec(0, f*q.x, f*q.y, f*q.z)
+end
 
 """
     exp(q)
@@ -137,16 +139,16 @@ function Base.exp(q::Quaternion{T}) where {T}
     e = exp(q.w)
     Quaternion(e*cos(absolutevec), e*s*q.x, e*s*q.y, e*s*q.z)
 end
-# function Base.exp(q::VectorQuaternion{T}) where {T}
-#     q = float(q)
-#     absolute2vec = abs2vec(q)
-#     if iszero(absolute2vec)
-#         return Quaternion{T}(1, 0, 0, 0)
-#     end
-#     absolutevec = sqrt(absolute2vec)
-#     s = sin(absolutevec) / absolutevec
-#     Quaternion(cos(absolutevec), s*q.x, s*q.y, s*q.z)
-# end
+function Base.exp(q::Quat3Vec{T}) where {T}
+    q = float(q)
+    absolute2vec = abs2vec(q)
+    if iszero(absolute2vec)
+        return Rotor{float(T)}(1, 0, 0, 0)
+    end
+    absolutevec = sqrt(absolute2vec)
+    s = sin(absolutevec) / absolutevec
+    Rotor(cos(absolutevec), s*q.x, s*q.y, s*q.z)
+end
 
 @doc raw"""
     sqrt(q)
@@ -204,19 +206,19 @@ function Base.sqrt(q::Quaternion{T}) where {T}
     c2 = sqrt(inv(2*c1))
     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
 end
-# function Base.sqrt(q::UnitQuaternion{T}) where {T}
-#     q = float(q)
-#     absolute2vec = abs2vec(q)
-#     if absolute2vec == zero(T)
-#         if q.w < 0
-#             return Quaternion{T}(0, 0, 0, 1)
-#         end
-#         return Quaternion{T}(1, 0, 0, 0)
-#     end
-#     c1 = 1 + q.w
-#     c2 = sqrt(inv(2*c1))
-#     Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
-# end
+function Base.sqrt(q::Rotor{T}) where {T}
+    q = float(q)
+    absolute2vec = abs2vec(q)
+    if absolute2vec == zero(float(T))
+        if q.w < 0
+            return Rotor{float(T)}(0, 0, 0, 1)
+        end
+        return Rotor{float(T)}(1, 0, 0, 0)
+    end
+    c1 = 1 + q.w
+    c2 = sqrt(inv(2*c1))
+    Rotor(c1*c2, q.x*c2, q.y*c2, q.z*c2)
+end
 
 """
     angle(q)
@@ -245,5 +247,4 @@ julia> angle(R)
 
 ```
 """
-Base.angle(q::Quaternion) = 2 * absvec(log(q))
-# Base.angle(q::UnitQuaternion) = 2 * absvec(log(q))
+Base.angle(q::Union{Quaternion, Rotor}) = 2 * absvec(log(q))

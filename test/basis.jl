@@ -1,5 +1,5 @@
 @testset verbose=true "Basis" begin
-    @testset "$T" for T in Types
+    @testset "$T" for T in Types#[FloatTypes...; IntTypes...]#Types
         # Note that, because `Num` from Symbolics is a weird type, we have to
         # be a little more explicit below than we normally would be.  Also,
         # because of signed zeros in the float types, we have to take the
@@ -40,16 +40,10 @@
         @test k == 𝐤 == imz
 
         # Test copy constructor and self-equality
-        @test Quaternion(u) == Quaternion{T}(u) == u == Quaternion{T}(:w)
-        @test Quaternion(i) == Quaternion{T}(i) == i == Quaternion{T}(:x)
-        @test Quaternion(j) == Quaternion{T}(j) == j == Quaternion{T}(:y)
-        @test Quaternion(k) == Quaternion{T}(k) == k == Quaternion{T}(:z)
-        if T === Float64
-            @test u == Quaternion(:w)
-            @test i == Quaternion(:x)
-            @test j == Quaternion(:y)
-            @test k == Quaternion(:z)
-        end
+        @test Quaternion(u) == Quaternion{T}(u) == u
+        @test Quaternion(i) == Quaternion{T}(i) == i
+        @test Quaternion(j) == Quaternion{T}(j) == j
+        @test Quaternion(k) == Quaternion{T}(k) == k
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
