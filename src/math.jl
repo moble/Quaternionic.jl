@@ -274,3 +274,5 @@ function Base.:^(q::Rotor, s::Real)
     f2 = sin_f1 / absolutevec
     Rotor(cos_f1, f2*q.x, f2*q.y, f2*q.z)
 end
+Base.:^(q::AbstractQuaternion, s::Integer) = Base.power_by_squaring(q, s)
+Base.:^(q::Rotor, s::Integer) = Base.power_by_squaring(q, s)
