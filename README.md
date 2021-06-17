@@ -23,6 +23,7 @@ Julia, and I have a lot of experience programming quaternions (including [this p
 package](https://github.com/moble/quaternion), and [this newer and fancier
 package](https://github.com/moble/quaternionic)), but I need a project to help me learn Julia
 itself, so this seems like a good fit.  In particular, I am interested in understanding how a
-general geometric algebra would be coded, so I am experimenting with static arrays, even though I
-can imagine that hard-coding the four components would be faster.  Once I am better at Julia, I may
-just rewrite that part.
+general geometric algebra would be coded, so I will be experimenting with subtypes and static
+arrays, even though I can imagine that hard-coding the four components could be better in some ways.
+Once I am better at Julia, I may just rewrite that part, though hopefully in a backwards-compatible
+way.
