@@ -1,3 +1,4 @@
+# General math functions of quaternions
 
 """
     abs2(q)
@@ -11,6 +12,7 @@ julia> abs2(Quaternion(1,2,4,10))
 ```
 """
 Base.abs2(q::AbstractQuaternion) = sum(q.components.^2)
+Base.abs2(q::Rotor{T}) where {T<:Real} = one(T)
 
 """
     abs(q)
@@ -24,6 +26,7 @@ julia> abs(Quaternion(1,2,4,10))
 ```
 """
 Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
+Base.abs(q::Rotor{T}) where {T<:Real} = one(T)
 
 """
     abs2vec(q)
@@ -209,7 +212,7 @@ end
 function Base.sqrt(q::Rotor{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
-    if absolute2vec == zero(float(T))
+    if iszero(absolute2vec)
         if q.w < 0
             return Rotor{float(T)}(0, 0, 0, 1)
         end
@@ -247,4 +250,27 @@ julia> angle(R)
 
 ```
 """
-Base.angle(q::Union{Quaternion, Rotor}) = 2 * absvec(log(q))
+Base.angle(q::Quaternion{T}) where T = 2 * absvec(log(q))
+Base.angle(q::Rotor{T}) where T = 2 * absvec(log(q))
+
+
+function Base.:^(q::AbstractQuaternion, s::Real)
+    exp(s * log(q))
+end
+function Base.:^(q::Rotor, s::Real)
+    q = float(q)
+    absolutevec = absvec(q)
+    if absolutevec ≤ eps(typeof(absolutevec))
+        if q.w < 0
+            # log(q) ≈ π𝐤
+            sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
+            return Rotor(cos_πs, 0, 0, sin_πs)
+        end
+        # log(q) ≈ 0
+        return one(q)
+    end
+    f1 = oftype(absolutevec, s) * atan(absolutevec, q.w)
+    sin_f1, cos_f1 = sincos(f1)
+    f2 = sin_f1 / absolutevec
+    Rotor(cos_f1, f2*q.x, f2*q.y, f2*q.z)
+end
