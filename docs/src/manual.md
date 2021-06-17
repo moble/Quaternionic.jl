@@ -50,9 +50,9 @@ It is frequently convenient to construct random `Quaternion` objects, which can
 be done just as with other types by passing the desired output type to the
 [`randn`](@ref) function.  The `rand` function is not overloaded, because there
 would be no geometric significance to such a `Quaternion`; `randn` results are
-independent of the orientation of the basis used to define the quaternions.  A
-simple convenience function [`randn_rotor`](@ref) is also provided, to
-normalize each result.
+independent of the orientation of the basis used to define the quaternions.
+Note that it is possible to get random *rotors* and *vectors* by passing the
+appropriate tyepes to the `randn` function.
 
 ```@autodocs
 Modules = [Quaternionic]
