@@ -108,13 +108,13 @@ function Base.log(q::Rotor{T}) where {T}
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
         if q.w < 0
-            return Quat3Vec{float(T)}(0, 0, 0, π)
+            return QuatVec{float(T)}(0, 0, 0, π)
         end
-        return Quat3Vec{float(T)}(0, 0, 0, 0)
+        return QuatVec{float(T)}(0, 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
     f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
-    Quat3Vec(0, f*q.x, f*q.y, f*q.z)
+    QuatVec(0, f*q.x, f*q.y, f*q.z)
 end
 
 """
@@ -139,7 +139,7 @@ function Base.exp(q::Quaternion{T}) where {T}
     e = exp(q.w)
     Quaternion(e*cos(absolutevec), e*s*q.x, e*s*q.y, e*s*q.z)
 end
-function Base.exp(q::Quat3Vec{T}) where {T}
+function Base.exp(q::QuatVec{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)

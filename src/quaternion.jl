@@ -16,7 +16,7 @@ struct Rotor{T<:Real} <: AbstractQuaternion{T}
     components::SVector{4, T}
 end
 
-struct Quat3Vec{T<:Real} <: AbstractQuaternion{T}
+struct QuatVec{T<:Real} <: AbstractQuaternion{T}
     components::SVector{4, T}
 end
 
@@ -57,16 +57,16 @@ julia> Quaternion(1)
 (::Type{QT})(w, x, y, z) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, x, y, z))
 Rotor(w, x, y, z) = (n=√(w^2+x^2+y^2+z^2); Rotor(SVector{4}(w/n, x/n, y/n, z/n)))
 Rotor{T}(w, x, y, z) where {T<:Real} = (n=√(w^2+x^2+y^2+z^2); Rotor{T}(SVector{4, T}(w/n, x/n, y/n, z/n)))
-Quat3Vec(w, x, y, z) = Quat3Vec(SVector{4}(false, x, y, z))
-Quat3Vec{T}(w, x, y, z) where {T<:Real} = Quat3Vec{T}(SVector{4, T}(false, x, y, z))
+QuatVec(w, x, y, z) = QuatVec(SVector{4}(false, x, y, z))
+QuatVec{T}(w, x, y, z) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, x, y, z))
 
 # Constructor from vector components
 (::Type{QT})(x, y, z) where {QT<:AbstractQuaternion} = QT(SVector{4}(false, x, y, z))
 (::Type{QT})(x, y, z) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(false, x, y, z))
 Rotor(x, y, z) = (n=√(x^2+y^2+z^2); Rotor(SVector{4}(false, x/n, y/n, z/n)))
 Rotor{T}(x, y, z) where {T<:Real} = (n=√(x^2+y^2+z^2); Rotor{T}(SVector{4, T}(false, x/n, y/n, z/n)))
-Quat3Vec(x, y, z) = Quat3Vec(SVector{4}(false, x, y, z))
-Quat3Vec{T}(x, y, z) where {T<:Real} = Quat3Vec{T}(SVector{4, T}(false, x, y, z))
+QuatVec(x, y, z) = QuatVec(SVector{4}(false, x, y, z))
+QuatVec{T}(x, y, z) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, x, y, z))
 
 # Constructor from scalar component
 (::Type{QT})(w::Real) where {QT<:AbstractQuaternion} = QT(SVector{4}(w, false, false, false))
@@ -75,8 +75,8 @@ Quaternion(w::Real) = Quaternion(SVector{4}(w, false, false, false))
 Quaternion{T}(w::Real) where {T<:Real} = Quaternion{T}(SVector{4, T}(w, false, false, false))
 Rotor(w::Real) = Rotor(SVector{4}(one(w), false, false, false))
 Rotor{T}(w::Real) where {T<:Real} = Rotor{T}(SVector{4, T}(one(T), false, false, false))
-Quat3Vec(w::Real) = Quat3Vec(SVector{4, typeof(w)}(false, false, false, false))
-Quat3Vec{T}(w::Real) where {T<:Real} = Quat3Vec{T}(SVector{4, T}(false, false, false, false))
+QuatVec(w::Real) = QuatVec(SVector{4, typeof(w)}(false, false, false, false))
+QuatVec{T}(w::Real) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, false, false, false))
 
 # Copy constructor
 (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT(q.components)
@@ -86,16 +86,16 @@ Quaternion(q::AbstractQuaternion{T}) where {T<:Real} = Quaternion(q.components..
 Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = Quaternion{T}(q.components...)
 Rotor(q::AbstractQuaternion{T}) where {T<:Real} = Rotor(q.components...)
 Rotor{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = Rotor{T}(q.components...)
-Quat3Vec(q::AbstractQuaternion{T}) where {T<:Real} = Quat3Vec(q.components...)
-Quat3Vec{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = Quat3Vec{T}(q.components...)
+QuatVec(q::AbstractQuaternion{T}) where {T<:Real} = QuatVec(q.components...)
+QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = QuatVec{T}(q.components...)
 
 # # Abitrary constructor
 # (::Type{QT})(q::AbstractVector) where {QT<:AbstractQuaternion} = QT(q...)#SVector{4}(q))
 # (::Type{QT})(q::AbstractVector) where {T<:Real, QT<:AbstractQuaternion{T}} = QT{T}(q...)#SVector{4, T}(q))
 # Rotor(q::AbstractVector) = Rotor(SVector{4, T}(q)...)
 # Rotor{T}(q::AbstractVector) where {T<:Real} = Rotor{T}(SVector{4, T}(q)...)
-# Quat3Vec(q::AbstractVector) = Quat3Vec(SVector{4, T}(q)...)
-# Quat3Vec{T}(q::AbstractVector) where {T<:Real} = Quat3Vec{T}(SVector{4, T}(q)...)
+# QuatVec(q::AbstractVector) = QuatVec(SVector{4, T}(q)...)
+# QuatVec{T}(q::AbstractVector) where {T<:Real} = QuatVec{T}(SVector{4, T}(q)...)
 
 # Type constructors
 (::Type{QT})(::Type{T}) where {T<:Real, QT<:AbstractQuaternion} = QT{T}
@@ -108,9 +108,9 @@ const QuaternionF16 = Quaternion{Float16}
 const RotorF64 = Rotor{Float64}
 const RotorF32 = Rotor{Float32}
 const RotorF16 = Rotor{Float16}
-const Quat3VecF64 = Quat3Vec{Float64}
-const Quat3VecF32 = Quat3Vec{Float32}
-const Quat3VecF16 = Quat3Vec{Float16}
+const QuatVecF64 = QuatVec{Float64}
+const QuatVecF32 = QuatVec{Float32}
+const QuatVecF16 = QuatVec{Float16}
 
 # Handy constants like `im`
 """
@@ -171,8 +171,8 @@ Base.zero(::Type{Rotor{T}}) where T = throw(DomainError("Rotor", "Zero is not a 
 
 Base.one(::Type{QT}) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
 Base.one(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = Base.one(QT)
-Base.one(::Type{Quat3Vec}) = throw(DomainError("Quat3Vec", "One is not a possible 3-vector."))
-Base.one(::Type{Quat3Vec{T}}) where T = throw(DomainError("Quat3Vec", "One is not a possible 3-vector."))
+Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(::Type{QuatVec{T}}) where T = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
 
 function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
     @inbounds begin
@@ -205,7 +205,7 @@ wrapper(q::T) where T = wrapper(T)
 wrapper(T::Type{<:AbstractQuaternion}) = T.name.wrapper
 wrapper(::Type{T1}, ::Type{T2}) where {T1<:AbstractQuaternion, T2<:AbstractQuaternion} = Quaternion
 wrapper(::Type{T1}, ::Type{T2}) where {T1<:Rotor, T2<:Rotor} = Rotor
-wrapper(::Type{T1}, ::Type{T2}) where {T1<:Quat3Vec, T2<:Quat3Vec} = Quat3Vec
+wrapper(::Type{T1}, ::Type{T2}) where {T1<:QuatVec, T2<:QuatVec} = QuatVec
 wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Real} =
@@ -218,7 +218,7 @@ Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q)
 Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
 Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(typeof(q)){float(T)}(float(q.components))
 
-# for Q in [:Quaternion, :Rotor, :Quat3Vec]
+# for Q in [:Quaternion, :Rotor, :QuatVec]
 #     @eval begin
 #         Base.promote_rule(::Type{$Q{T}}, ::Type{S}) where {T<:Real,S<:Real} = $Q{promote_type(T,S)}
 #         Base.promote_rule(::Type{$Q{T}}, ::Type{$Q{S}}) where {T<:Real,S<:Real} = $Q{promote_type(T,S)}

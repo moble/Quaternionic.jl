@@ -17,7 +17,7 @@ If the quaternion type passed in is `Rotor`, the result will be normalized corre
 Because the distribution is spherically symmetric, the result is a truly random
 rotation.
 
-If the quaternion type is `Quat3Vec`, the result will have a 0 scalar component, and the
+If the quaternion type is `QuatVec`, the result will have a 0 scalar component, and the
 vector will have mean 0 standard deviation of norm 1.
 
 # Examples
@@ -46,15 +46,15 @@ end
 
 _q3v_factor(::Type{T}) where T = inv(√T(3))
 
-Base.randn(rng::AbstractRNG, QT::Type{Quat3Vec{T}}) where {T<:AbstractFloat} =
+Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
     QT(0, randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T))
 
-function Base.randn(rng::AbstractRNG, QT::Type{Quat3Vec{BigFloat}})
+function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{BigFloat}})
     # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
     c = rand(rng, BigFloat, 4)
     l1 = √(-log(c[1])/2)
     s2 = sinpi(2*c[2])
     l3 = √(-log(c[3])/2)
     s4, c4 = sincospi(2*c[4])
-    Quat3Vec(0, l1*s2, l3*c4, l3*s4)
+    QuatVec(0, l1*s2, l3*c4, l3*s4)
 end

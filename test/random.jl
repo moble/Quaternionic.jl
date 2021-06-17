@@ -4,7 +4,7 @@
     rng = MersenneTwister(1234)
 
     @testset "$BT" for BT in FloatTypes
-        for T in [Quaternion{BT}, Rotor{BT}, Quat3Vec{BT}]
+        for T in [Quaternion{BT}, Rotor{BT}, QuatVec{BT}]
             @test randn(T) isa T
             @test randn(T, 4) isa Vector{T}
             @test randn(T, 2, 3) isa Matrix{T}
