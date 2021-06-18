@@ -4,30 +4,17 @@
 Quaternionic number type with elements of type `T`.
 
 `QuaternionF16`, `QuaternionF32` and `QuaternionF64` are aliases for `Quaternion{Float16}`,
-`Quaternion{Float32}` and `Quaternion{Float64}` respectively.
+`Quaternion{Float32}` and `Quaternion{Float64}` respectively.  See also [`Rotor`](@ref) and
+[`QuatVec`](@ref).
 
-See also: [`Quaternion`](@ref)
-"""
-struct Quaternion{T<:Real} <: AbstractQuaternion{T}
-    components::SVector{4, T}
-end
+The functions
 
-struct Rotor{T<:Real} <: AbstractQuaternion{T}
-    components::SVector{4, T}
-end
-
-struct QuatVec{T<:Real} <: AbstractQuaternion{T}
-    components::SVector{4, T}
-end
-
-
-"""
     Quaternion(w, x, y, z)
     Quaternion(x, y, z)
     Quaternion(w)
     Quaternion{T}(w, x, y, z)
 
-Creates a new quaternion with the given components.  The argument `w` is the
+create a new quaternion with the given components.  The argument `w` is the
 scalar component, and `x`, `y`, and `z` are the corresponding "vector"
 components.  If any of these arguments is missing, it will be set to zero.  The
 type of the returned quaternion will be inferred from the input arguments, or
@@ -51,6 +38,18 @@ julia> Quaternion(1)
 1 + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
+struct Quaternion{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+end
+
+struct Rotor{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+end
+
+struct QuatVec{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+end
+
 
 # Constructor from all 4 components
 (::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = QT(SVector{4}(w, x, y, z))
@@ -198,18 +197,28 @@ Base.imag(q::AbstractQuaternion{T}) where {T<:Real} = q.im
 
 # Type games
 Base.eltype(::Type{<:AbstractQuaternion{T}}) where {T} = T
-wrapper(q::T) where T = wrapper(T)
-wrapper(T::Type{<:AbstractQuaternion}) = T.name.wrapper
-wrapper(::Type{T1}, ::Type{T2}) where {T1<:AbstractQuaternion, T2<:AbstractQuaternion} = Quaternion
-wrapper(::Type{T1}, ::Type{T2}) where {T1<:Rotor, T2<:Rotor} = Rotor
-wrapper(::Type{T1}, ::Type{T2}) where {T1<:QuatVec, T2<:QuatVec} = QuatVec
-wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
-Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Real} =
-    wrapper(Q){promote_type(eltype(Q),S)}
-Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
-    wrapper(Q1, Q2){promote_type(eltype(Q1),eltype(Q2))}
 Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q))}
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion{<:AbstractFloat}} = Q
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q))}
 Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
 Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(typeof(q)){float(T)}(float(q.components))
+
+Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Real} =
+    wrapper(Q){promote_type(eltype(Q),S)}
+Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
+    wrapper(Q1, Q2){promote_type(eltype(Q1),eltype(Q2))}
+
+wrapper(::T) where {T} = wrapper(T)
+# wrapper(::T, ::S) where {T, S} = wrapper(T, S)
+# wrapper(::T, ::S, ::R) where {T, S, R} = wrapper(T, S, R)
+# wrapper(T::Type{<:AbstractQuaternion}) = T.name.wrapper
+# wrapper(::Type{T1}, ::Type{T2}) where {T1<:AbstractQuaternion, T2<:AbstractQuaternion} = Quaternion
+# wrapper(::Type{T1}, ::Type{T2}) where {T1<:Rotor, T2<:Rotor} = Rotor
+# wrapper(::Type{T1}, ::Type{T2}) where {T1<:QuatVec, T2<:QuatVec} = QuatVec
+# wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
+
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor
+wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:Rotor}) = Rotor
