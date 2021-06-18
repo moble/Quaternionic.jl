@@ -63,8 +63,9 @@ function addtests(fname)
 end
 
 @testset verbose=true "All tests" begin
-    addtests("infrastructure.jl")
+    addtests("quaternion.jl")
     addtests("basis.jl")
+    addtests("base.jl")
     addtests("algebra.jl")
     addtests("math.jl")
     addtests("random.jl")
