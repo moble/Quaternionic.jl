@@ -1,9 +1,24 @@
 # Quaternionic functions
 
-## Constructors and Number methods
+From `AbstractQuaternion{T}` we define three subtypes:
 
-At the most basic level, `Quaternion{T}` mimics `Complex{T}` as closely as possible, including the
-behavior of most functions in `Base`.
+  * `Quaternion{T}`, which is an element of the general algebra of quaternions
+    over any `T<:Real`.
+  * `Rotor{T}`, which is an element of the multiplicative group of unit
+    quaternions, and is interpreted as mapping to a rotation.  The magnitude is
+    *assumed* to be 1 (though, for efficiency, this is not generally
+    confirmed), and the sign may be freely changed in certain cases.
+  * `QuatVec{T}`, which is an element of the additive group of quaternions with
+    0 scalar part; a "pure vector" quaternion.
+
+For simplicity, almost every function in this package is defined for general
+`Quaternion`s, so you may not need any other type.  However, it can frequently
+be more accurate *and* more efficient to use the other subtypes where relevant.
+
+## Constructors, constants, and conversions
+
+At the most basic level, `Quaternion{T}` mimics `Complex{T}` as closely as
+possible, including the behavior of most functions in `Base`.
 
 To create new `Quaternion`s interactively, it is typically most convenient to
 use the constants `imx`, `imy`, and `imz` — or equivalently `𝐢`, `𝐣`, and `𝐤` —
@@ -12,8 +27,16 @@ it is more common to use the [`Quaternion`](@ref) function — which takes all
 four components, the three vector components, or just the one scalar component,
 and creates a new `Quaternion` of the type implied by the arguments.  You can
 also *specify* the type, as in `Quaternion{Float64}(...)`.  Type conversions
-with `promote`, `widen`, `float`, etc., work as expected.  The standard
-[`Number`
+with `promote`, `widen`, `float`, etc., work as expected.
+
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["quaternion.jl"]
+```
+
+## Number functions from Base
+
+The standard [`Number`
 functions](https://docs.julialang.org/en/v1/base/numbers/#General-Number-Functions-and-Constants)
 that work for `Complex`, such as `isfinite`, `iszero`, etc., should work
 analogously for `Quaternion`.  The `hash`, `read`, and `write` functions are
@@ -22,7 +45,7 @@ component is also implemented via `broadcasted`.
 
 ```@autodocs
 Modules = [Quaternionic]
-Pages   = ["quaternion.jl"]
+Pages   = ["base.jl"]
 ```
 
 
