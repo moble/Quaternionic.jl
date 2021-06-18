@@ -36,40 +36,6 @@ for TA ∈ [AbstractQuaternion, Rotor, QuatVec]
 end
 
 
-# Base.:+(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} = wrapper(Q1, Q2)(q.components+p.components)
-# Base.:-(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} = wrapper(Q1, Q2)(q.components-p.components)
-
-# Base.:+(q::Q, p::Number) where {Q<:AbstractQuaternion} = wrapper(Q)(q.w+p, q.x, q.y, q.z)
-# Base.:-(q::Q, p::Number) where {Q<:AbstractQuaternion} = wrapper(Q)(q.w-p, q.x, q.y, q.z)
-
-# Base.:+(q::Number, p::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q+p.w, p.x, p.y, p.z)
-# Base.:-(q::Number, p::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q-p.w, -p.x, -p.y, -p.z)
-
-# Base.:+(q::Q, p::Symbolics.Num) where {Q<:AbstractQuaternion} = wrapper(Q)(q.w+p, q.x, q.y, q.z)
-# Base.:-(q::Q, p::Symbolics.Num) where {Q<:AbstractQuaternion} = wrapper(Q)(q.w-p, q.x, q.y, q.z)
-
-# Base.:+(q::Symbolics.Num, p::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q+p.w, p.x, p.y, p.z)
-# Base.:-(q::Symbolics.Num, p::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q-p.w, -p.x, -p.y, -p.z)
-
-# Base.:+(q::Rotor, p::Rotor) = Quaternion(q.components+p.components)
-# Base.:-(q::Rotor, p::Rotor) = Quaternion(q.components-p.components)
-# Base.:+(q::Rotor, p::Q) where {Q<:AbstractQuaternion} = Quaternion(q.components+p.components)
-# Base.:-(q::Rotor, p::Q) where {Q<:AbstractQuaternion} = Quaternion(q.components-p.components)
-# Base.:+(q::Q, p::Rotor) where {Q<:AbstractQuaternion} = Quaternion(q.components+p.components)
-# Base.:-(q::Q, p::Rotor) where {Q<:AbstractQuaternion} = Quaternion(q.components-p.components)
-
-# Base.:+(q::Rotor, p::Number) = Quaternion(q.w+p, q.x, q.y, q.z)
-# Base.:-(q::Rotor, p::Number) = Quaternion(q.w-p, q.x, q.y, q.z)
-
-# Base.:+(q::Number, p::Rotor) = Quaternion(q+p.w, p.x, p.y, p.z)
-# Base.:-(q::Number, p::Rotor) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
-
-# Base.:+(q::Rotor, p::Symbolics.Num) = Quaternion(q.w+p, q.x, q.y, q.z)
-# Base.:-(q::Rotor, p::Symbolics.Num) = Quaternion(q.w-p, q.x, q.y, q.z)
-
-# Base.:+(q::Symbolics.Num, p::Rotor) = Quaternion(q+p.w, p.x, p.y, p.z)
-# Base.:-(q::Symbolics.Num, p::Rotor) = Quaternion(q-p.w, -p.x, -p.y, -p.z)
-
 function Base.:*(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion}
     wrapper(Q1, Q2)(
         q.w*p.w - q.x*p.x - q.y*p.y - q.z*p.z,
