@@ -43,12 +43,6 @@ help = ("help" ∈ enabled_tests || "--help" ∈ enabled_tests)
 helptests = []
     
 # This block is cribbed from StaticArrays.jl/test/runtests.jl
-#
-# Hook into Pkg.test so that tests from a single file can be run.  For example,
-# to run only the MVector and SVector tests, use:
-#
-#   Pkg.test("StaticArrays", test_args=["MVector", "SVector"])
-#
 function addtests(fname)
     key = lowercase(splitext(fname)[1])
     if help

@@ -70,6 +70,16 @@
         @test !isequal(k, j)
         @test isequal(k, k)
 
+        # Check isapprox
+        @test u ≈ one(T)
+        @test one(T) ≈ u
+        @test i ≉ one(T)
+        @test one(T) ≉ i
+        @test j ≉ one(T)
+        @test one(T) ≉ j
+        @test k ≉ one(T)
+        @test one(T) ≉ k
+
         # Check "real" part
         @test real(u) == one(T)
         @test real(i) == zero(T)

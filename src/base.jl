@@ -1,13 +1,13 @@
 # Useful functions from Base
 
+function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:AbstractQuaternion,S<:AbstractQuaternion}
+    Base.rtoldefault(eltype(x), eltype(y), atol)
+end
 function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:AbstractQuaternion,S<:Number}
     Base.rtoldefault(eltype(x), y, atol)
 end
 function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:Number,S<:AbstractQuaternion}
     Base.rtoldefault(x, eltype(y), atol)
-end
-function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) where {T<:AbstractQuaternion,S<:AbstractQuaternion}
-    Base.rtoldefault(eltype(x), eltype(y), atol)
 end
 
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
