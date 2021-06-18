@@ -254,7 +254,7 @@ Base.angle(q::Quaternion{T}) where T = 2 * absvec(log(q))
 Base.angle(q::Rotor{T}) where T = 2 * absvec(log(q))
 
 
-function Base.:^(q::AbstractQuaternion, s::Real)
+function Base.:^(q::Quaternion, s::Real)
     exp(s * log(q))
 end
 function Base.:^(q::Rotor, s::Real)
@@ -274,5 +274,6 @@ function Base.:^(q::Rotor, s::Real)
     f2 = sin_f1 / absolutevec
     Rotor(cos_f1, f2*q.x, f2*q.y, f2*q.z)
 end
-Base.:^(q::AbstractQuaternion, s::Integer) = Base.power_by_squaring(q, s)
+Base.:^(q::Quaternion, s::Integer) = Base.power_by_squaring(q, s)
+Base.:^(q::QuatVec, s::Integer) = Base.power_by_squaring(q, s)
 Base.:^(q::Rotor, s::Integer) = Base.power_by_squaring(q, s)
