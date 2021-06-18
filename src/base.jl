@@ -46,6 +46,8 @@ Base.isone(q::AbstractQuaternion{T}) where {T<:Real} = isone(q.w) && iszero(q.x)
 
 Base.in(q::AbstractQuaternion, r::AbstractRange{<:Real}) = isreal(q) && real(q) in r
 
+Base.flipsign(q::AbstractQuaternion, x::Real) = ifelse(signbit(x), -q, q)
+
 Base.bswap(q::Q) where {T<:Real, Q<:AbstractQuaternion{T}} = Q(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
 
 if UInt === UInt64
