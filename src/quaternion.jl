@@ -209,13 +209,6 @@ Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:Abs
     wrapper(Q1, Q2){promote_type(eltype(Q1),eltype(Q2))}
 
 wrapper(::T) where {T} = wrapper(T)
-# wrapper(::T, ::S) where {T, S} = wrapper(T, S)
-# wrapper(::T, ::S, ::R) where {T, S, R} = wrapper(T, S, R)
-# wrapper(T::Type{<:AbstractQuaternion}) = T.name.wrapper
-# wrapper(::Type{T1}, ::Type{T2}) where {T1<:AbstractQuaternion, T2<:AbstractQuaternion} = Quaternion
-# wrapper(::Type{T1}, ::Type{T2}) where {T1<:Rotor, T2<:Rotor} = Rotor
-# wrapper(::Type{T1}, ::Type{T2}) where {T1<:QuatVec, T2<:QuatVec} = QuatVec
-# wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
 
 wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
 wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
