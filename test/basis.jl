@@ -1,5 +1,5 @@
 @testset verbose=true "Basis" begin
-    @testset "$T" for T in Types#[FloatTypes...; IntTypes...]#Types
+    @testset "$T" for T in Types
         # Note that, because `Num` from Symbolics is a weird type, we have to
         # be a little more explicit below than we normally would be.  Also,
         # because of signed zeros in the float types, we have to take the

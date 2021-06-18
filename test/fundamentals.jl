@@ -72,7 +72,7 @@ end
 
 @testset verbose=true "Fundamentals" begin
     @testset "$T" for T in [FloatTypes...; IntTypes...]
-        println("Testing fundamentals with type $T")
+        println("    Testing fundamentals with type $T")
 
         # Construct a variety of arguments
         scalars = [zero(T), one(T), -one(T)]#, 2*one(T), -2*one(T)]#, eps(T), -eps(T)]
@@ -94,7 +94,7 @@ end
         end
     end
     @testset "$T" for T in SymbolicTypes
-        println("Testing fundamentals with type $T")
+        println("    Testing fundamentals with type $T")
         chars = Iterators.Stateful(Iterators.cycle("abcdefghijkl"))
         function next_scalar!(chars)
             x = Symbol(popfirst!(chars))

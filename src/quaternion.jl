@@ -208,9 +208,15 @@ Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Real} =
 Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
     wrapper(Q1, Q2){promote_type(eltype(Q1),eltype(Q2))}
 
-wrapper(::T) where {T} = wrapper(T)
+wrapper(T::Type{<:AbstractQuaternion}) = T.name.wrapper
+wrapper(::Type{<:AbstractQuaternion}, ::Type{<:AbstractQuaternion}) = Quaternion
+wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
 
 wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Real}) where {OP} = Quaternion
+wrapper(::Type{<:Real}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
+wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
 wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
 wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
 wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor

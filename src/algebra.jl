@@ -24,7 +24,7 @@ for TA ∈ [AbstractQuaternion, Rotor, QuatVec]
             Base.:-(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(-), $TB)(q.components-p.components)
         end
     end
-    for TB ∈ [Number, Symbolics.Num]
+    for TB ∈ [Real, Symbolics.Num]
         @eval begin
             Base.:+(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(+), $TB)(q.w+p, q.x, q.y, q.z)
             Base.:-(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(-), $TB)(q.w-p, q.x, q.y, q.z)
@@ -58,22 +58,17 @@ function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
     )
 end
 
-Base.:*(s::N, p::Q) where {N<:Union{Real, Symbolics.Num}, Q<:AbstractQuaternion} =
-    wrapper(Q)(s*p.components)
-Base.:*(p::Q, s::N) where {N<:Union{Real, Symbolics.Num}, Q<:AbstractQuaternion} =
-    wrapper(Q)(s*p.components)
-Base.:/(p::Q, s::N) where {N<:Union{Real, Symbolics.Num}, Q<:AbstractQuaternion} =
-    wrapper(Q)(p.components/s)
-function Base.:/(s::N, p::Q) where {N<:Union{Real, Symbolics.Num}, Q<:AbstractQuaternion}
-    f = s / abs2(p)
-    wrapper(Q)(p.w * f, -p.x * f, -p.y * f, -p.z * f)
+for S ∈ [Real, Symbolics.Num]
+    @eval begin
+        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} =
+            wrapper(Q, Val(*), $S)(s*p.components)
+        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} =
+            wrapper($S, Val(*), Q)(s*p.components)
+        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} =
+            wrapper(Q, Val(/), $S)(p.components/s)
+        function Base.:/(s::$S, p::Q) where {Q<:AbstractQuaternion}
+            f = s / abs2(p)
+            wrapper($S, Val(/), Q)(p.w * f, -p.x * f, -p.y * f, -p.z * f)
+        end
+    end
 end
-
-Base.:*(s::N, p::Rotor) where {N<:Union{Real, Symbolics.Num}} =
-    wrapper(Q)(signbit(s) ? -p.components : p.components)
-Base.:*(p::Rotor, s::N) where {N<:Union{Real, Symbolics.Num}} =
-    wrapper(Q)(signbit(s) ? -p.components : p.components)
-Base.:/(s::N, p::Rotor) where {N<:Union{Real, Symbolics.Num}} =
-    wrapper(Q)(signbit(s) ? -conj(p).components : conj(p).components)
-Base.:/(p::Rotor, s::N) where {N<:Union{Real, Symbolics.Num}} =
-    wrapper(Q)(signbit(s) ? -p.components : p.components)
