@@ -65,7 +65,7 @@ end
 @testset verbose=true "All tests" begin
     addtests("infrastructure.jl")
     addtests("basis.jl")
-    addtests("fundamentals.jl")
+    addtests("algebra.jl")
     addtests("math.jl")
     addtests("random.jl")
     addtests("conversion.jl")
