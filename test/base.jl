@@ -10,6 +10,7 @@
         i = Quaternion{T}(𝐢)
         j = Quaternion{T}(𝐣)
         k = Quaternion{T}(𝐤)
+        basis = [u, i, j, k]
 
         # Check basis elements
         for (index, element) in enumerate(basis)
@@ -73,12 +74,14 @@
         # Check isapprox
         @test u ≈ one(T)
         @test one(T) ≈ u
-        @test i ≉ one(T)
-        @test one(T) ≉ i
-        @test j ≉ one(T)
-        @test one(T) ≉ j
-        @test k ≉ one(T)
-        @test one(T) ≉ k
+        if T !== Num  # Num(1) ≉ Num(2) doesn't work
+            @test i ≉ one(T)
+            @test one(T) ≉ i
+            @test j ≉ one(T)
+            @test one(T) ≉ j
+            @test k ≉ one(T)
+            @test one(T) ≉ k
+        end
 
         # Check "real" part
         @test real(u) == one(T)
