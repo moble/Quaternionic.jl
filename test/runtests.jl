@@ -20,7 +20,7 @@ code you don't want to measure:
 """
 
 using Quaternionic
-using Test, Random, Symbolics, InteractiveUtils, StaticArrays
+using Test, Random, Symbolics, StaticArrays
 
 @variables w x y z a b c d e  # Symbolic variables
 
@@ -31,7 +31,7 @@ SymbolicTypes = [Num]
 Types = [FloatTypes...; IntTypes...; SymbolicTypes...]
 PrimitiveTypes = [T for T in Types if isbitstype(T)]
 
-QTypes = InteractiveUtils.subtypes(AbstractQuaternion)
+QTypes = [Quaternion, Rotor, QuatVec]
 
 # Handy assignments for now
 Base.eps(::Quaternion{T}) where {T} = eps(T)
