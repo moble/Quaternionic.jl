@@ -56,13 +56,19 @@ A rotor is typically considered to be an element of the group
 of quaternions with norm 1.  They are particularly useful as representations of
 rotations because a rotor ``R`` acts on a vector ``\vec{v}`` by "conjugation" as
 
-    \vec{v}' = R\, \vec{v}\, R^{-1}.
+```math
+\vec{v}' = R\, \vec{v}\, R^{-1}.
+```
 
 This preserves the inner product between any two vectors conjugated in this
 way, and so is a rotation.  Note that, because there are two factors of ``R``
 here, the sign of ``R`` does not affect the result.  Therefore,
 ``\mathrm{Spin}(3)`` forms a *double* cover of the rotation group
-``\mathrm{SO}(3)``.
+``\mathrm{SO}(3)``.  For this reason, it will occasionally be useful to
+disregard or arbitrarily change the sign of a `Rotor` (as in [`distance`](@ref)
+functions) — though this is not generally the default, and may cause problems
+if the input rotors change sign when the corresponding rotations are not so
+different (cf. [`unflip`](@ref)).
 
 `RotorF16`, `RotorF32` and `RotorF64` are aliases for `Rotor{Float16}`,
 `Rotor{Float32}` and `Rotor{Float64}` respectively.  See also
