@@ -160,9 +160,9 @@ Square-root of a quaternion.
 
 The general formula whenever the denominator is nonzero is
 
-``
+```math
 \sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q.w}}
-``
+```
 
 This can be proven by expanding `q` as `q.w + q.vec` and multiplying the
 expression above by itself.
