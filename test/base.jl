@@ -107,6 +107,14 @@
             @test one(T) ≉ k
         end
 
+        # Check non-sensical basis elements are not allowed
+        @test_throws DomainError one(QuatVec)
+        @test_throws DomainError one(QuatVec{T})
+        @test_throws DomainError one(QuatVec{T}(1, 2, 3))
+        @test_throws DomainError zero(Rotor)
+        @test_throws DomainError zero(Rotor{T})
+        @test_throws DomainError zero(Rotor{T}(1))
+
         # Check "real" part
         @test real(u) == one(T)
         @test real(i) == zero(T)
