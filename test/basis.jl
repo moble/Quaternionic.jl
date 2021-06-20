@@ -35,5 +35,38 @@
             @test k * j ≈ -i atol=eps(T)
             @test k * k ≈ -u atol=eps(T)
         end
+
+        for Q in [Quaternion, QuatVec]
+            # Define basis elements
+            u = Q{T}(1)
+            i = Q{T}(𝐢)
+            j = Q{T}(𝐣)
+            k = Q{T}(𝐤)
+            basis = [u, i, j, k]
+
+            # Basic self-addition/subtraction
+            @test u + u == 2u
+            @test u - u == 0u
+            @test i + i == 2i
+            @test i - i == 0i
+            @test j + j == 2j
+            @test j - j == 0j
+            @test k + k == 2k
+            @test k - k == 0k
+
+            # Full addition/subtraction table
+            for i1 in 1:4
+                for i2 in 1:4
+                    a = zeros(T, 4)
+                    s = zeros(T, 4)
+                    a[i1] += one(T)
+                    a[i2] += one(T)
+                    s[i1] += one(T)
+                    s[i2] -= one(T)
+                    @test basis[i1] + basis[i2] == Q{T}(a...)
+                    @test basis[i1] - basis[i2] == Q{T}(s...)
+                end
+            end
+        end
     end
 end
