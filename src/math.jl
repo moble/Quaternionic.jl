@@ -264,7 +264,7 @@ function Base.:^(q::Rotor, s::Real)
         if q.w < 0
             # log(q) ≈ π𝐤
             sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
-            return Rotor(cos_πs, 0, 0, sin_πs)
+            return Rotor{eltype(q)}([cos_πs, 0, 0, sin_πs])
         end
         # log(q) ≈ 0
         return one(q)
@@ -272,8 +272,8 @@ function Base.:^(q::Rotor, s::Real)
     f1 = oftype(absolutevec, s) * atan(absolutevec, q.w)
     sin_f1, cos_f1 = sincos(f1)
     f2 = sin_f1 / absolutevec
-    Rotor(cos_f1, f2*q.x, f2*q.y, f2*q.z)
+    Rotor{eltype(q)}([cos_f1, f2*q.x, f2*q.y, f2*q.z])
 end
-Base.:^(q::Quaternion, s::Integer) = Base.power_by_squaring(q, s)
-Base.:^(q::QuatVec, s::Integer) = Base.power_by_squaring(q, s)
-Base.:^(q::Rotor, s::Integer) = Base.power_by_squaring(q, s)
+Base.:^(q::Quaternion, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
+Base.:^(q::QuatVec, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
+Base.:^(q::Rotor, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
