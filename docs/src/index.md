@@ -8,10 +8,10 @@ providing extensive support for rotations — along with thorough testing, docum
 integration with the rest of Julia.  Wherever possible, standard functions that work with `Complex`
 will also work with `Quaternion`.
 
-In addition to a basic `Quaternion{T}` type, we also have `Rotor{T}` and `QuatVec{T}`
-specializations, which can improve the accuracy and efficiency of certain applications.  Each of
-these can be defined over any `T<:Real`, but the standard primitive types (`Float64`, etc.),
-`BigFloat`, and `Symbolics.Num` are tested extensively.
+In addition to a basic `Quaternion{T}` type, we also have [`Rotor{T}`](@ref) and
+[`QuatVec{T}`](@ref) specializations, which can improve the accuracy and efficiency of certain
+applications.  Each of these can be defined over any `T<:Real`; in addition to the standard
+primitive types (`Float64`, etc.), `BigFloat` and `Symbolics.Num` are tested extensively.
 
 ## Examples
 

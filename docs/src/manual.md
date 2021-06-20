@@ -18,7 +18,12 @@ be more accurate *and* more efficient to use the other subtypes where relevant.
 ## Constructors, constants, and conversions
 
 At the most basic level, `Quaternion{T}` mimics `Complex{T}` as closely as
-possible, including the behavior of most functions in `Base`.
+possible, including the behavior of most functions in `Base`.  The `Rotor{T}`
+and `QuatVec{T}` subtypes behave very similarly, except that most of their
+constructors automatically impose the constraints that the norm is 1 and the
+scalar component is 0, respectively.  Also note that when a certain operation
+is not defined for either of those subtypes, the functions will usually convert
+to a general `Quaternion` automatically.
 
 To create new `Quaternion`s interactively, it is typically most convenient to
 use the constants `imx`, `imy`, and `imz` — or equivalently `𝐢`, `𝐣`, and `𝐤` —
@@ -32,6 +37,7 @@ with `promote`, `widen`, `float`, etc., work as expected.
 ```@autodocs
 Modules = [Quaternionic]
 Pages   = ["quaternion.jl"]
+Order   = [:module, :type, :constant, :function, :macro]
 ```
 
 ## Number functions from Base
