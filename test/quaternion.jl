@@ -3,6 +3,11 @@
         for T in Types
             @test Q(T) === Q{T}
             @test Q(Q{T}) === Q{T}
+            if Q === Rotor
+                @test real(Q{T}) === T
+            else
+                @test real(Q{T}) === T
+            end
         end
 
         for TypeGroup in [FloatTypes, IntTypes]
@@ -70,6 +75,9 @@
                 v[i] = one(T)
                 v = SVector(v...)
                 @test float(Q{T}(v)) == Q(float(T).(v))
+                @test float(Q{T}(v)) == Q{T}(float(T).(v))
+                v = Vector(v)
+                @test float(Q{T}(v)) == Q{T}(float(T).(v))
             end
         end
     end
