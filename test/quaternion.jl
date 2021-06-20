@@ -51,8 +51,11 @@
 
         for T in FloatTypes
             @test float(Q{T}) === Q{T}
+            @test big(Q{T}) === Q{big(T)}
             if Q !== Rotor
                 @test float(Q{T}(1, 2, 3, 4)) == Q(float(T)(1), float(T)(2), float(T)(3), float(T)(4))
+                @test big(Q{T}(1, 2, 3, 4)) == Q(big(T)(1), big(T)(2), big(T)(3), big(T)(4))
+                @test big(Q{T}(1, 2, 3, 4)) == Q{big(T)}(1, 2, 3, 4)
             end
             @test float(Q{T}(1, 2, 3, 4)) == Q{T}(1, 2, 3, 4)
         end

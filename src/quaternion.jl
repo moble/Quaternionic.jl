@@ -232,7 +232,10 @@ Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q)
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion{<:AbstractFloat}} = Q
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q))}
 Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
-Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(typeof(q)){float(T)}(float(q.components))
+Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(q){float(T)}(float(q.components))
+
+Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
+Base.big(q::AbstractQuaternion{T}) where {T<:Real} = wrapper(q){big(T)}(q)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion, S<:Real} =
     wrapper(Q){promote_type(eltype(Q),S)}
