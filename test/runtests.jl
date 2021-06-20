@@ -20,7 +20,7 @@ code you don't want to measure:
 """
 
 using Quaternionic
-using Test, Random, Symbolics
+using Test, Random, Symbolics, StaticArrays
 
 @variables w x y z a b c d e  # Symbolic variables
 
@@ -31,37 +31,50 @@ SymbolicTypes = [Num]
 Types = [FloatTypes...; IntTypes...; SymbolicTypes...]
 PrimitiveTypes = [T for T in Types if isbitstype(T)]
 
+QTypes = [Quaternion, Rotor, QuatVec]
+
 # Handy assignments for now
 Base.eps(::Quaternion{T}) where {T} = eps(T)
 Base.eps(T::Type{<:Integer}) = zero(T)
 Base.eps(n::Num) = zero(n)
 Base.:≈(a::Num, b::Num; kwargs...) = Symbolics.simplify(a-b; expand=true) == 0
 
-# This block is cribbed from StaticArrays.jl/test/runtests.jl
-#
-# Hook into Pkg.test so that tests from a single file can be run.  For example,
-# to run only the MVector and SVector tests, use:
-#
-#   Pkg.test("StaticArrays", test_args=["MVector", "SVector"])
-#
 enabled_tests = lowercase.(ARGS)
+
+help = ("help" ∈ enabled_tests || "--help" ∈ enabled_tests)
+helptests = []
+    
+# This block is cribbed from StaticArrays.jl/test/runtests.jl
 function addtests(fname)
     key = lowercase(splitext(fname)[1])
-    if isempty(enabled_tests) || key in enabled_tests
-        println("Running $key.jl")
-        Random.seed!(42)
-        include(fname)
+    if help
+        push!(helptests, key)
+    else
+        if isempty(enabled_tests) || key in enabled_tests
+            println("Running $key.jl")
+            Random.seed!(42)
+            include(fname)
+        end
     end
 end
 
 @testset verbose=true "All tests" begin
-    addtests("infrastructure.jl")
+    addtests("quaternion.jl")
     addtests("basis.jl")
-    addtests("fundamentals.jl")
+    addtests("base.jl")
+    addtests("algebra.jl")
     addtests("math.jl")
     addtests("random.jl")
     addtests("conversion.jl")
     addtests("distance.jl")
     addtests("interpolation.jl")
     addtests("doctests.jl")
+end
+
+if help
+    println()
+    println("Pass no args to run all tests, or select one or more of the following:")
+    for helptest in helptests
+        println("    ", helptest)
+    end
 end

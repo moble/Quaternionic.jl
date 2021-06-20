@@ -112,21 +112,3 @@ end
 # function squad(qᵢ::Vector{Rotor}, tᵢ::Vector{<:AbstractFloat}, tₒ; unflip=false)
 
 # end
-
-# function exp_s_log(s, q::Rotor)
-#     q = float(q)
-#     absolutevec = absvec(q)
-#     if absolutevec ≤ eps(typeof(absolutevec))
-#         if q.w < 0
-#             # log(q) ≈ π𝐤
-#             sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
-#             return Quaternion(cos_πs, 0, 0, sin_πs)
-#         end
-#         # log(q) ≈ 0
-#         return one(q)
-#     end
-#     f1 = oftype(absolutevec, s) * atan(absolutevec, q.w)
-#     sin_f1, cos_f1 = sincos(f1)
-#     f2 = sin_f1 / absolutevec
-#     Quaternion(cos_f1, f2*q.x, f2*q.y, f2*q.z)
-# end

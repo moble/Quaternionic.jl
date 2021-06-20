@@ -4,29 +4,21 @@
 Quaternionic number type with elements of type `T`.
 
 `QuaternionF16`, `QuaternionF32` and `QuaternionF64` are aliases for `Quaternion{Float16}`,
-`Quaternion{Float32}` and `Quaternion{Float64}` respectively.
+`Quaternion{Float32}` and `Quaternion{Float64}` respectively.  See also [`Rotor`](@ref) and
+[`QuatVec`](@ref).
 
-See also: [`Quaternion`](@ref)
-"""
-struct Quaternion{T<:Real} <: AbstractQuaternion{T}
-    components::SVector{4, T}
-end
-Quaternion{T}(q::Quaternion) where {T<:Real} = Quaternion{T}(q.components)
-Quaternion{T}(w, x, y, z) where {T<:Real} = Quaternion(T.([w, x, y, z])...)
+The functions
 
-
-"""
     Quaternion(w, x, y, z)
     Quaternion(x, y, z)
     Quaternion(w)
     Quaternion{T}(w, x, y, z)
 
-Creates a new quaternion with the given components.  The first argument `w` is
-the scalar component, and `x`, `y`, and `z` are the corresponding "vector"
-components.  The type of the returned quaternion will be inferred from the
-input arguments.  If numeric arguments are missing, they will be set to zero.
-The element type `T` can also be specified, by passing the type parameter as
-usual.
+create a new quaternion with the given components.  The argument `w` is the
+scalar component, and `x`, `y`, and `z` are the corresponding "vector"
+components.  If any of these arguments is missing, it will be set to zero.  The
+type of the returned quaternion will be inferred from the input arguments, or
+can be specified, by passing the type parameter `T` as above.
 
 Note that the constants [`imx`](@ref), [`imy`](@ref), and [`imz`](@ref) can
 also be used like the complex `im` to create new `Quaternion` object.
@@ -46,44 +38,188 @@ julia> Quaternion(1)
 1 + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
-function Quaternion(w::Real, x::Real, y::Real, z::Real)
-    Quaternion(SVector{4}(w, x, y, z))
-end
-function Quaternion(w::Real)
-    Quaternion(w, zero(w), zero(w), zero(w))
-end
-function Quaternion(x::Real, y::Real, z::Real)
-    Quaternion(zero(x), x, y, z)
-end
-function Quaternion{T}(sym::Symbol) where {T<:Real}
-    if sym === :w
-        return Quaternion{T}(one(T), zero(T), zero(T), zero(T))
-    elseif sym === :x
-        return Quaternion{T}(zero(T), one(T), zero(T), zero(T))
-    elseif sym === :y
-        return Quaternion{T}(zero(T), zero(T), one(T), zero(T))
-    elseif sym === :z
-        return Quaternion{T}(zero(T), zero(T), zero(T), one(T))
-    else
-        throw(ArgumentError(
-            "Only :w, :x, :y, or :z are accepted, not `$sym`"
-        ))
-    end
-end
-Quaternion(sym::Symbol) = Quaternion{Float64}(sym)
-Quaternion(q::Quaternion) = q
-function Quaternion(q)
-    v = SVector{4}(q)
-    Quaternion{eltype(v)}(v)
+struct Quaternion{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+    Quaternion{T}(a::SVector{4, T}) where {T<:Real} = new{T}(a)
+    Quaternion{T}(a::A) where {T<:Real, A<:AbstractArray} = new{T}(SVector{4, T}(a))
 end
 
-Quaternion(::Type{T}) where {T<:Real} = Quaternion{T}
-Quaternion(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}
+@doc raw"""
+    Rotor{T<:Real} <: Number
 
+Quaternion of unit magnitude with elements of type `T`.  These objects can be
+significantly faster *and* more accurate in certain operations representing
+rotations.
+
+A rotor is typically considered to be an element of the group
+``\mathrm{Spin}(3) ≃ \mathrm{SU}(2)``, which can be thought of as the subgroup
+of quaternions with norm 1.  They are particularly useful as representations of
+rotations because a rotor ``R`` acts on a vector ``\vec{v}`` by "conjugation" as
+
+```math
+\vec{v}' = R\, \vec{v}\, R^{-1}.
+```
+
+This preserves the inner product between any two vectors conjugated in this
+way, and so is a rotation.  Note that, because there are two factors of ``R``
+here, the sign of ``R`` does not affect the result.  Therefore,
+``\mathrm{Spin}(3)`` forms a *double* cover of the rotation group
+``\mathrm{SO}(3)``.  For this reason, it will occasionally be useful to
+disregard or arbitrarily change the sign of a `Rotor` (as in [`distance`](@ref)
+functions) — though this is not generally the default, and may cause problems
+if the input rotors change sign when the corresponding rotations are not so
+different (cf. [`unflip`](@ref)).
+
+`RotorF16`, `RotorF32` and `RotorF64` are aliases for `Rotor{Float16}`,
+`Rotor{Float32}` and `Rotor{Float64}` respectively.  See also
+[`Quaternion`](@ref) and [`QuatVec`](@ref).
+
+The functions
+
+    Rotor(w, x, y, z)
+    Rotor(x, y, z)
+    Rotor(w)
+    Rotor{T}(w, x, y, z)
+
+create a new rotor with the given components (where the components are as
+described in [`Quaternion`](@ref)), automatically normalizing them on input.
+If you would like to bypass this normalization step, you can call
+
+    Rotor{T}(v)
+
+where `v<:AbstractArray`, and can be converted to an `SVector{4, T}`.
+
+However, once a `Rotor` is created, its norm will always be assumed to be
+precisely 1.  So if its true norm is significantly different, you will like see
+weird results — including vectors with very different lengths after "rotation"
+by a non-unit `Rotor`.
+
+Note that simply creating a `Quaternion` that happens to have norm 1 does not
+make it a `Rotor`.  However, you can pass such a `Quaternion` to the `Rotor`
+function and get the desired result.
+
+# Examples
+
+```jldoctest
+julia> Rotor(1, 2, 3, 4)
+0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤
+julia> Rotor(Quaternion(1, 2, 3, 4))
+0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤
+julia> Rotor{Float16}(1, 2, 3, 4)
+0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤
+julia> Rotor(2, 3, 4)
+0.0 + 0.3713906763541037𝐢 + 0.5570860145311556𝐣 + 0.7427813527082074𝐤
+julia> Rotor(1)
+1 + 0𝐢 + 0𝐣 + 0𝐤
+```
+"""
+struct Rotor{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+    Rotor{T}(a::SVector{4, T}) where {T<:Real} = new{T}(a)
+    Rotor{T}(a::A) where {T<:Real, A<:AbstractArray} = new{T}(SVector{4, T}(a))
+end
+
+"""
+    QuatVec{T<:Real} <: Number
+
+Pure-vector quaternion with elements of type `T`.  These objects can be
+significantly faster *and* more accurate in certain operations than general
+`Quaternion`s.
+
+`QuatVecF16`, `QuatVecF32` and `QuatVecF64` are aliases for `QuatVec{Float16}`,
+`QuatVec{Float32}` and `QuatVec{Float64}` respectively.  See also
+[`Quaternion`](@ref) and [`Rotor`](@ref).
+
+The functions
+
+    QuatVec(w, x, y, z)
+    QuatVec(x, y, z)
+    QuatVec(w)
+    QuatVec{T}(w, x, y, z)
+
+create a new rotor with the given components (where the components are as
+described in [`Quaternion`](@ref)), except that the scalar argument `w` is
+always set to 0.
+
+# Examples
+
+```jldoctest
+julia> QuatVec(1, 2, 3, 4)
+0 + 2𝐢 + 3𝐣 + 4𝐤
+julia> QuatVec(Quaternion(1, 2, 3, 4))
+0 + 2𝐢 + 3𝐣 + 4𝐤
+julia> QuatVec(2, 3, 4)
+0 + 2𝐢 + 3𝐣 + 4𝐤
+julia> QuatVec(1)
+0 + 0𝐢 + 0𝐣 + 0𝐤
+```
+"""
+struct QuatVec{T<:Real} <: AbstractQuaternion{T}
+    components::SVector{4, T}
+    QuatVec{T}(a::SVector{4, T}) where {T<:Real} = new{T}(a)
+    QuatVec{T}(a::A) where {T<:Real, A<:AbstractArray} = new{T}(SVector{4, T}(a))
+end
+
+
+# Untyped constructor from SVector
+# (::Type{QT})(v::SVector{4, T}) where {T<:Real, QT<:AbstractQuaternion} = QT{eltype(v)}(v)
+Quaternion(v::SVector{4, T}) where {T<:Real} = Quaternion{eltype(v)}(v)
+Rotor(v::SVector{4, T}) where {T<:Real} = Rotor{eltype(v)}(v)
+QuatVec(v::SVector{4, T}) where {T<:Real} = QuatVec{eltype(v)}(v)
+
+# Constructor from all 4 components
+(::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, x, y, z); QT{eltype(v)}(v))
+(::Type{QT})(w, x, y, z) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, x, y, z))
+Rotor(w, x, y, z) = (n=√(w^2+x^2+y^2+z^2); Rotor(SVector{4}(w/n, x/n, y/n, z/n)))
+Rotor{T}(w, x, y, z) where {T<:Real} = (n=√T(w^2+x^2+y^2+z^2); Rotor{T}(SVector{4, T}(w/n, x/n, y/n, z/n)))
+QuatVec(w, x, y, z) = QuatVec(SVector{4}(oftype(w, false), x, y, z))
+QuatVec{T}(w, x, y, z) where {T<:Real} = QuatVec{T}(SVector{4, T}(oftype(w, false), x, y, z))
+
+# Constructor from vector components
+(::Type{QT})(x, y, z) where {QT<:AbstractQuaternion} = (v=SVector{4}(false, x, y, z); QT{eltype(v)}(v))
+(::Type{QT})(x, y, z) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(false, x, y, z))
+Rotor(x, y, z) = (n=√(x^2+y^2+z^2); Rotor(SVector{4}(false, x/n, y/n, z/n)))
+Rotor{T}(x, y, z) where {T<:Real} = (n=√T(x^2+y^2+z^2); Rotor{T}(SVector{4, T}(false, x/n, y/n, z/n)))
+QuatVec(x, y, z) = QuatVec(SVector{4}(false, x, y, z))
+QuatVec{T}(x, y, z) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, x, y, z))
+
+# Constructor from scalar component
+# (::Type{QT})(w::Real) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, false, false, false); QT{eltype(v)}(v))
+# (::Type{QT})(w::Real) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, false, false, false))
+Quaternion(w::Real) = Quaternion(SVector{4}(w, false, false, false))
+Quaternion{T}(w::Real) where {T<:Real} = Quaternion{T}(SVector{4, T}(w, false, false, false))
+Rotor(w::Real) = Rotor(SVector{4}(one(w), false, false, false))
+Rotor{T}(w::Real) where {T<:Real} = Rotor{T}(SVector{4, T}(one(T), false, false, false))
+QuatVec(w::Real) = QuatVec(SVector{4, typeof(w)}(false, false, false, false))
+QuatVec{T}(w::Real) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, false, false, false))
+
+# Copy constructor
+# (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT{eltype(q.components)}(q.components)
+# (::Type{QT})(q::AbstractQuaternion{S}) where {T<:Real, S<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(q.components))
+# (::Type{QT})(q::AbstractQuaternion{T}) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(q.components))
+Quaternion(q::AbstractQuaternion{T}) where {T<:Real} = Quaternion(q.components...)
+Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = Quaternion{T}(q.components...)
+Rotor(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = Rotor(q.components...)
+Rotor{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = Rotor{T}(q.components...)
+QuatVec(q::AbstractQuaternion{T}) where {T<:Real} = QuatVec(q.components...)
+QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Real, S<:Real} = QuatVec{T}(q.components...)
+
+# Type constructors
+(::Type{QT})(::Type{T}) where {T<:Real, QT<:AbstractQuaternion} = QT{T}
+(::Type{QT})(::Type{<:AbstractQuaternion{T}}) where {T<:Real, QT<:AbstractQuaternion} = QT{T}
+
+# Handy aliases like `ComplexF64`, etc.
 const QuaternionF64 = Quaternion{Float64}
 const QuaternionF32 = Quaternion{Float32}
 const QuaternionF16 = Quaternion{Float16}
+const RotorF64 = Rotor{Float64}
+const RotorF32 = Rotor{Float32}
+const RotorF16 = Rotor{Float16}
+const QuatVecF64 = QuatVec{Float64}
+const QuatVecF32 = QuatVec{Float32}
+const QuatVecF16 = QuatVec{Float16}
 
+# Handy constants like `im`
 """
     imx
 
@@ -135,12 +271,19 @@ julia> 1.2imz
 const imz = Quaternion(false, false, false, true)
 const 𝐤 = imz
 
-Base.zero(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(false, false, false, false)
-Base.zero(q::Quaternion{T}) where {T<:Real} = Base.zero(Quaternion{T})
-Base.one(::Type{Quaternion{T}}) where {T<:Real} = Quaternion{T}(true, false, false, false)
-Base.one(q::Quaternion{T}) where {T<:Real} = Base.one(Quaternion{T})
+# Essential constructors
+Base.zero(::Type{QT}) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(false, false, false, false)
+Base.zero(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = Base.zero(QT)
+Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+Base.zero(::Type{Rotor{T}}) where T = throw(DomainError("Rotor", "Zero is not a possible rotor."))
 
-function Base.getproperty(q::Quaternion, sym::Symbol)
+Base.one(::Type{QT}) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
+Base.one(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = Base.one(QT)
+Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(::Type{QuatVec{T}}) where T = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+
+# Getting pieces of quaternions
+function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
     @inbounds begin
         if sym === :w
             return q.components[1]
@@ -161,109 +304,42 @@ function Base.getproperty(q::Quaternion, sym::Symbol)
         end
     end
 end
+@inline Base.getindex(q::AbstractQuaternion, i::Int) = (@boundscheck checkbounds(q.components,i); q.components[i])
+Base.@propagate_inbounds Base.getindex(q::AbstractQuaternion, I) = [q[i] for i in I]
+Base.real(::Type{QT}) where {T<:Real, QT<:AbstractQuaternion{T}} = real(T)
+Base.real(q::AbstractQuaternion{T}) where {T<:Real} = q.re
+Base.imag(q::AbstractQuaternion{T}) where {T<:Real} = q.im
 
-@inline Base.getindex(q::Quaternion, i::Int) = (@boundscheck checkbounds(q.components,i); q.components[i])
-# Base.getindex(q::Quaternion, i::Number) = q[convert(Int, i)]
-Base.@propagate_inbounds Base.getindex(q::Quaternion, I) = [q[i] for i in I]
-Base.eltype(::Type{Quaternion{T}}) where {T} = T
+# Type games
+wrapper(::T) where {T} = wrapper(T)
+wrapper(T::UnionAll) = T
+wrapper(T::Type{Q}) where {S<:Real, Q<:AbstractQuaternion{S}} = T.name.wrapper
+# wrapper(T1::Type{<:AbstractQuaternion{T}}, T2::Type{<:AbstractQuaternion{T}}) where {T<:Real} =
+#     wrapper(wrapper(T1), wrapper(T2)){T}
+wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
+wrapper(::Type{<:AbstractQuaternion}, ::Type{<:AbstractQuaternion}) = Quaternion
 
-Base.promote_rule(::Type{Quaternion{T}}, ::Type{S}) where {T<:Real,S<:Real} =
-    Quaternion{promote_type(T,S)}
-Base.promote_rule(::Type{Quaternion{T}}, ::Type{Quaternion{S}}) where {T<:Real,S<:Real} =
-    Quaternion{promote_type(T,S)}
-Base.widen(::Type{Quaternion{T}}) where {T} = Quaternion{widen(T)}
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Real}) where {OP} = Quaternion
+wrapper(::Type{<:Real}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
+wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor
+wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:Rotor}) = Rotor
 
-Base.float(::Type{Quaternion{T}}) where {T<:AbstractFloat} = Quaternion{T}
-Base.float(::Type{Quaternion{T}}) where {T} = Quaternion{float(T)}
-Base.float(q::Quaternion{T}) where T<:Real = Quaternion(float(q.components))
+Base.eltype(::Type{<:AbstractQuaternion{T}}) where {T} = T
+Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q))}
+Base.float(::Type{Q}) where {Q<:AbstractQuaternion{<:AbstractFloat}} = Q
+Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q))}
+Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
+Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(q){float(T)}(float(q.components))
 
-Base.real(::Type{Quaternion{T}}) where {T<:Real} = real(T)
-Base.real(q::Quaternion) = q.re
-Base.imag(q::Quaternion) = q.im
+Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
+Base.big(q::AbstractQuaternion{T}) where {T<:Real} = wrapper(q){big(T)}(q)
 
-Base.isreal(q::Quaternion) = iszero(q.x) && iszero(q.y) && iszero(q.z)
-Base.isinteger(q::Quaternion) = isreal(q) && isinteger(real(q))
-Base.isfinite(q::Quaternion) = isfinite(q.w) && isfinite(q.x) && isfinite(q.y) && isfinite(q.z)
-Base.isnan(q::Quaternion) = isnan(q.w) || isnan(q.x) || isnan(q.y) || isnan(q.z)
-Base.isinf(q::Quaternion) = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
-Base.iszero(q::Quaternion) = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
-Base.isone(q::Quaternion) = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
-
-Base.bswap(q::Quaternion) = Quaternion(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
-
-if UInt === UInt64
-    const h_imagx = 0xdf13da9384000582
-    const h_imagy = 0x437d0726f1028bcd
-    const h_imagz = 0xcf13f7ab1f367e01
-else
-    const h_imagx = 0x27a4bf84
-    const h_imagy = 0xccefdeeb
-    const h_imagz = 0x1683854f
-end
-const hash_0_imagx = hash(0, h_imagx)
-const hash_0_imagy = hash(0, h_imagy)
-const hash_0_imagz = hash(0, h_imagz)
-
-function Base.hash(q::Quaternion, h::UInt)
-    # TODO: with default argument specialization, this would be better:
-    # hash(q.w, h ⊻ hash(q.x, h ⊻ h_imagx) ⊻ hash(0, h ⊻ h_imagx) ⊻ hash(q.y, h ⊻ h_imagy) ⊻ hash(0, h ⊻ h_imagy) ⊻ hash(q.z, h ⊻ h_imagz) ⊻ hash(0, h ⊻ h_imagz))
-    hash(q.w, h ⊻ hash(q.x, h_imagx) ⊻ hash_0_imagx ⊻ hash(q.y, h_imagy) ⊻ hash_0_imagy ⊻ hash(q.z, h_imagz) ⊻ hash_0_imagz)
-end
-
-function Base.show(io::IO, q::Quaternion)
-    function pm(x)
-        s = "$x"
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+-]", s[2:end])
-            s = " " * s[1] * " " * "(" * s[2:end] * ")"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
-    end
-    print(
-        io,
-        q.w,
-        pm(q.x), "𝐢",
-        pm(q.y), "𝐣",
-        pm(q.z), "𝐤"
-    )
-end
-
-function Base.show(io::IO, ::MIME"text/latex", q::Quaternion)
-    function pm(x)
-        s = latexify(x, env=:raw, bracket=true)
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+-]", s[2:end])
-            s = " " * s[1] * " " * "\\left\\(" * s[2:end] * "\\right\\)"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
-    end
-    s = latexstring(
-        latexify(q.w, env=:raw, bracket=true),
-        pm(q.x), "\\,\\mathbf{i}",
-        pm(q.y), "\\,\\mathbf{j}",
-        pm(q.z), "\\,\\mathbf{k}"
-    )
-    print(io, s)
-end
-
-function Base.read(s::IO, ::Type{Quaternion{T}}) where T<:Real
-    w = read(s,T)
-    x = read(s,T)
-    y = read(s,T)
-    z = read(s,T)
-    Quaternion{T}(w,x,y,z)
-end
-
-function Base.write(s::IO, q::Quaternion)
-    write(s,q.w,q.x,q.y,q.z)
-end
-
-Broadcast.broadcasted(f, q::Quaternion, args...; kwargs...) = Quaternion(f.(q.components, args...; kwargs...))
+Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion, S<:Real} =
+    wrapper(Q){promote_type(eltype(Q),S)}
+Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
+    wrapper(wrapper(Q1), wrapper(Q2)){promote_type(eltype(Q1),eltype(Q2))}

@@ -7,9 +7,10 @@ The input array must have an initial dimension whose size is 4, because
 successive indices in that dimension will be considered successive components
 of the output quaternion.
 
-Note that this returns a view of the original data only if the base type of the
-input array `isbitstype`; otherwise, a new array of `Quaternion`s must be
-created, and the memory copied.
+Note that this returns a view of the original data [via
+`reinterpret(reshape,...)`] only if the base type of the input array
+`isbitstype`; otherwise, a new array of `Quaternion`s must be created, and the
+memory copied.
 
 See also [`to_float_array`](@ref).
 
@@ -45,20 +46,20 @@ and the memory copied.
 
 See also [`from_float_array`](@ref).
 """
-function to_float_array(A::AbstractArray{Quaternion{T}}) where {T<:Real}
+function to_float_array(A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
     isbitstype(T) ? to_float_array(Val(true), A) : to_float_array(Val(false), A)
 end
-function to_float_array(::Val{true}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+function to_float_array(::Val{true}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
     reinterpret(reshape, T, A)
 end
-function to_float_array(::Val{false}, A::AbstractArray{Quaternion{T}}) where {T<:Real}
+function to_float_array(::Val{false}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
     F = Array{T}(undef, (4, size(A)...))
     @inbounds for (i, j) in zip(eachindex(A), Base.Iterators.partition(eachindex(F), 4))
         @views F[j] .= A[i].components[:]
     end
     F
 end
-to_float_array(q::Quaternion) = collect(float(q).components)
+to_float_array(q::AbstractQuaternion) = collect(float(q).components)
 
 
 """
@@ -103,7 +104,7 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 - [`to_euler_phases`](@ref): Convert quaternion to Euler phases
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
 """
-function to_euler_angles(q::Quaternion)
+function to_euler_angles(q::AbstractQuaternion)
     q = float(q)
     a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
     a1 = atan(q.z, q.w)
@@ -141,7 +142,7 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
 """
 function from_euler_angles(α, β, γ)
-    Quaternion(
+    Rotor(
         cos(β/2)*cos((α+γ)/2),
         -sin(β/2)*sin((α-γ)/2),
         sin(β/2)*cos((α-γ)/2),
@@ -151,7 +152,7 @@ end
 from_euler_angles(αβγ) = from_euler_angles(αβγ...)
 
 
-function to_euler_phases!(z::Array{Complex{T}}, R::Quaternion{T}) where {T}
+function to_euler_phases!(z::Array{Complex{T}}, R::AbstractQuaternion{T}) where {T}
     a = R[1]^2 + R[4]^2
     b = R[2]^2 + R[3]^2
     sqrta = √a
@@ -201,7 +202,7 @@ computed from the components of the corresponding quaternion algebraically
 - [`from_euler_angles`](@ref): Create quaternion from Euler angles
 
 """
-function to_euler_phases(R::Quaternion{T}) where {T}
+function to_euler_phases(R::AbstractQuaternion{T}) where {T}
     z = Array{Complex{T}}(undef, 3)
     to_euler_phases!(z, R)
     z
@@ -248,7 +249,7 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
     if abs(zₐ - zp * zm) > abs(zₐ + zp * zm)
         zp *= -1
     end
-    Quaternion(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
+    Rotor(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
 end
 from_euler_phases(z) = from_euler_phases(z...)
                        
@@ -267,7 +268,7 @@ projection of ``n̂`` into the ``x``-``y`` plane.  Both angles are given in
 radians.
 
 """
-function to_spherical_coordinates(q::Quaternion)
+function to_spherical_coordinates(q::Q) where {Q<:AbstractQuaternion}
     q = float(q)
     a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
     a1 = atan(q.z, q.w)
@@ -279,7 +280,7 @@ end
 """
     from_spherical_coordinates(θ, ϕ)
 
-Return a quaternion corresponding to these spherical coordinates.
+Return a rotor corresponding to these spherical coordinates.
 
 Considering (θ, ϕ) as a point ``n̂`` on the sphere, we can also construct a
 quaternion that rotates the ``z`` axis onto that point.  Here, we use the
@@ -292,7 +293,7 @@ Both angles must be given in radians.
 function from_spherical_coordinates(θ, ϕ)
     sϕ, cϕ = sincos(ϕ/2)
     sθ, cθ = sincos(θ/2)
-    Quaternion(cθ*cϕ, -sθ*sϕ, sθ*cϕ, cθ*sϕ)
+    Rotor(cθ*cϕ, -sθ*sϕ, sθ*cϕ, cθ*sϕ)
 end
 from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 
@@ -333,7 +334,7 @@ function from_rotation_matrix(ℛ)
     eigenvec = eigen(transpose(H), 4:4).vectors[:, 1]
 
     # convert it into a quaternion
-    Quaternion(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
+    Rotor(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
 end
 
 
@@ -353,7 +354,7 @@ we can also express this rotation in terms of a 3x3 matrix `ℛ` such that
 This function returns that matrix.
 
 """
-function to_rotation_matrix(q)
+function to_rotation_matrix(q::Q) where {Q<:AbstractQuaternion}
     m = Array{eltype(q)}(undef, 3, 3)
     n = inv(abs2(q))
     m[1, 1] = 1 - 2*(q.y^2 + q.z^2) * n

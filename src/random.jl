@@ -1,5 +1,5 @@
 """
-    randn([rng=GLOBAL_RNG], [T=Quaternion{Float64}], [dims...])
+    randn([rng=GLOBAL_RNG], T=Quaternion{Float64}, [dims...])
 
 Generate a normally distributed random quaternion of type `T` with mean 0 and standard
 deviation of norm 1.  Optionally generate an *array* of such quaternions.  This module
@@ -13,7 +13,12 @@ not work with `BigFloat`; we just use the [Box-Muller
 transform](https://en.wikipedia.org/wiki/Box–Muller_transform) to obtain the desired
 result.
 
-See also: [`randn_rotor`](@ref)
+If the quaternion type passed in is `Rotor`, the result will be normalized correctly.
+Because the distribution is spherically symmetric, the result is a truly random
+rotation.
+
+If the quaternion type is `QuatVec`, the result will have a 0 scalar component, and the
+vector will have mean 0 standard deviation of norm 1.
 
 # Examples
 ```julia
@@ -26,66 +31,30 @@ julia> randn(QuaternionF16, 2, 2)
 ```
 
 """
-Base.randn(rng::AbstractRNG, ::Type{Quaternion{T}}) where {T<:AbstractFloat} =
-    Quaternion{T}(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
+Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{T}}) where {T<:AbstractFloat} =
+    QT(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
 
-function Base.randn(rng::AbstractRNG, ::Type{Quaternion{BigFloat}})
+function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})
     # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
     c = rand(rng, BigFloat, 4)
-    Quaternion{BigFloat}(
-        √(-log(c[1])/2) * cos(2*(π*c[2])),
-        √(-log(c[1])/2) * sin(2*(π*c[2])),
-        √(-log(c[3])/2) * cos(2*(π*c[4])),
-        √(-log(c[3])/2) * sin(2*(π*c[4]))
-    )
+    l1 = √(-log(c[1])/2)
+    s2, c2 = sincospi(2*c[2])
+    l3 = √(-log(c[3])/2)
+    s4, c4 = sincospi(2*c[4])
+    QT(l1*c2, l1*s2, l3*c4, l3*s4)
 end
 
+_q3v_factor(::Type{T}) where T = inv(√T(3))
 
-"""
-    randn_rotor([rng=GLOBAL_RNG], [T=Quaternion{Float64}], [dims...])
+Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
+    QT(0, randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T))
 
-Generate a normally distributed random quaternion of type `T` with mean 0 and norm 1.  (Note that
-the *norm* is always precisely 1 with this function, but otherwise the individual components are
-randomly distributed.)  The result is spherically symmetric, and gives rise a truly random rotation.
-
-See also: [`randn`](@ref)
-"""
-function randn_rotor(rng::AbstractRNG, ::Type{T}, dims::Dims) where {T<:AbstractFloat}
-    q = randn(rng, Quaternion{T}, dims)
-    @. q / abs(q)
+function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{BigFloat}})
+    # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
+    c = rand(rng, BigFloat, 4)
+    l1 = √(-log(c[1])/2)
+    s2 = sinpi(2*c[2])
+    l3 = √(-log(c[3])/2)
+    s4, c4 = sincospi(2*c[4])
+    QuatVec(0, l1*s2, l3*c4, l3*s4)
 end
-randn_rotor(rng::AbstractRNG, ::Type{Quaternion{T}}, dims::Dims) where {T<:AbstractFloat} =
-    randn_rotor(rng, T, dims)
-# Note: The following are more-or-less as given in the original `randn` definition
-function randn_rotor(rng::AbstractRNG, ::Type{T}, dim1::Integer, dims::Integer...) where {T<:AbstractFloat}
-    q = randn(rng, Quaternion{T}, dim1, dims...)
-    @. q / abs(q)
-end
-randn_rotor(rng::AbstractRNG, ::Type{Quaternion{T}}, dim1::Integer, dims::Integer...) where {T<:AbstractFloat} =
-    randn_rotor(rng, T, dim1, dims...)
-randn_rotor(rng::AbstractRNG, ::Type{Quaternion{T}}                                 ) where {T<:AbstractFloat} =
-    randn_rotor(rng, T, ())
-randn_rotor(rng::AbstractRNG, ::Type{T}                                             ) where {T<:AbstractFloat} =
-    randn_rotor(rng, T, ())
-randn_rotor(                  ::Type{Quaternion{T}}, dims::Dims                     ) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, dims)
-randn_rotor(                  ::Type{T},             dims::Dims                     ) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, dims)
-randn_rotor(                  ::Type{Quaternion{T}}, dim1::Integer, dims::Integer...) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, dim1, dims...)
-randn_rotor(                  ::Type{T},             dim1::Integer, dims::Integer...) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, dim1, dims...)
-randn_rotor(                  ::Type{Quaternion{T}}                                 ) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, ())
-randn_rotor(                  ::Type{T},                                            ) where {T<:AbstractFloat} =
-    randn_rotor(default_rng(), T, ())
-randn_rotor(rng::AbstractRNG,                        dims::Dims                     ) =
-    randn_rotor(rng, QuaternionF64, dims)
-randn_rotor(rng::AbstractRNG,                        dims::Integer...               ) =
-    randn_rotor(rng, QuaternionF64, dims...)
-randn_rotor(                                         dims::Dims                     ) =
-    randn_rotor(default_rng(), QuaternionF64, dims)
-randn_rotor(                                         dim1::Integer, dims::Integer...) =
-    randn_rotor(default_rng(), QuaternionF64, dim1, dims...)
-randn_rotor(                                                                        ) =
-    randn_rotor(default_rng(), QuaternionF64, ())

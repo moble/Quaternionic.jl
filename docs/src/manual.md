@@ -1,9 +1,29 @@
 # Quaternionic functions
 
-## Constructors and Number methods
+From `AbstractQuaternion{T}` we define three subtypes:
 
-At the most basic level, `Quaternion{T}` mimics `Complex{T}` as closely as possible, including the
-behavior of most functions in `Base`.
+  * `Quaternion{T}`, which is an element of the general algebra of quaternions
+    over any `T<:Real`.
+  * `Rotor{T}`, which is an element of the multiplicative group of unit
+    quaternions, and is interpreted as mapping to a rotation.  The magnitude is
+    *assumed* to be 1 (though, for efficiency, this is not generally
+    confirmed), and the sign may be freely changed in certain cases.
+  * `QuatVec{T}`, which is an element of the additive group of quaternions with
+    0 scalar part; a "pure vector" quaternion.
+
+For simplicity, almost every function in this package is defined for general
+`Quaternion`s, so you may not need any other type.  However, it can frequently
+be more accurate *and* more efficient to use the other subtypes where relevant.
+
+## Constructors, constants, and conversions
+
+At the most basic level, `Quaternion{T}` mimics `Complex{T}` as closely as
+possible, including the behavior of most functions in `Base`.  The `Rotor{T}`
+and `QuatVec{T}` subtypes behave very similarly, except that most of their
+constructors automatically impose the constraints that the norm is 1 and the
+scalar component is 0, respectively.  Also note that when a certain operation
+is not defined for either of those subtypes, the functions will usually convert
+to a general `Quaternion` automatically.
 
 To create new `Quaternion`s interactively, it is typically most convenient to
 use the constants `imx`, `imy`, and `imz` — or equivalently `𝐢`, `𝐣`, and `𝐤` —
@@ -12,8 +32,17 @@ it is more common to use the [`Quaternion`](@ref) function — which takes all
 four components, the three vector components, or just the one scalar component,
 and creates a new `Quaternion` of the type implied by the arguments.  You can
 also *specify* the type, as in `Quaternion{Float64}(...)`.  Type conversions
-with `promote`, `widen`, `float`, etc., work as expected.  The standard
-[`Number`
+with `promote`, `widen`, `float`, etc., work as expected.
+
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["quaternion.jl"]
+Order   = [:module, :type, :constant, :function, :macro]
+```
+
+## Number functions from Base
+
+The standard [`Number`
 functions](https://docs.julialang.org/en/v1/base/numbers/#General-Number-Functions-and-Constants)
 that work for `Complex`, such as `isfinite`, `iszero`, etc., should work
 analogously for `Quaternion`.  The `hash`, `read`, and `write` functions are
@@ -22,7 +51,7 @@ component is also implemented via `broadcasted`.
 
 ```@autodocs
 Modules = [Quaternionic]
-Pages   = ["quaternion.jl"]
+Pages   = ["base.jl"]
 ```
 
 
@@ -50,9 +79,9 @@ It is frequently convenient to construct random `Quaternion` objects, which can
 be done just as with other types by passing the desired output type to the
 [`randn`](@ref) function.  The `rand` function is not overloaded, because there
 would be no geometric significance to such a `Quaternion`; `randn` results are
-independent of the orientation of the basis used to define the quaternions.  A
-simple convenience function [`randn_rotor`](@ref) is also provided, to
-normalize each result.
+independent of the orientation of the basis used to define the quaternions.
+Note that it is possible to get random *rotors* and *vectors* by passing the
+appropriate tyepes to the `randn` function.
 
 ```@autodocs
 Modules = [Quaternionic]
@@ -107,10 +136,10 @@ cases.)
 
 It is not hard to see that these criteria can be satisfied by any of
 
-  * `abs2(q₁ - q₂)`
   * `abs(q₁ - q₂)`
-  * `abs2(log(q₁ / q₂)`
+  * `abs2(q₁ - q₂)`
   * `abs(log(q₁ / q₂))`
+  * `abs2(log(q₁ / q₂)`
 
 If ``q_1`` and ``q_2`` are interpreted as rotations, we frequently don't care
 about their signs, and just want the *smallest* distance between them, for any
@@ -120,12 +149,9 @@ which should be 1.  In this case, we relax the "positive-definiteness"
 criterion to allow ``d(q_1, q_2)`` to equal zero when ``q_1`` and ``q_2`` are
 related by a nonzero scalar multiple.
 
-While these functions are simple to implement as needed, it is also useful to
-have a single function to remind us of all the possibilities.  The
-[`distance`](@ref) function implements all these possible choices with keyword
-arguments.  The [`distance_rotation`](@ref) function is similar, but restricts
-to the multiplicative case, and assumes rotations.  These two functions, with
-their default arguments, are likely to be the most commonly needed functions.
+For `Rotor` types, the latter two multiplicative options are most relevant, while for
+other types the additive options are more relevant.  These are the default
+behaviors of the `distance` and `distance2` functions.
 
 ```@autodocs
 Modules = [Quaternionic]

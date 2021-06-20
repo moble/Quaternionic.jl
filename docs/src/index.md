@@ -3,8 +3,15 @@
 *Quaternions for Julia*
 
 The goal of this package is to provide a simple but flexible and complete implementation of
-quaternions, without restricting the interpretation of quaternions to being rotations, but also
-providing extensive support for rotations.
+quaternions, without restricting the interpretation of quaternions to being rotations — while also
+providing extensive support for rotations — along with thorough testing, documentation, and
+integration with the rest of Julia.  Wherever possible, standard functions that work with `Complex`
+will also work with `Quaternion`.
+
+In addition to a basic `Quaternion{T}` type, we also have [`Rotor{T}`](@ref) and
+[`QuatVec{T}`](@ref) specializations, which can improve the accuracy and efficiency of certain
+applications.  Each of these can be defined over any `T<:Real`; in addition to the standard
+primitive types (`Float64`, etc.), `BigFloat` and `Symbolics.Num` are tested extensively.
 
 ## Examples
 
@@ -105,7 +112,7 @@ particularly helpful when simplifying `Symbolics` expressions:
 ```jldoctest symbolics
 julia> @variables q[1:4];
 
-julia> Q = Quaternion(q);
+julia> Q = Quaternion(q...);
 
 julia> simplify.(Q * imz * conj(Q))
 0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (2q[3]*q[4] - (2q[1]*q[2]))𝐣 + (q[1]^2 + q[4]^2 - (q[2]^2) - (q[3]^2))𝐤
