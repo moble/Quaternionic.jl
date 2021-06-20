@@ -33,6 +33,27 @@
         @test j == 𝐣 == imy
         @test k == 𝐤 == imz
 
+        @test Quaternion{T}(1, 2, 3, 4) == Quaternion{T}(SVector{4, T}(1, 2, 3, 4))
+        @test Quaternion{T}(0, 2, 3, 4) == Quaternion{T}(2, 3, 4)
+        @test Quaternion{T}(1, 0, 0, 0) == Quaternion{T}(1)
+        @test Quaternion(T.([1, 2, 3, 4])...) == Quaternion(SVector{4, T}(1, 2, 3, 4))
+        @test Quaternion(T.([0, 2, 3, 4])...) == Quaternion(T(2), T(3), T(4))
+        @test Quaternion(T.([1, 0, 0, 0])...) == Quaternion(T(1))
+        if !(T<:Integer)
+            @test Rotor{T}(1, 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
+            @test Rotor{T}(0, 2, 3, 4) == Rotor{T}(2, 3, 4)
+            @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
+            @test Rotor(T.([1, 2, 3, 4])...) == Rotor(SVector{4, T}(1, 2, 3, 4)/√T(30))
+            @test Rotor(T.([0, 2, 3, 4])...) == Rotor(T(2), T(3), T(4))
+            @test Rotor(T.([1, 0, 0, 0])...) == Rotor(T(1))
+        end
+        @test QuatVec{T}(1, 2, 3, 4) == QuatVec{T}(SVector{4, T}(0, 2, 3, 4))
+        @test QuatVec{T}(0, 2, 3, 4) == QuatVec{T}(2, 3, 4)
+        @test QuatVec{T}(1, 0, 0, 0) == QuatVec{T}(1)
+        @test QuatVec(T.([0, 2, 3, 4])...) == QuatVec(SVector{4, T}(0, 2, 3, 4))
+        @test QuatVec(T.([0, 2, 3, 4])...) == QuatVec(T(2), T(3), T(4))
+        @test QuatVec(T.([0, 0, 0, 0])...) == QuatVec(T(0))
+
         # Test indexing
         q = Quaternion(T(1), T(2), T(3), T(4))
         @test q[[1, 2]] == [T(1), T(2)]
@@ -46,6 +67,9 @@
         @test Quaternion(i) == Quaternion{T}(i) == i
         @test Quaternion(j) == Quaternion{T}(j) == j
         @test Quaternion(k) == Quaternion{T}(k) == k
+        @test Quaternionic.wrapper(Quaternion(u)) == Quaternion
+        @test Quaternionic.wrapper(Rotor(u)) == Rotor
+        @test Quaternionic.wrapper(QuatVec(u)) == QuatVec
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
