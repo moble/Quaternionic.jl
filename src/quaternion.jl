@@ -283,7 +283,7 @@ Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 
 Base.one(::Type{QuatVec{T}}) where T = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
 
 # Getting pieces of quaternions
-function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
+@inline function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
     @inbounds begin
         if sym === :w
             return q.components[1]
