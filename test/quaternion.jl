@@ -61,6 +61,10 @@
                 @test float(Q{T}(1, 2, 3, 4)) == Q(float(T)(1), float(T)(2), float(T)(3), float(T)(4))
                 @test big(Q{T}(1, 2, 3, 4)) == Q(big(T)(1), big(T)(2), big(T)(3), big(T)(4))
                 @test big(Q{T}(1, 2, 3, 4)) == Q{big(T)}(1, 2, 3, 4)
+                @test typeof(Q{T}(1, 2, 3, 4) * rand(T)) === Q{T}
+                @test typeof(Q{T}(1, 2, 3, 4) / rand(T)) === Q{T}
+                @test typeof(rand(T) * Q{T}(1, 2, 3, 4)) === Q{T}
+                @test typeof(rand(T) / Q{T}(1, 2, 3, 4)) === Q{T}
             end
             @test float(Q{T}(1, 2, 3, 4)) == Q{T}(1, 2, 3, 4)
         end
@@ -78,6 +82,16 @@
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
                 v = Vector(v)
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
+            end
+        end
+
+        for T in SymbolicTypes
+            q = Q{T}(1, 2, 3, 4)
+            if Q !== Rotor
+                @test typeof(a * q) === Q{T}
+                @test typeof(a / q) === Q{T}
+                @test typeof(q * a) === Q{T}
+                @test typeof(q / a) === Q{T}
             end
         end
     end
