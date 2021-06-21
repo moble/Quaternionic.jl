@@ -49,4 +49,15 @@
             @test flips == 0
         end
     end
+
+    @testset verbose=true "Squad" begin
+        ω = 0.1
+        tin = collect(LinRange(-10, 10, 201))
+        Rin = [exp(ω*ti*imz/2) for ti in tin]
+        tout = (tin[1:end-1] + tin[2:end]) / 2
+        Rout = squad(Rin, tin, tout)
+        Ravg = [exp(ω*ti*imz/2) for ti in tout]
+        @test maximum(distance.(Rout, Ravg)) < 2eps()
+        @test distance(Rotor(1), squad(Rin, tin, 0)) == 0
+    end
 end

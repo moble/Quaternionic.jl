@@ -14,7 +14,7 @@ export from_float_array, to_float_array, from_euler_angles, to_euler_angles,
     from_spherical_coordinates, to_spherical_coordinates,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance2
-export unflip, unflip!
+export unflip, unflip!, slerp, squad
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
