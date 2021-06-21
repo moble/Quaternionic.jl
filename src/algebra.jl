@@ -45,6 +45,7 @@ function Base.:*(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
     )
 end
 
+
 function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion}
     if p == q
         return one(promote_type(Q1, float(Q2)))
@@ -57,6 +58,22 @@ function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
         (-q.w*p.z - q.x*p.y + q.y*p.x + q.z*p.w) / den
     )
 end
+
+
+"""
+    p ⋅ q
+
+Evaluate the inner ("dot") product between two quaternions.  Equal to the
+scalar part of `p * conj(q)`.
+
+Note that this function is not very commonly used, except as a quick way to
+determine whether the two quaternions are more anti-parallel than parallel, for
+functions like [`unflip`](@ref).
+"""
+@inline function ⋅(p::P, q::P) where {P<:AbstractQuaternion, Q<:AbstractQuaternion}
+    p.w*q.w + p.x*q.x + p.y*q.y + p.z*q.z
+end
+
 
 for S ∈ [Real, Symbolics.Num]
     @eval begin
