@@ -50,7 +50,71 @@
         end
     end
 
+    @testset verbose=true "Slerp" begin
+        ϵ = 20eps()
+        comp = [0, 1, -1]
+        Rs = [
+            [Rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
+            randn(RotorF64, 20)...
+        ]
+        directions = [Rotor(1), Rotor(imx), Rotor(imy), Rotor(imz), Rotor(-imx), Rotor(-imy), Rotor(-imz)]
+
+        # Check extremes
+        for Q1 in directions
+            @test distance(slerp(Q1, Q1, 0.0), Q1) < ϵ
+            @test distance(slerp(Q1, Q1, 1.0), Q1) < ϵ
+            @test distance(slerp(Q1, -Q1, 0.0), Q1) < ϵ
+            @test distance(slerp(Q1, -Q1, 1.0), Q1) < ϵ
+            for Q2 in directions
+                @test distance(slerp(Q1, Q2, 0.0), Q1) < ϵ
+                @test distance(slerp(Q1, Q2, 1.0), Q2) < ϵ
+                @test distance(slerp(Q1, -Q2, 0.0), Q1) < ϵ
+                @test distance(slerp(Q1, -Q2, 1.0), -Q2) < ϵ
+                @test distance(slerp(Q2, Q1, 0.0), Q2) < ϵ
+                @test distance(slerp(Q2, Q1, 1.0), Q1) < ϵ
+            end
+        end
+
+        # Test simple rotations about each axis
+        for Q2 in directions[2:end]
+            for t in LinRange(0.0, 1.0, 100)
+                @test distance(
+                    slerp(Rotor(1), Q2, t),
+                    Rotor(cos(π * t / 2) + sin(π * t / 2) * Q2)
+                ) < ϵ
+            end
+        end
+
+        # Test that (slerp of rotated rotors) is (rotated slerp of rotors)
+        for R in Rs
+            for Q2 in directions[1:end]
+                for t in LinRange(0.0, 1.0, 100)
+                    @test distance(
+                        R * slerp(Rotor(1), Q2, t),
+                        slerp(R, R*Q2, t)
+                    ) < ϵ
+                end
+            end
+        end
+
+        # Check that unflipping works
+        for Q in directions
+            for t in LinRange(0.0, 1.0, 10)
+                @test distance(slerp(Q, -Q, t, unflip=true), Q) < ϵ
+            end
+        end
+
+    end
+
     @testset verbose=true "Squad" begin
+        ϵ = 20eps()
+        comp = [0, 1, -1]
+        Rs = [
+            [Rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
+            randn(RotorF64, 20)...
+        ]
+        directions = [Rotor(1), Rotor(imx), Rotor(imy), Rotor(imz), Rotor(-imx), Rotor(-imy), Rotor(-imz)]
+
         ω = 0.1
         tin = collect(LinRange(-10, 10, 201))
         Rin = [exp(ω*ti*imz/2) for ti in tin]
@@ -67,5 +131,27 @@
         @test distance(Rin[1], squad(Rin, tin, tin[1], validate=true)) == 0
         @test distance(Rin[end], squad(Rin, tin, tin[end], validate=true)) == 0
         @test squad(Rin, tin, Vector{eltype(tin)}()) == Vector{eltype(Rin)}()
+
+        t_in = LinRange(0.0, 1.0, 13)
+        t_out = LinRange(0.0, 1.0, 37)
+        t_out2 = sort(rand(59))
+        # squad interpolated onto the inputs should be the identity
+        for R1 in Rs
+            for R2 in Rs
+                R_in = [slerp(R1, R2, t) for t in t_in]
+                @test squad(R_in, t_in, t_in) ≈ R_in atol=ϵ
+            end
+        end
+
+        # squad should be the same as slerp for linear interpolation
+        for R in directions
+            R_in = [slerp(Rotor(1), R, t) for t in t_in]
+            R_out_squad = squad(R_in, t_in, t_out)
+            R_out_slerp = [slerp(Rotor(1), R, t) for t in t_out]
+            @test R_out_squad ≈ R_out_slerp atol=ϵ
+            R_out_squad = squad(R_in, t_in, t_out2)
+            R_out_slerp = [slerp(Rotor(1), R, t) for t in t_out2]
+            @test R_out_squad ≈ R_out_slerp atol=ϵ
+        end
     end
 end

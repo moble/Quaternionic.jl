@@ -113,7 +113,7 @@ end
 
 
 @doc raw"""
-    squad_control_points(R::Vector{Rotor}, t::Vector{<:AbstractFloat}, i::Int)
+    squad_control_points(R::AbstractVector{Rotor}, t::AbstractVector{<:AbstractFloat}, i::Int)
 
 This is a helper function for the `squad` routines, returning the control
 points between one pair of input rotors.
@@ -151,11 +151,11 @@ B_{\mathrm{end}} &= R_{\mathrm{end}}\, \bar{R}_{\mathrm{end-1}}\, R_{\mathrm{end
 \end{aligned}
 ```
 """
-function squad_control_points(R::Vector{<:Rotor}, t::Vector{<:AbstractFloat}, i::Int)
+function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:AbstractFloat}, i::Int)
     if i==1
         A = R[1]
     elseif i==length(R)
-        A = R[end]
+        A = R[end]  # COV_EXCL_LINE
     else
         A = R[i] * exp(
             (
@@ -174,7 +174,7 @@ function squad_control_points(R::Vector{<:Rotor}, t::Vector{<:AbstractFloat}, i:
     elseif i==length(R)-1
         B = R[i+1]
     else # i==length(R)
-        B = Rotor{eltype(R)}((2*(R[i] ⋅ R[i-1]) * R[i] - R[i-1]).components...)
+        B = Rotor{eltype(R)}((2*(R[i] ⋅ R[i-1]) * R[i] - R[i-1]).components...)  # COV_EXCL_LINE
     end
     A, B
 end
@@ -207,7 +207,7 @@ and `tout` will be tested to ensure that no extrapolation will be done.
 See also [`squad_control_points`](@ref).
 
 """
-function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Vector{<:Real}; unflip=false, validate=false)
+function squad(Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real}; unflip=false, validate=false)
     t_begin, t_end = extrema(tin)
     @assert t_begin < t_end  # Proves that there are at least 2 tin
     @assert length(Rin) == length(tin)  # Proves that there are at least 2 Rin
@@ -257,6 +257,6 @@ function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Vector{<:Real}; 
 end
 
 
-function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Real; unflip=false, validate=false)
+function squad(Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::Real; unflip=false, validate=false)
     squad(Rin, tin, [tout]; unflip=unflip, validate=validate)[1]
 end
