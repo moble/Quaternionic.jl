@@ -234,7 +234,7 @@ julia> 1.2imx
 0.0 + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
 ```
 """
-const imx = Quaternion(false, true, false, false)
+const imx = QuatVec(false, true, false, false)
 const 𝐢 = imx
 
 """
@@ -251,7 +251,7 @@ julia> 1.2imy
 0.0 + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
 ```
 """
-const imy = Quaternion(false, false, true, false)
+const imy = QuatVec(false, false, true, false)
 const 𝐣 = imy
 
 """
@@ -268,7 +268,7 @@ julia> 1.2imz
 0.0 + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
 ```
 """
-const imz = Quaternion(false, false, false, true)
+const imz = QuatVec(false, false, false, true)
 const 𝐤 = imz
 
 # Essential constructors
@@ -314,8 +314,6 @@ Base.imag(q::AbstractQuaternion{T}) where {T<:Real} = q.im
 wrapper(::T) where {T} = wrapper(T)
 wrapper(T::UnionAll) = T
 wrapper(T::Type{Q}) where {S<:Real, Q<:AbstractQuaternion{S}} = T.name.wrapper
-# wrapper(T1::Type{<:AbstractQuaternion{T}}, T2::Type{<:AbstractQuaternion{T}}) where {T<:Real} =
-#     wrapper(wrapper(T1), wrapper(T2)){T}
 wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
 wrapper(::Type{<:AbstractQuaternion}, ::Type{<:AbstractQuaternion}) = Quaternion
 
@@ -324,10 +322,20 @@ wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Real}) where {OP} = Qu
 wrapper(::Type{<:Real}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
 wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
 wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
-wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
-wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
+
 wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor
 wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:Rotor}) = Rotor
+
+wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:Real}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:Real}) = QuatVec
+wrapper(::Type{<:Real}, ::Val{*}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:Real}, ::Val{/}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:Symbolics.Num}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:Symbolics.Num}) = QuatVec
+wrapper(::Type{<:Symbolics.Num}, ::Val{*}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:Symbolics.Num}, ::Val{/}, ::Type{<:QuatVec}) = QuatVec
 
 Base.eltype(::Type{<:AbstractQuaternion{T}}) where {T} = T
 Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q))}
