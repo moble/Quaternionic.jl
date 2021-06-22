@@ -60,6 +60,19 @@ function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
 end
 
 
+for S ∈ [Real, Symbolics.Num]
+    @eval begin
+        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*p.components)
+        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*p.components)
+        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(/), $S)(p.components/s)
+        function Base.:/(s::$S, p::Q) where {Q<:AbstractQuaternion}
+            f = s / abs2(p)
+            wrapper($S, Val(/), Q)(p.w * f, -p.x * f, -p.y * f, -p.z * f)
+        end
+    end
+end
+
+
 """
     p ⋅ q
 
@@ -70,22 +83,6 @@ Note that this function is not very commonly used, except as a quick way to
 determine whether the two quaternions are more anti-parallel than parallel, for
 functions like [`unflip`](@ref).
 """
-@inline function ⋅(p::P, q::Q) where {P<:AbstractQuaternion, Q<:AbstractQuaternion}
+@inline function ⋅(p::AbstractQuaternion, q::AbstractQuaternion)
     p.w*q.w + p.x*q.x + p.y*q.y + p.z*q.z
-end
-
-
-for S ∈ [Real, Symbolics.Num]
-    @eval begin
-        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} =
-            wrapper(Q, Val(*), $S)(s*p.components)
-        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} =
-            wrapper($S, Val(*), Q)(s*p.components)
-        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} =
-            wrapper(Q, Val(/), $S)(p.components/s)
-        function Base.:/(s::$S, p::Q) where {Q<:AbstractQuaternion}
-            f = s / abs2(p)
-            wrapper($S, Val(/), Q)(p.w * f, -p.x * f, -p.y * f, -p.z * f)
-        end
-    end
 end
