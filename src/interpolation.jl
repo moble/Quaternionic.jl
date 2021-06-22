@@ -180,6 +180,9 @@ function squad_control_points(R::Vector{<:Rotor}, t::Vector{<:AbstractFloat}, i:
 end
 
 
+const unflip_func = unflip  # `unflip` will be used as a local variable in
+                            # `squad`, but the function will also be needed
+
 """
     squad(Rin, tin, tout; [unflip=false], [validate=false])
 
@@ -220,7 +223,7 @@ function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Vector{<:Real}; 
         end
     end
     if unflip
-        Rin = unflip(Rin)
+        Rin = unflip_func(Rin)
     end
     Rout = similar(Rin, length(tout))
     if length(tout) == 0
@@ -236,7 +239,7 @@ function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Vector{<:Real}; 
         toutj = tout[j]
         i = searchsortedfirst(tin, toutj) - 1
         if i == length(tin)
-            error("Searching for $toutj went out of range [$t_begin, $t_end]")
+            error("Searching for $toutj went out of range [$t_begin, $t_end]")  # COV_EXCL_LINE
         end
         A, B = squad_control_points(Rin, tin, i)
         ta, tb = tin[i], tin[i+1]
@@ -247,16 +250,12 @@ function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Vector{<:Real}; 
                 slerp(A, B, τ),
                 2τ*(1-τ)
             )
-            # println((j, i))
-            # println((tout[j], ta, tb))
-            # println((Rin[i], Rin[i+1], A, B))
-            # println(τ)
-            # println()
             j += 1
         end
     end
     Rout
 end
+
 
 function squad(Rin::Vector{<:Rotor}, tin::Vector{<:Real}, tout::Real; unflip=false, validate=false)
     squad(Rin, tin, [tout]; unflip=unflip, validate=validate)[1]
