@@ -1,6 +1,6 @@
 module Quaternionic
 
-using StaticArrays, Latexify, LaTeXStrings, LinearAlgebra
+using StaticArrays, Latexify, LaTeXStrings, LinearAlgebra, Requires
 import Random: AbstractRNG, default_rng, randn!
 import Symbolics
 
@@ -16,8 +16,10 @@ export from_float_array, to_float_array, from_euler_angles, to_euler_angles,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance2
 export unflip, unflip!, slerp, squad
+export ∂log, ∂exp
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
+
 
 include("quaternion.jl")
 include("base.jl")
@@ -27,5 +29,19 @@ include("random.jl")
 include("conversion.jl")
 include("distance.jl")
 include("interpolation.jl")
+include("gradients.jl")
+
+
+function __init__()
+    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
+        # Let ForwardDiff act naturally on quaternions.
+        @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion) where {T}
+            Quaternion(ForwardDiff.extract_derivative(T, y.components))
+        end
+    end
+
+    # @require DifferentialEquations="0c46a032-eb83-5123-abaf-570d42b7fbaa" begin
+    # end
+end
 
 end  # module
