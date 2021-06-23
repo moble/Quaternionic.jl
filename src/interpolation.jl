@@ -225,7 +225,8 @@ function squad(Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::
     if unflip
         Rin = unflip_func(Rin)
     end
-    Rout = similar(Rin, length(tout))
+    Rout_eltype = promote_type(promote_type(typeof(tin), typeof(tout)), eltype(Rin))
+    Rout = similar(Rin, Rout_eltype, length(tout))
     if length(tout) == 0
         return Rout
     end
