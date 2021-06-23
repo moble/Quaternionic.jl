@@ -116,7 +116,7 @@ function Base.log(q::Rotor{T}) where {T}
         return QuatVec{float(T)}(0, 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
+    f = atan(absolutevec, q.w) / absolutevec  # acos(q.w) / absolutevec
     QuatVec(0, f*q.x, f*q.y, f*q.z)
 end
 
@@ -138,9 +138,10 @@ function Base.exp(q::Quaternion{T}) where {T}
         return Quaternion(exp(q.w), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    s = sin(absolutevec) / absolutevec
     e = exp(q.w)
-    Quaternion(e*cos(absolutevec), e*s*q.x, e*s*q.y, e*s*q.z)
+    s, c = sincos(absolutevec)
+    esinc = e * s / absolutevec
+    Quaternion(e*c, esinc*q.x, esinc*q.y, esinc*q.z)
 end
 function Base.exp(q::QuatVec{T}) where {T}
     q = float(q)
@@ -149,8 +150,9 @@ function Base.exp(q::QuatVec{T}) where {T}
         return Rotor{float(T)}(1, 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    s = sin(absolutevec) / absolutevec
-    Rotor(cos(absolutevec), s*q.x, s*q.y, s*q.z)
+    s, c = sincos(absolutevec)
+    sinc = s / absolutevec
+    Rotor(c, sinc*q.x, sinc*q.y, sinc*q.z)
 end
 
 @doc raw"""
@@ -269,10 +271,10 @@ function Base.:^(q::Rotor, s::Real)
         # log(q) ≈ 0
         return one(q)
     end
-    f1 = oftype(absolutevec, s) * atan(absolutevec, q.w)
+    f1 = s * atan(absolutevec, q.w)
     sin_f1, cos_f1 = sincos(f1)
     f2 = sin_f1 / absolutevec
-    Rotor{eltype(q)}([cos_f1, f2*q.x, f2*q.y, f2*q.z])
+    Rotor{typeof(cos_f1)}([cos_f1, f2*q.x, f2*q.y, f2*q.z])
 end
 Base.:^(q::Quaternion, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
 Base.:^(q::QuatVec, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
