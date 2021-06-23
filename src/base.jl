@@ -98,7 +98,7 @@ function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
             s = "+" * s
         end
         if occursin(r"[+-]", s[2:end])
-            s = " " * s[1] * " " * "\\left\\(" * s[2:end] * "\\right\\)"
+            s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
         else
             s = " " * s[1] * " " * s[2:end]
         end
@@ -125,4 +125,4 @@ function Base.write(s::IO, q::AbstractQuaternion)
     write(s,q.w,q.x,q.y,q.z)
 end
 
-Broadcast.broadcasted(f, q::QT, args...) where {QT<:AbstractQuaternion{<:Real}} = wrapper(QT)(f.(q.components, args...))
+#Broadcast.broadcasted(f, q::QT, args...) where {QT<:AbstractQuaternion{<:Real}} = wrapper(QT)(f.(q.components, args...))
