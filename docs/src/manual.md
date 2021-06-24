@@ -183,3 +183,17 @@ automatically by passing the corresponding keywords to `slerp` and `squad`.
 Modules = [Quaternionic]
 Pages   = ["interpolation.jl"]
 ```
+
+
+# Gradients
+
+It can be very useful to compute the derivative of various functions with
+respect to their arguments — for example, when computing angular velocity of a
+`squad` interpolant, one needs to use the chain rule, and therefore needs each
+of the derivatives of `exp`, `log`, etc.  Here, we treat each quaternion
+argument as a series of four ℝ arguments.
+
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["gradients.jl"]
+```

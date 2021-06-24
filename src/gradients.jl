@@ -8,14 +8,14 @@ though change of `Z` in a direction that changes its norm would not be allowed
 for a `Rotor`, we measure the gradient in that direction anyway.  That is, the
 elements of the returned vector of quaternions is
 ```math
-\begin{equation}
+\begin{aligned}
   \left[
-    \frac{\partial} {\partial Z_w} log(Z),
-    \frac{\partial} {\partial Z_x} log(Z),
-    \frac{\partial} {\partial Z_y} log(Z),
-    \frac{\partial} {\partial Z_z} log(Z)
+    \frac{\partial} {\partial Z_w} \log(Z),
+    \frac{\partial} {\partial Z_x} \log(Z),
+    \frac{\partial} {\partial Z_y} \log(Z),
+    \frac{\partial} {\partial Z_z} \log(Z)
   \right].
-\end{equation}
+\end{aligned}
 ```
 
 Note that, even though `log(::Rotor)` is a `QuatVec`, the derivative (and
@@ -94,9 +94,9 @@ though a scalar component of `Z` would not be allowed for a `QuatVec`, we
 measure the gradient in that direction anyway.  That is, the first element
 of the returned vector of quaternions is
 ```math
-\begin{equation}
-  \left.\frac{\partial} {\partial Z_w} exp(Z) \right|_{Z_w=0}.
-\end{equation}
+\begin{aligned}
+  \left.\frac{\partial} {\partial Z_w} \exp(Z) \right|_{Z_w=0}.
+\end{aligned}
 ```
 
 Note that, even though `exp(::QuatVec)` is a `Rotor`, the derivative (and
