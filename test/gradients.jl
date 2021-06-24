@@ -20,6 +20,17 @@
                 @test ∂3[i] ≈ ∂2[i] rtol=ϵ
             end
         end
+        ∂1 = ∂log(Rotor(1))
+        ∂2 = QuaternionF64[1, 0, 0, imz]
+        for i in 1:4
+            @test ∂1[i] ≈ ∂2[i] rtol=ϵ
+        end
+        l, ∂1 = log∂log(Rotor(1))
+        ∂2 = QuaternionF64[1, 0, 0, imz]
+        @test l ≈ QuaternionF64(0) rtol=4eps() atol=10eps()
+        for i in 1:4
+            @test ∂1[i] ≈ ∂2[i] rtol=ϵ
+        end
     end
 
     @testset verbose=true "exp" begin
@@ -40,6 +51,16 @@
             for i in 1:4
                 @test ∂3[i] ≈ ∂2[i] rtol=ϵ
             end
+        end
+        ∂1 = ∂exp(QuatVecF64(0))
+        ∂2 = QuaternionF64[1, imx, imy, imz]
+        for i in 1:4
+            @test ∂1[i] ≈ ∂2[i] rtol=ϵ
+        end
+        e, ∂1 = exp∂exp(QuatVecF64(0))
+        @test e ≈ QuaternionF64(1) rtol=4eps() atol=10eps()
+        for i in 1:4
+            @test ∂1[i] ≈ ∂2[i] rtol=ϵ
         end
     end
 
