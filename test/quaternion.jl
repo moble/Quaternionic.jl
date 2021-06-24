@@ -36,9 +36,6 @@
                         Texpected = promote_type(T1, T2)
                         expected = Qexpected{Texpected}
                         observed = promote_rule(Q1{T1}, Q2{T2})
-                        # if expected !== observed
-                        #     println("$Q1($T1), $Q2($T2) -> $observed -> $expected")
-                        # end
                         @test expected === observed
                     end
                 end
