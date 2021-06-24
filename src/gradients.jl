@@ -69,7 +69,10 @@ function log∂log(Z::Rotor)
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
-        return Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
+        return (
+            QuatVec(zero(a)),
+            Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
+        )
     end
     f = acos(Z.w) / a
     fprime = (Z.w - f) / a2
@@ -152,7 +155,10 @@ function exp∂exp(Z::QuatVec)
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
-        return Quaternion.([Quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
+        return (
+            Quaternion(one(a)),
+            Quaternion.([Quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
+        )
     end
     s, c = sincos(a)
     sinca = s / a
