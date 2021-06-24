@@ -11,24 +11,44 @@ function Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol::Real) 
 end
 
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
-    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+    (
+        iszero(Symbolics.simplify(q1.w-q2.w; expand=true)) &&
+        iszero(Symbolics.simplify(q1.x-q2.x; expand=true)) &&
+        iszero(Symbolics.simplify(q1.y-q2.y; expand=true)) &&
+        iszero(Symbolics.simplify(q1.z-q2.z; expand=true))
+    )
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Real)
-    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+    (
+        iszero(Symbolics.simplify(q1.w-q2; expand=true)) &&
+        iszero(Symbolics.simplify(q1.x; expand=true)) &&
+        iszero(Symbolics.simplify(q1.y; expand=true)) &&
+        iszero(Symbolics.simplify(q1.z; expand=true))
+    )
 end
 function Base.:(==)(q1::Real, q2::AbstractQuaternion{Symbolics.Num})
-    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+    (
+        iszero(Symbolics.simplify(q1-q2.w; expand=true)) &&
+        iszero(Symbolics.simplify(q2.x; expand=true)) &&
+        iszero(Symbolics.simplify(q2.y; expand=true)) &&
+        iszero(Symbolics.simplify(q2.z; expand=true))
+    )
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Symbolics.Num)
-    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+    (
+        iszero(Symbolics.simplify(q1.w-q2; expand=true)) &&
+        iszero(Symbolics.simplify(q1.x; expand=true)) &&
+        iszero(Symbolics.simplify(q1.y; expand=true)) &&
+        iszero(Symbolics.simplify(q1.z; expand=true))
+    )
 end
 function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
-    qdiff = Symbolics.simplify.(Symbolics.simplify(q1-q2; expand=true); expand=true)
-    iszero(qdiff.w) && iszero(qdiff.x) && iszero(qdiff.y) && iszero(qdiff.z)
+    (
+        iszero(Symbolics.simplify(q1-q2.w; expand=true)) &&
+        iszero(Symbolics.simplify(q2.x; expand=true)) &&
+        iszero(Symbolics.simplify(q2.y; expand=true)) &&
+        iszero(Symbolics.simplify(q2.z; expand=true))
+    )
 end
 Base.:(==)(q1::AbstractQuaternion{<:Real}, q2::AbstractQuaternion{<:Real}) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
 Base.:(==)(q::AbstractQuaternion{<:Real}, x::Real) = isreal(q) && real(q) == x
