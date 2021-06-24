@@ -85,7 +85,7 @@ end
 """
     slerp(q₁, q₂, τ; [unflip=false])
 
-Spherical linear interpolation of quaternions
+"Spherical Linear intERPolation" of a pair of quaternions.
 
 The result of a "slerp" is given by
 
@@ -135,12 +135,13 @@ B_{i} &= R_{i+1}\, \exp\left\{
     \log\left(\bar{R}_{i+1}\, R_{i+2}\right) \frac{t_{i+1} - t_{i}} {t_{i+2} - t_{i+1}}
     - \log\left(\bar{R}_{i}\, R_{i+1}\right)
   \right]
-\right\}
-\end{aligned}.
+\right\}.
+\end{aligned}
 ```
-The indices will be invalid for `A[begin]` and `A[end]`, and for `B[end-1]` and
-`B[end]`.  We can simply extend the input `R` values by linearly extrapolating,
-which results in the following simplified results:
+These expressions will be invalid for ``A_{\mathrm{begin}}``, ``A_{\mathrm{end}}``,
+``B_{\mathrm{end-1}}``, and ``B_{\mathrm{end}}``, because they all involve out-of-bounds indices of
+``R_i``.  We can simply extend the input `R` values by linearly extrapolating, which results in the
+following simplified results:
 ```math
 \begin{aligned}
 A_{\mathrm{begin}} &= R_{\mathrm{begin}} \\
@@ -186,7 +187,7 @@ const unflip_func = unflip  # `unflip` will be used as a local variable in
 """
     squad(Rin, tin, tout; [unflip=false], [validate=false])
 
-Perform "Spherical QUADrangle interpolation" on the input `Rotor`s `Rin` with
+"Spherical QUADrangle interpolation" of the input `Rotor`s `Rin` with
 corresponding times `tin`, to the output times `tout`.
 
 This is a slightly generalized version of [Shoemake's "spherical Bézier
