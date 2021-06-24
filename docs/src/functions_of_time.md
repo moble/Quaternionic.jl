@@ -149,7 +149,14 @@ Also note that this simple version involves allocations at each time step.  If
 this is problematic, it should be easy to [define in-place
 updating](https://diffeq.sciml.ai/dev/tutorials/ode_example/#Example-2:-Solving-Systems-of-Equations)
 versions of `ω⃗` and `angular_velocity_ode` to eliminate allocations, using
-vectors to hold the numbers instead of quaternions.
+vectors to hold the numbers instead of quaternions, and an expression like this
+for the ODE:
+```julia
+    dqdt[1] = (q[2]*ω⃗t[2] + q[3]*ω⃗t[3] + q[4]*ω⃗t[4]) / -2
+    dqdt[2] = (q[1]*ω⃗t[2] - q[3]*ω⃗t[4] + q[4]*ω⃗t[3]) / 2
+    dqdt[3] = (q[1]*ω⃗t[3] + q[2]*ω⃗t[4] - q[4]*ω⃗t[2]) / 2
+    dqdt[4] = (q[1]*ω⃗t[4] - q[2]*ω⃗t[3] + q[3]*ω⃗t[2]) / 2
+```
 
 
 ## Minimal rotation
