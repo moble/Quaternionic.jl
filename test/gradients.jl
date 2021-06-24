@@ -74,4 +74,21 @@
             end
         end
     end
+
+    @testset verbose=true "squad" begin
+        qs = Rotor[1, imx, imy, imz, -imy, -imz, -imx, -Rotor(1)]
+        ts = Float64.(1:length(qs))
+        ∂squad(t) = ForwardDiff.derivative(τ->squad(qs, ts, τ), t)
+        for i ∈ 1:length(ts)-1
+            qᵢ, qᵢ₊₁ = qs[i], qs[i+1]
+            ta, tb = ts[i], ts[i+1]
+            for τ ∈ [0.001, 0.1, 0.49, 0.5, 0.51, 0.9, 0.999]
+                t = ta + τ*(tb-ta)
+                A, B = Quaternionic.squad_control_points(qs, ts, i)
+                ∂1 = ∂squad(t)
+                ∂2 = ∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
+                @test ∂1 ≈ ∂2 rtol=100ϵ atol=ϵ
+            end
+        end
+    end
 end
