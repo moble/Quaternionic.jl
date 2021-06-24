@@ -246,6 +246,18 @@ function squad(Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::
         ta, tb = tin[i], tin[i+1]
         while j ≤ length(Rout) && tb ≥ tout[j]
             τ = (tout[j] - ta) / (tb - ta)
+            if typeof(τ) === Float64
+                t = tout[j]
+                qᵢ, qᵢ₊₁ = Rin[i], Rin[i+1]
+                println("τ = $τ")
+                println("ta = $ta")
+                println("tb = $tb")
+                println("t = $t")
+                println("qᵢ = Rotor($qᵢ)")
+                println("A = Rotor($A)")
+                println("B = Rotor($B)")
+                println("qᵢ₊₁ = Rotor($qᵢ₊₁)")
+            end
             Rout[j] = slerp(
                 slerp(Rin[i], Rin[i+1], τ),
                 slerp(A, B, τ),
