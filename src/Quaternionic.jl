@@ -17,7 +17,7 @@ export from_float_array, to_float_array,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance2
 export unflip, unflip!, slerp, squad
-export ∂log, ∂exp
+export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, ∂squad∂t
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
