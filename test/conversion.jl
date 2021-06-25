@@ -5,13 +5,6 @@
         Random.seed!(4321)
 
         @testset "Array types" begin
-            # function dumb_from_float_array(f)
-            #     println(typeof(f))
-            #     # q = mapslices(x->Quaternion{T}(x...), f, dims=(1,))
-            #     # if length(size(q))
-            #     # [1, ..]
-            #     mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
-            # end
             dumb_from_float_array(f) = mapslices(x->Quaternion{T}(x...), f, dims=(1,))[1, ..]
             dumb_from_float_array(f::Vector) = Quaternion{T}(f...)
             function dumb_to_float_array(q)

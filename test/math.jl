@@ -28,7 +28,6 @@
                     if unary_function ∈ [log, sqrt] && component!=:z && c.re < zero(T) && c.im == zero(T)
                         continue  # We arbitrarily chose the z component for these return values
                     end
-                    # println((unary_function, T, c, q))
                     cval = unary_function(c)
                     qval = ℍ_to_ℂ(unary_function(q), component)
                     @test cval ≈ qval rtol=ϵ nans=true

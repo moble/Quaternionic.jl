@@ -238,7 +238,7 @@
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left\\(d + e\\right\\)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         for T in PrimitiveTypes
             io = IOBuffer()

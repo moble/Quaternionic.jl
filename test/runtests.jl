@@ -20,7 +20,7 @@ code you don't want to measure:
 """
 
 using Quaternionic
-using Test, Random, Symbolics, StaticArrays
+using Test, Random, Symbolics, StaticArrays, ForwardDiff
 
 @variables w x y z a b c d e  # Symbolic variables
 
@@ -68,6 +68,7 @@ end
     addtests("conversion.jl")
     addtests("distance.jl")
     addtests("interpolation.jl")
+    addtests("gradients.jl")
     addtests("doctests.jl")
 end
 

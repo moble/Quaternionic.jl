@@ -1,27 +1,33 @@
-# name: benchmarks
+name: benchmarks
 
+# # Disable this action for now; also see `if` below
+on:
+  push:
+    branches-ignore:
+      - '**'
 # on: [pull_request]
 
-# jobs:
-#   benchmarks:
-#     name: Benchmarks
-#     runs-on: ubuntu-latest
-#     if: >-
-#         !contains(github.event.head_commit.message, '[skip ci]')
-#         && !contains(github.event.head_commit.message, '[skip benchmark]')
-#         && !contains(github.event.head_commit.message, '[skip benchmarks]')
-#     steps:
-#       - uses: actions/checkout@v2
-#       - uses: julia-actions/setup-julia@v1
-#         with:
-#           version: 'nightly'
-#           show-versioninfo: true
-#       - uses: julia-actions/julia-buildpkg@latest
-#       - name: Install benchmark dependencies
-#         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
-#       - name: Run benchmarks
-#         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/main"); BenchmarkCI.displayjudgement()'
-#       - name: Post benchmark results
-#         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    if: false # always skip job
+    # if: >-
+    #     !contains(github.event.head_commit.message, '[skip ci]')
+    #     && !contains(github.event.head_commit.message, '[skip benchmark]')
+    #     && !contains(github.event.head_commit.message, '[skip benchmarks]')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: 'nightly'
+          show-versioninfo: true
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Install benchmark dependencies
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI"'
+      - name: Run benchmarks
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/main"); BenchmarkCI.displayjudgement()'
+      - name: Post benchmark results
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

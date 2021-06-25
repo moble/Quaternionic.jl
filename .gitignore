@@ -29,3 +29,6 @@ Manifest.toml
 .benchmarkci/*.json
 benchmark/*.json
 benchmark/results.md
+
+# Ignore my notes
+notes

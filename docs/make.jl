@@ -15,7 +15,8 @@ makedocs(
     ),
     pages = [
         "Introduction" => "index.md",
-        "Manual" => "manual.md",
+        "Basics" => "manual.md",
+        "Functions of time" => "functions_of_time.md",
     ],
     # doctest = false
 )
