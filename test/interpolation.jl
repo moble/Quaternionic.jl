@@ -156,28 +156,29 @@
     end
 
     @testset verbose=true "Squad derivatives" begin
-        R, ω⃗, Ṙ = precessing_nutating_example();
-        tin = collect(range(0, 1, length=1000));
-        tout = tin#[1:end-1] + 0.5diff(tin);
-        Rsquad, ω⃗squad, Ṙsquad = squad(
-            Rotor.(R.(tin)), tin, tout,
-            compute_angular_velocity=true, compute_derivative=true
-        )
-        ω⃗eval = ω⃗.(tout);
-        Ṙeval = Ṙ.(tout);
-        @test ω⃗squad ≈ ω⃗eval rtol=1e-6
-        @test Ṙsquad ≈ Ṙeval rtol=1e-6
-        Rsquad2, ω⃗squad2 = squad(
-            Rotor.(R.(tin)), tin, tout,
-            compute_angular_velocity=true
-        )
-        @test Rsquad == Rsquad2
-        @test ω⃗squad == ω⃗squad2
-        Rsquad3, Ṙsquad3 = squad(
-            Rotor.(R.(tin)), tin, tout,
-            compute_derivative=true
-        )
-        @test Rsquad == Rsquad3
-        @test Ṙsquad == Ṙsquad3
+        R, ω⃗, Ṙ = precessing_nutating_example()
+        tin = collect(range(0, 1, length=1000))
+        for tout in [tin, tin[498]]
+            Rsquad, ω⃗squad, Ṙsquad = squad(
+                Rotor.(R.(tin)), tin, tout,
+                compute_angular_velocity=true, compute_derivative=true
+            )
+            ω⃗eval = ω⃗.(tout)
+            Ṙeval = Ṙ.(tout)
+            @test ω⃗squad ≈ ω⃗eval rtol=1e-6
+            @test Ṙsquad ≈ Ṙeval rtol=1e-6
+            Rsquad2, ω⃗squad2 = squad(
+                Rotor.(R.(tin)), tin, tout,
+                compute_angular_velocity=true
+            )
+            @test Rsquad == Rsquad2
+            @test ω⃗squad == ω⃗squad2
+            Rsquad3, Ṙsquad3 = squad(
+                Rotor.(R.(tin)), tin, tout,
+                compute_derivative=true
+            )
+            @test Rsquad == Rsquad3
+            @test Ṙsquad == Ṙsquad3
+        end
     end
 end
