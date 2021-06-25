@@ -242,6 +242,19 @@ function squad!(
     j = 1
     toutj = tout[j]
     if toutj == tin[1]
+        if evaluate_Ω⃗ || evaluate_Ṙ
+            i = 1
+            A, B = squad_control_points(Rin, tin, i)
+            ta, tb = tin[i], tin[i+1]
+            qᵢ, qᵢ₊₁ = Rin[i], Rin[i+1]
+            s, ∂s∂t = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
+            if evaluate_Ω⃗
+                Ω⃗out[j] = 2 * eltype(Ω⃗out)(∂s∂t / s)
+            end
+            if evaluate_Ṙ
+                Ṙout[j] = ∂s∂t
+            end
+        end
         Rout[1] = Rin[1]
         j += 1
     end
@@ -253,6 +266,7 @@ function squad!(
         end
         A, B = squad_control_points(Rin, tin, i)
         ta, tb = tin[i], tin[i+1]
+        qᵢ, qᵢ₊₁ = Rin[i], Rin[i+1]
         while j ≤ length(Rout) && tb ≥ tout[j]
             if evaluate_Ω⃗ || evaluate_Ṙ
                 s, ∂s∂t = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
@@ -266,7 +280,7 @@ function squad!(
             else
                 τ = (tout[j] - ta) / (tb - ta)
                 Rout[j] = slerp(
-                    slerp(Rin[i], Rin[i+1], τ),
+                    slerp(qᵢ, qᵢ₊₁, τ),
                     slerp(A, B, τ),
                     2τ*(1-τ)
                 )
@@ -315,7 +329,7 @@ will be a tuple.  The first element of the tuple will be a vector of `Rotor`s
 as before, but the second element will be a vector of `QuatVec`s representing
 the angular velocity.
 
-If `compute_derivative=false` is passed as a keyword, the return value will be
+If `compute_derivative=true` is passed as a keyword, the return value will be
 a tuple.  The first element of the tuple will be a vector of `Rotor`s as
 before, but the last element will be a vector of `Quaternion`s representing the
 time-derivative of the rotors.  Note that if `compute_angular_velocity=true`,
