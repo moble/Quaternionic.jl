@@ -219,11 +219,9 @@ function squad!(
     evaluate_Ṙ = (Ṙout !== nothing)
     if evaluate_Ω⃗
         @assert length(Ω⃗out) == length(tout)
-        evaluate_Ω⃗ = true
     end
     if evaluate_Ṙ
         @assert length(Ṙout) == length(tout)
-        evaluate_Ṙ = true
     end
     if validate
         @assert minimum(diff(tin)) > 0
