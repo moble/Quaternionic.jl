@@ -40,8 +40,10 @@ before passing quaternions to the interpolating functions.  For this purpose,
 there is the [`unflip`](@ref) utility function, which can also be called
 automatically by passing the corresponding keywords to `slerp` and `squad`.
 
-As noted [below](#Gradients), `slerp` and `squad` can also be differentiated
-analytically (or with `ForwardDiff`).
+As noted [below](#Gradients), `slerp` can also be simultaneously evaluated and
+differentiated analytically with [`slerp∂slerp∂τ`](@ref) (or automatically with
+`ForwardDiff`).  Similarly, `squad` and its derivative can be evaluated with
+[`squad∂squad∂τ`](@ref).
 
 ```@autodocs
 Modules = [Quaternionic]
@@ -77,8 +79,8 @@ directly (as in the example from Sec. 6.2 of [the
 paper](https://arxiv.org/abs/1604.08139)).  But ordinarily, this is a difficult
 task.  For numerical functions automatic differentiation can be used to obtain
 a numerical result for ``\dot{q}`` (see [below](#Gradient)).  Or, if ``q`` is
-discretely sampled, [`∂squad∂t`](@ref) can be used to find the derivative of
-the interpolant at any instant.
+discretely sampled, [`squad∂squad∂t`](@ref) can be used to find the derivative
+of the interpolant at any instant.
 
 Going the other way, obtaining ``q(t)`` from ``\vec{\omega}(t)``, is more
 delicate — though still possible.  It requires integrating the ordinary

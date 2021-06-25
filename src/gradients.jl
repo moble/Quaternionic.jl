@@ -267,16 +267,18 @@ end
 
 
 """
-    ∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
+    squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
 
-Compute the time-derivative of `squad`.
+Compute the value and time-derivative of [`squad`](@ref).
 
 This is primarily an internal helper function, taking various parameters
 computed within the `squad` function.  This will be used to compute the
-derivative of `squad` when the angular velocity is also requested.
+derivative of `squad` when the angular velocity is also requested.  To actually
+obtain the derivative, simply pass the relevant keyword to the `squad`
+function.
 
 """
-function ∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
+function squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
     # squad = slerp(slerp(qᵢ, qᵢ₊₁, τ), slerp(A, B, τ), 2τ*(1-τ))
     # τ = (t - ta) / (tb - ta)
     # ∂τ∂t = 1 / (tb - ta)
@@ -294,7 +296,8 @@ function ∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
     s, ∂s∂X, ∂s∂Y, ∂s∂τparabola = slerp∂slerp(X, Y, 2τ*(1-τ))
     ∂s∂t = ∂τ∂t * (2 - 4τ) * ∂s∂τparabola
 
-    ∂s∂t = (
+    (
+        s,
         sum(∂X∂t[b] * ∂s∂X[b] for b in 1:4)
         + sum(∂Y∂t[b] * ∂s∂Y[b] for b in 1:4)
         + ∂s∂t

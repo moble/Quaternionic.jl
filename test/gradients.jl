@@ -107,8 +107,9 @@
                 t = ta + τ*(tb-ta)
                 A, B = Quaternionic.squad_control_points(qs, ts, i)
                 ∂1 = ∂squad(t)
-                ∂2 = ∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
+                s, ∂2 = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
                 @test ∂1 ≈ ∂2 rtol=100ϵ atol=ϵ
+                @test s ≈ squad(qs, ts, t) rtol=ϵ atol=ϵ
             end
         end
     end

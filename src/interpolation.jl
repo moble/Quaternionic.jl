@@ -103,6 +103,10 @@ If `unflip=true` is passed as a keyword, and the input quaternions are more
 anti-parallel than parallel, the sign of `q₂` will be flipped before the result
 is computed.
 
+See also [`slerp∂slerp∂τ`](@ref), to simultaneously evaluate this function and
+its derivative with respect to `τ`, or [`slerp∂slerp`](@ref) to evaluate this
+function and its derivative with respect to each parameter of the input.
+
 """
 function slerp(q₁::R1, q₂::R2, τ::Real; unflip::Bool=false) where {R1<:Rotator, R2<:Rotator}
     if unflip && q₁⋅q₂ < 0
