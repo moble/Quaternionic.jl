@@ -42,8 +42,9 @@ automatically by passing the corresponding keywords to `slerp` and `squad`.
 
 As noted [below](#Gradients), `slerp` can also be simultaneously evaluated and
 differentiated analytically with [`slerp∂slerp∂τ`](@ref) (or automatically with
-`ForwardDiff`).  Similarly, `squad` and its derivative can be evaluated with
-[`squad∂squad∂τ`](@ref).
+`ForwardDiff`).  While, `squad` and its derivative can be evaluated with
+[`squad∂squad∂t`](@ref), this is a relatively low-level function; it is easier
+to use the relevant keyword arguments to [`squad`](@ref).
 
 ```@autodocs
 Modules = [Quaternionic]
@@ -79,8 +80,9 @@ directly (as in the example from Sec. 6.2 of [the
 paper](https://arxiv.org/abs/1604.08139)).  But ordinarily, this is a difficult
 task.  For numerical functions automatic differentiation can be used to obtain
 a numerical result for ``\dot{q}`` (see [below](#Gradient)).  Or, if ``q`` is
-discretely sampled, [`squad∂squad∂t`](@ref) can be used to find the derivative
-of the interpolant at any instant.
+discretely sampled, [`squad`](@ref) (with the relevant keyword arguments) can
+be used to find the derivative of the interpolant at any instant and/or the
+corresponding angular velocity.
 
 Going the other way, obtaining ``q(t)`` from ``\vec{\omega}(t)``, is more
 delicate — though still possible.  It requires integrating the ordinary
@@ -158,6 +160,12 @@ for the ODE:
     dqdt[2] = (q[1]*ω⃗t[2] - q[3]*ω⃗t[4] + q[4]*ω⃗t[3]) / 2
     dqdt[3] = (q[1]*ω⃗t[3] + q[2]*ω⃗t[4] - q[4]*ω⃗t[2]) / 2
     dqdt[4] = (q[1]*ω⃗t[4] - q[2]*ω⃗t[3] + q[3]*ω⃗t[2]) / 2
+```
+
+There is a particularly useful complicated but analytic example available here:
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["examples.jl"]
 ```
 
 
