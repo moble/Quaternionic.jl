@@ -18,6 +18,7 @@ export from_float_array, to_float_array,
 export distance, distance2
 export unflip, unflip!, slerp, squad
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
+export precessing_nutating_example
 
 abstract type AbstractQuaternion{T<:Real} <: Number end
 
@@ -31,6 +32,7 @@ include("conversion.jl")
 include("distance.jl")
 include("interpolation.jl")
 include("gradients.jl")
+include("examples.jl")
 
 
 function __init__()
