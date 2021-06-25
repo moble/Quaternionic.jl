@@ -290,13 +290,6 @@ function squad!(
     end
 end
 
-function squad!(
-    Rout::AbstractVector{<:Rotor},
-    Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real}; unflip=false, validate=false
-)
-    squad!(Rout, nothing, nothing, Rin, tin, tout; unflip, validate)
-end
-
 
 
 """
