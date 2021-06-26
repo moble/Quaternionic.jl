@@ -328,7 +328,7 @@ this tuple will have three elements.
 
 """
 function squad(
-        Rin::AbstractVector{<:Rotor{T}}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real};
+        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real};
         unflip=false, validate=false, compute_angular_velocity=false, compute_derivative=false
 ) where {T}
     Rout_eltype = promote_type(eltype(tin), eltype(tout), T)
@@ -348,9 +348,9 @@ end
 
 
 function squad(
-        Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real}, tout::Real;
+        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::Real;
         unflip=false, validate=false, compute_angular_velocity=false, compute_derivative=false
-)
+) where {T}
     result = squad(Rin, tin, [tout]; unflip, validate, compute_angular_velocity, compute_derivative)
     if compute_angular_velocity && compute_derivative
         return (result[1][1], result[2][1], result[3][1])
