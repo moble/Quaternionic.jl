@@ -16,9 +16,9 @@ their default values and physical interpretations:
   * `α=π/8`: The opening angle of the precession cone at ``t=0``
   * `α̇=2α/100_000`: The rate of opening of the precession cone
   * `ν=π/80`: The angle of nutation
-  * `R₀`: Overal rotation of the system
+  * `R₀=exp(-3α*imx/10)`: Overal rotation of the system
 
-The parameters are chosen to be typical of a (potentially) real precessing
+The default values are chosen to be typical of a (potentially) real precessing
 binary black hole system shortly before merger.
 
 The returned objects are three functions of time: `R`, `ω⃗`, and `Ṙ`, which
@@ -31,9 +31,9 @@ return the orientation as a `Rotor`, followed by the angular velocity as a
 julia> R, ω⃗, Ṙ = precessing_nutating_example();
 
 julia> R(12.34)
-0.9944579779058748 + 0.09804177421238347𝐢 - 0.0008485045352531204𝐣 + 0.03795287510453948𝐤
+0.9944579779058746 + 0.09804177421238346𝐢 - 0.00084850453525312𝐣 + 0.03795287510453948𝐤
 julia> ω⃗(345.67)
-0.0 + 0.00046343007342867034𝐢 - 0.0007032818419003181𝐣 + 0.006214814810035087𝐤
+0.0 + 0.00046343007342867023𝐢 - 0.0007032818419003181𝐣 + 0.006214814810035088𝐤
 julia> ϵ = 1e-6; (R(ϵ) - R(-ϵ)) / 2ϵ  # Approximate derivative at t=0
 -3.8491432263754177e-7 + (3.9080960689830135e-6)𝐢 - (6.861695854245619e-5)𝐣 + 0.003076329202503836𝐤
 julia> Ṙ(0)
