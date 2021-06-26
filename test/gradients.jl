@@ -97,7 +97,7 @@
     end
 
     @testset verbose=true "squad" begin
-        qs = Rotor[1, imx, imy, imz, -imy, -imz, -imx, -Rotor(1)]
+        qs = Rotor{Float64}[1, imx, imy, imz, -imy, -imz, -imx, -Rotor(1)]
         ts = Float64.(1:length(qs))
         ∂squad(t) = ForwardDiff.derivative(τ->squad(qs, ts, τ), t)
         for i ∈ 1:length(ts)-1
