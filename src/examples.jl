@@ -16,9 +16,9 @@ their default values and physical interpretations:
   * `α=π/8`: The opening angle of the precession cone at ``t=0``
   * `α̇=2α/100_000`: The rate of opening of the precession cone
   * `ν=π/80`: The angle of nutation
-  * `R₀`: Overal rotation of the system
+  * `R₀=exp(-3α*imx/10)`: Overal rotation of the system
 
-The parameters are chosen to be typical of a (potentially) real precessing
+The default values are chosen to be typical of a (potentially) real precessing
 binary black hole system shortly before merger.
 
 The returned objects are three functions of time: `R`, `ω⃗`, and `Ṙ`, which
