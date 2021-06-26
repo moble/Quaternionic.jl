@@ -167,6 +167,24 @@ There is a particularly useful complicated but analytic example available here:
 Modules = [Quaternionic]
 Pages   = ["examples.jl"]
 ```
+Because this is an analytic solution, we know that `R(t)` and `ω⃗(t)` output by
+this function are consistent with each other to within numerical accuracy.  We
+can check that our integration scheme agrees:
+```julia
+R, ω⃗, Ṙ = precessing_nutating_example()
+angular_velocity_ode(q, ω⃗, t) = ω⃗(t) * q / 2
+tspan = (0., 100_000.)
+angular_velocity_problem = ODEProblem(angular_velocity_ode, Quaternion(R(tspan[1])), tspan, ω⃗)
+q = solve(angular_velocity_problem, Vern9(), abstol=1e-12, reltol=0);
+```
+To check the difference between the analytic `R` and the integrated `q.u`, we
+evaluate
+```julia
+julia> maximum(distance.(R.(q.t), RotorF64.(q.u)))
+3.655365559565175e-13
+```
+The maximum error is consistent with time-stepping error, so we can have
+confidence that other `ω⃗` functions would be correctly integrated also.
 
 
 ## Minimal rotation
