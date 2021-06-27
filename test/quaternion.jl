@@ -1,4 +1,6 @@
 @testset verbose=true "Quaternion" begin
+    @test eltype([1.0, imx]) === QuaternionF64
+
     @testset "$Q{T}" for Q in [Quaternion, Rotor, QuatVec]
         for T in Types
             @test Q(T) === Q{T}
@@ -19,7 +21,11 @@
                         continue
                     end
                     @test promote_rule(T1, T2) === T1
-                    @test promote_rule(Q{T1}, T2) === Q{T1}
+                    if Q === QuatVec
+                        @test promote_rule(Q{T1}, T2) === Quaternion{T1}
+                    else
+                        @test promote_rule(Q{T1}, T2) === Q{T1}
+                    end
                     @test promote_rule(Q{T1}, Q{T2}) === Q{T1}
                 end
             end
