@@ -349,5 +349,7 @@ Base.big(q::AbstractQuaternion{T}) where {T<:Real} = wrapper(q){big(T)}(q)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion, S<:Real} =
     wrapper(Q){promote_type(eltype(Q),S)}
+Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Real, S<:Real} =
+    Quaternion{promote_type(T,S)}
 Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
     wrapper(wrapper(Q1), wrapper(Q2)){promote_type(eltype(Q1),eltype(Q2))}
