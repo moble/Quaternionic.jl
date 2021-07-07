@@ -68,5 +68,46 @@
                 end
             end
         end
+
+        let Q = QuatVec
+            i = Q{T}(𝐢)
+            j = Q{T}(𝐣)
+            k = Q{T}(𝐤)
+
+            @test i × i == zero(i)
+            @test j × j == zero(j)
+            @test k × k == zero(k)
+            @test i × j == k
+            @test j × k == i
+            @test k × i == j
+            @test j × i == -k
+            @test k × j == -i
+            @test i × k == -j
+
+            @test i ×̂ i == zero(i)
+            @test j ×̂ j == zero(j)
+            @test k ×̂ k == zero(k)
+            @test i ×̂ j == k
+            @test j ×̂ k == i
+            @test k ×̂ i == j
+            @test j ×̂ i == -k
+            @test k ×̂ j == -i
+            @test i ×̂ k == -j
+
+            @test i ×̂ 2j == k
+            @test j ×̂ 2k == i
+            @test k ×̂ 2i == j
+            @test j ×̂ 2i == -k
+            @test k ×̂ 2j == -i
+            @test i ×̂ 2k == -j
+
+            @test 2i ×̂ j == k
+            @test 2j ×̂ k == i
+            @test 2k ×̂ i == j
+            @test 2j ×̂ i == -k
+            @test 2k ×̂ j == -i
+            @test 2i ×̂ k == -j
+        end
+
     end
 end

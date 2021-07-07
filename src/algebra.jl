@@ -86,3 +86,34 @@ functions like [`unflip`](@ref).
 @inline function ⋅(p::AbstractQuaternion, q::AbstractQuaternion)
     p.w*q.w + p.x*q.x + p.y*q.y + p.z*q.z
 end
+
+"""
+    a × b
+
+Return the cross product of two pure-vector quaternions.  Equal to ½ of the
+commutator product `a*b-b*a`.
+"""
+@inline function ×(a::QuatVec, b::QuatVec)
+    QuatVec(
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    )
+end
+
+"""
+    a ×̂ b
+
+Return the *direction* of the cross product between `a` and `b`; the normalized
+vector along `a×b` — unless the magnitude is zero, in which case the zero
+vector is returned.
+"""
+@inline function ×̂(a::QuatVec, b::QuatVec)
+    axb = a × b
+    av = absvec(axb)
+    if av == zero(av)
+        return axb
+    else
+        return axb / av
+    end
+end

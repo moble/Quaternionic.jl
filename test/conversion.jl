@@ -46,7 +46,7 @@
                 @test q1 ≈ q2 atol=10eps(T)
             end
             q1 = from_euler_angles.(random_angles)
-            q2 = broadcast((αβγ)->(exp(αβγ[1]*imz/2)*exp(αβγ[2]*imy/2)*exp(αβγ[3]*imz/2)), random_angles)
+            q2 = map((αβγ)->(exp(αβγ[1]*imz/2)*exp(αβγ[2]*imy/2)*exp(αβγ[3]*imz/2)), random_angles)
             @test maximum(abs, q1 .- q2) < 10eps(T)
 
             random_rotors = randn(Rotor{T}, N)

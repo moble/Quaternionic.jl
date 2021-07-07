@@ -1,5 +1,6 @@
 @testset verbose=true "Quaternion" begin
     @test eltype([1.0, imx]) === QuaternionF64
+    @test [1.0, imx] == QuaternionF64[QuaternionF64(1.0, 0.0, 0.0, 0.0), QuaternionF64(0.0, 1.0, 0.0, 0.0)]
 
     @testset "$Q{T}" for Q in [Quaternion, Rotor, QuatVec]
         for T in Types
