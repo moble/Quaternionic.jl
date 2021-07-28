@@ -187,10 +187,13 @@ QuatVec{T}(x, y, z) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, x, y, z))
 # (::Type{QT})(w::Real) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, false, false, false); QT{eltype(v)}(v))
 # (::Type{QT})(w::Real) where {T<:Real, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, false, false, false))
 Quaternion(w::Real) = Quaternion(SVector{4}(w, false, false, false))
+Quaternion(w::Symbolics.Num) = Quaternion(SVector{4}(w, false, false, false))
 Quaternion{T}(w::Real) where {T<:Real} = Quaternion{T}(SVector{4, T}(w, false, false, false))
 Rotor(w::Real) = Rotor(SVector{4}(one(w), false, false, false))
+Rotor(w::Symbolics.Num) = Rotor(SVector{4}(one(w), false, false, false))
 Rotor{T}(w::Real) where {T<:Real} = Rotor{T}(SVector{4, T}(one(T), false, false, false))
 QuatVec(w::Real) = QuatVec(SVector{4, typeof(w)}(false, false, false, false))
+QuatVec(w::Symbolics.Num) = QuatVec(SVector{4, typeof(w)}(false, false, false, false))
 QuatVec{T}(w::Real) where {T<:Real} = QuatVec{T}(SVector{4, T}(false, false, false, false))
 
 # Copy constructor
