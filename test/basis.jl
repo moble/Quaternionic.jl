@@ -67,6 +67,36 @@
                     @test basis[i1] - basis[i2] == Q{T}(s...)
                 end
             end
+
+            # Normalization
+            for q in basis
+                n = normalize(q)
+                @test typeof(n) === Q{float(T)}
+                if Q === QuatVec && q == u
+                    continue
+                end
+                @test q == n
+                @test q == normalize(2n)
+            end
+        end
+
+        let Q = Rotor
+            # Define basis elements
+            u = Q{T}(1)
+            i = Q{T}(𝐢)
+            j = Q{T}(𝐣)
+            k = Q{T}(𝐤)
+            basis = [u, i, j, k]
+
+            # Normalization
+            for q in basis
+                n = normalize(q)
+                @test typeof(n) === Q{float(T)}
+                @test q == n
+                @test q == normalize(2n)
+                twoq = Q{T}(2*(q.components))  # Won't normalize
+                @test q == normalize(twoq)
+            end
         end
 
         let Q = QuatVec
