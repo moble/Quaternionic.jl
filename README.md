@@ -4,6 +4,7 @@
 [![Test Coverage](https://codecov.io/gh/moble/Quaternionic.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/moble/Quaternionic.jl)
 [![Documentation
 Status](https://github.com/moble/Quaternionic.jl/workflows/docs/badge.svg)](https://moble.github.io/Quaternionic.jl/dev)
+[![DOI](https://zenodo.org/badge/375490468.svg)](https://zenodo.org/badge/latestdoi/375490468)
 
 *Quaternions for Julia*
 
