@@ -53,11 +53,11 @@
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_euler_angles(to_euler_angles(q1))
-                @test q1 ≈ q2 atol=80eps(T)
+                @test q1 ≈ q2 atol=250eps(T)
             end
             q1 = random_rotors
             q2 = from_euler_angles.(to_euler_angles.(random_rotors))
-            @test maximum(abs, q1 .- q2) < 80eps(T)
+            @test maximum(abs, q1 .- q2) < 250eps(T)
         end
 
         @testset "Euler phases" begin
@@ -132,7 +132,7 @@
             for i in 1:N
                 q1 = random_rotors[i]
                 q2 = from_spherical_coordinates(to_spherical_coordinates(q1))
-                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=150eps(T)
+                @test q1*imz*inv(q1) ≈ q2*imz*inv(q2) atol=420eps(T)
             end
         end
 
