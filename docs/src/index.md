@@ -42,7 +42,7 @@ julia> using Quaternionic, Symbolics
 julia> @variables a b c d e;
 
 julia> Quaternion(a-b, b*c, c/d, d+e)
-a - b + b*c𝐢 + (c*(d^-1))𝐣 + (d + e)𝐤
+a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤
 ```
 It is also possible to construct random quaternions using [`randn`](@ref) with a `Quaternion` type.
 In analogy with the complex types, the aliases `QuaternionF64`, `QuaternionF32`, and `QuaternionF16`
