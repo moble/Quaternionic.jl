@@ -13,7 +13,7 @@ jobs:
       matrix:
         version:
           - '1'
-          - 'nightly'
+          # - 'nightly'
         os:
           - ubuntu-latest
         include:
