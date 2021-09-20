@@ -9,7 +9,6 @@ makedocs(
         prettyurls = !("local" in ARGS),  # Use clean URLs, unless built as a "local" build
         edit_link = "main",  # Link out to "main" branch on github
         canonical = "https://moble.github.io/Quaternionic.jl/stable/",
-        warn_outdated = true,
     ),
     pages = [
         "Introduction" => "index.md",
