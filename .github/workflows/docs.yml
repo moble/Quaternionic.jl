@@ -1,6 +1,6 @@
 name: docs
 
-on: [push, workflow_dispatch, release]
+on: [push,workflow_dispatch,release]
 
 jobs:
 
