@@ -7,7 +7,8 @@ jobs:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     if: >-
-        !contains(github.event.head_commit.message, '[skip ci]')
+        !contains(github.ref, 'refs/tags/')
+        && !contains(github.event.head_commit.message, '[skip ci]')
         && !contains(github.event.head_commit.message, '[skip tests]')
     strategy:
       matrix:
