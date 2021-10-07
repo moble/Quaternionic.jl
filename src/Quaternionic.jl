@@ -16,6 +16,7 @@ export from_float_array, to_float_array,
     from_spherical_coordinates, to_spherical_coordinates,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance2
+export align
 export unflip, unflip!, slerp, squad
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
@@ -30,6 +31,7 @@ include("math.jl")
 include("random.jl")
 include("conversion.jl")
 include("distance.jl")
+include("alignment.jl")
 include("interpolation.jl")
 include("gradients.jl")
 include("examples.jl")
