@@ -12,7 +12,7 @@
         Quaternion(c.re, [comp_i == component ? c.im : zero(real(c)) for comp_i in components]...)
     end
     @testset "Complex equivalence $T" for T in FloatTypes
-        ϵ = 10eps(T)
+        ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
         scalars = [zero(T), one(T), -one(T)]
         for c in [a+b*im for a in scalars for b in scalars]
             # The following constructs a quaternion from the complex number `c` by equating `im`
