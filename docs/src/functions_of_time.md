@@ -190,7 +190,7 @@ confidence that other `ω⃗` functions would be correctly integrated also.
 ## Minimal rotation
 
 One common problem arises when a system must be rotated to align some axis with
-some direction, though the rotation of the system *about* that axis is
+some direction, while the rotation of the system *about* that axis is
 irrelevant.  To be specific, suppose we want to rotate our basis vectors
 ``\hat{x}, \hat{y}, \hat{z}`` so that ``\hat{z}`` points in a particular
 direction.  A naive approach may be to determine the direction in terms of
@@ -200,6 +200,13 @@ with most applications of Euler angles, this is a terrible idea.  The resulting
 orientation will be extremely sensitive to the direction whenever it happens to
 be near the poles.  In such cases, the angular velocity of the system will be
 very high — potentially infinite, in principle.
+
+A *slightly* better approach would be to use ``(\alpha, \beta, \gamma) = (\phi,
+\theta, -\phi)``, which is the most direct rotation from the ``z`` axis to the
+point given by ``(\theta, \phi)``, and behaves better in the limit of small
+``\theta``.  However, this only works for rotations directly from the ``z``
+axis; the result depends on the choice of coordinates, and is not the best
+choice for tracking general motion of the target axis.
 
 Fortunately, it is possible to take *any* rotor ``R_\mathrm{axis}(t)`` that
 aligns the axis correctly, and compute another rotation that also aligns the
@@ -218,8 +225,8 @@ R(t) = R_\mathrm{axis}(t)\, \exp\left[\gamma(t) 𝐤 / 2 \right]
 ```
 This rotor also aligns the axis correctly, but otherwise has the smallest
 possible angular velocity.  Here, ``R_\mathrm{axis}`` may be constructed in any
-convenient way, including using spherical coordinates; the resulting ``R(t)``
-will be independent of such poor life choices.
+convenient way, including using spherical coordinates or even Euler angles; the
+resulting ``R(t)`` will be independent of such poor life choices.
 
 
 ## Derivatives and gradients
