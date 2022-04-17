@@ -92,6 +92,21 @@
                     @test z1[3] ≈ z2[3] atol=ϵ
                 end
 
+                to_euler_phases!(z1, q1)
+                @test z1[2] ≈ z2[2] atol=ϵ
+                if abs(β) < ϵ  # Typically only happens with Float16
+                    @test z1[2] ≈ one(T) atol=ϵ
+                    @test z2[2] ≈ one(T) atol=ϵ
+                    @test z1[1]*z1[3] ≈ z2[1]*z2[3] atol=ϵ
+                elseif abs(β-π) < ϵ  # Typically only happens with Float16
+                    @test z1[2] ≈ -one(T) atol=ϵ
+                    @test z2[2] ≈ -one(T) atol=ϵ
+                    @test z1[1]*z1[3] ≈ z2[1]*z2[3] atol=ϵ
+                else
+                    @test z1[1] ≈ z2[1] atol=ϵ
+                    @test z1[3] ≈ z2[3] atol=ϵ
+                end
+
                 q4 = from_euler_angles(α, zero(T), γ)
                 @test iszero(q4.x)
                 @test iszero(q4.y)

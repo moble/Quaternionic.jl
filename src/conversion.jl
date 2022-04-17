@@ -109,7 +109,7 @@ function to_euler_angles(q::AbstractQuaternion)
     a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
     a1 = atan(q.z, q.w)
     a2 = atan(-q.x, q.y)
-    [a1+a2, a0, a1-a2]
+    @SVector [a1+a2, a0, a1-a2]
 end
 
 
@@ -152,31 +152,8 @@ end
 from_euler_angles(αβγ) = from_euler_angles(αβγ...)
 
 
-function to_euler_phases!(z::Array{Complex{T}}, R::AbstractQuaternion{T}) where {T}
-    a = R[1]^2 + R[4]^2
-    b = R[2]^2 + R[3]^2
-    sqrta = √a
-    sqrtb = √b
-    if iszero(sqrta)
-        zp = one(Complex{T})
-    else
-        zp = Complex{T}(R[1], R[4]) / sqrta  # exp[i(α+γ)/2]
-    end
-    if iszero(sqrtb)
-        zm = one(Complex{T})
-    else
-        zm = Complex{T}(R[3], -R[2]) / sqrtb  # exp[i(α-γ)/2]
-    end
-    z[1] = zp * zm  # exp[iα]
-    z[2] = Complex{T}((a - b), 2 * sqrta * sqrtb) / (a + b)  # exp[iβ]
-    z[3] = zp * conj(zm)  # exp[iγ]
-    z
-end
-
-
 """
     to_euler_phases(q)
-    to_euler_phases!(z, q)
 
 Convert input quaternion to complex phases of Euler angles
 
@@ -193,8 +170,12 @@ involved in computing spherical harmonics and Wigner's 𝔇 matrices — and can
 computed from the components of the corresponding quaternion algebraically
 (without the use of transcendental functions).
 
+Note that `to_euler_phases!(z, q)` is supported for backwards compatibility,
+but because this function returns an `SVector`, there is probably no advantage
+to the in-place approach.
+
 # Returns
-- `z::Vector{Complex{T}}`: complex phases (zₐ, zᵦ, zᵧ) in that order.
+- `z::SVector{Complex{T}}`: complex phases (zₐ, zᵦ, zᵧ) in that order.
 
 # See Also
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
@@ -203,8 +184,30 @@ computed from the components of the corresponding quaternion algebraically
 
 """
 function to_euler_phases(R::AbstractQuaternion{T}) where {T}
-    z = Array{Complex{T}}(undef, 3)
-    to_euler_phases!(z, R)
+    a = R[1]^2 + R[4]^2
+    b = R[2]^2 + R[3]^2
+    sqrta = √a
+    sqrtb = √b
+    if iszero(sqrta)
+        zp = one(Complex{T})
+    else
+        zp = Complex{T}(R[1], R[4]) / sqrta  # exp[i(α+γ)/2]
+    end
+    if iszero(sqrtb)
+        zm = one(Complex{T})
+    else
+        zm = Complex{T}(R[3], -R[2]) / sqrtb  # exp[i(α-γ)/2]
+    end
+    @SVector [
+        zp * zm,  # exp[iα]
+        Complex{T}((a - b), 2 * sqrta * sqrtb) / (a + b),  # exp[iβ]
+        zp * conj(zm),  # exp[iγ]
+    ]
+end
+
+
+function to_euler_phases!(z::Array{Complex{T}}, R::AbstractQuaternion{T}) where {T}
+    z[:] = to_euler_phases(R)
     z
 end
 
@@ -273,7 +276,7 @@ function to_spherical_coordinates(q::Q) where {Q<:AbstractQuaternion}
     a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
     a1 = atan(q.z, q.w)
     a2 = atan(-q.x, q.y)
-    [a0, a1+a2]
+    @SVector [a0, a1+a2]
 end
 
 
@@ -317,24 +320,28 @@ p. 1085](http://dx.doi.org/10.2514/2.4654)
 
 """
 function from_rotation_matrix(ℛ)
-    K = Array{eltype(ℛ), 2}(undef, (4, 4))
-    K[1, 1] = (ℛ[1, 1] - ℛ[2, 2] - ℛ[3, 3])/3
-    K[1, 2] = (ℛ[2, 1] + ℛ[1, 2])/3
-    K[1, 3] = (ℛ[3, 1] + ℛ[1, 3])/3
-    K[1, 4] = (ℛ[2, 3] - ℛ[3, 2])/3
-    K[2, 2] = (ℛ[2, 2] - ℛ[1, 1] - ℛ[3, 3])/3
-    K[2, 3] = (ℛ[3, 2] + ℛ[2, 3])/3
-    K[2, 4] = (ℛ[3, 1] - ℛ[1, 3])/3
-    K[3, 3] = (ℛ[3, 3] - ℛ[1, 1] - ℛ[2, 2])/3
-    K[3, 4] = (ℛ[1, 2] - ℛ[2, 1])/3
-    K[4, 4] = (ℛ[1, 1] + ℛ[2, 2] + ℛ[3, 3])/3
-    H = Symmetric(K)
+    @assert size(ℛ) == (3, 3)
+    @inbounds begin
+        K = Array{eltype(ℛ), 2}(undef, (4, 4))
+        K[1, 1] = (ℛ[1, 1] - ℛ[2, 2] - ℛ[3, 3])/3
+        K[1, 2] = (ℛ[2, 1] + ℛ[1, 2])/3
+        K[1, 3] = (ℛ[3, 1] + ℛ[1, 3])/3
+        K[1, 4] = (ℛ[2, 3] - ℛ[3, 2])/3
+        K[2, 2] = (ℛ[2, 2] - ℛ[1, 1] - ℛ[3, 3])/3
+        K[2, 3] = (ℛ[3, 2] + ℛ[2, 3])/3
+        K[2, 4] = (ℛ[3, 1] - ℛ[1, 3])/3
+        K[3, 3] = (ℛ[3, 3] - ℛ[1, 1] - ℛ[2, 2])/3
+        K[3, 4] = (ℛ[1, 2] - ℛ[2, 1])/3
+        K[4, 4] = (ℛ[1, 1] + ℛ[2, 2] + ℛ[3, 3])/3
+        H = Symmetric(K)
 
-    # compute the *dominant* (largest eigenvalue) eigenvector
-    eigenvec = eigen(transpose(H), 4:4).vectors[:, 1]
+        # compute the *dominant* (largest eigenvalue) eigenvector
+        eigenvec = eigen(H, 4:4).vectors[:, 1]
 
-    # convert it into a quaternion
-    Rotor(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
+        # convert it into a quaternion
+        R = Rotor(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
+    end
+    R
 end
 
 
@@ -355,16 +362,10 @@ This function returns that matrix.
 
 """
 function to_rotation_matrix(q::Q) where {Q<:AbstractQuaternion}
-    m = Array{eltype(q)}(undef, 3, 3)
     n = inv(abs2(q))
-    m[1, 1] = 1 - 2*(q.y^2 + q.z^2) * n
-    m[1, 2] = 2*(q.x*q.y - q.z*q.w) * n
-    m[1, 3] = 2*(q.x*q.z + q.y*q.w) * n
-    m[2, 1] = 2*(q.x*q.y + q.z*q.w) * n
-    m[2, 2] = 1 - 2*(q.x^2 + q.z^2) * n
-    m[2, 3] = 2*(q.y*q.z - q.x*q.w) * n
-    m[3, 1] = 2*(q.x*q.z - q.y*q.w) * n
-    m[3, 2] = 2*(q.y*q.z + q.x*q.w) * n
-    m[3, 3] = 1 - 2*(q.x^2 + q.y^2) * n
-    m
+    @SMatrix [
+        1 - 2*(q.y^2 + q.z^2) * n  2*(q.x*q.y - q.z*q.w) * n  2*(q.x*q.z + q.y*q.w) * n ;
+        2*(q.x*q.y + q.z*q.w) * n  1 - 2*(q.x^2 + q.z^2) * n  2*(q.y*q.z - q.x*q.w) * n ;
+        2*(q.x*q.z - q.y*q.w) * n  2*(q.y*q.z + q.x*q.w) * n  1 - 2*(q.x^2 + q.y^2) * n
+    ]
 end

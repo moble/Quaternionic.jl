@@ -103,9 +103,8 @@ end
         end
         function next_quaternion!(chars)
             x = Symbol(popfirst!(chars))
-            # Work around <https://github.com/JuliaSymbolics/Symbolics.jl/issues/379>:
-            # xvar = @variables $x[1:4]
-            xvar = [[Symbolics.variable(:x, i) for i in 1:4]]
+            # May have to work around <https://github.com/JuliaSymbolics/Symbolics.jl/issues/379>:
+            xvar = @variables $x[1:4]
             Quaternion(xvar[1]...)
         end
 
