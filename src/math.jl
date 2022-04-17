@@ -78,9 +78,13 @@ scalar component `log(-q.w)`, but will also have a `z` component of π.  The
 choice of the `z` direction is arbitrary; the "vector" component of the
 returned quaternion could be π times any unit vector.
 
-Note that this function is not specialized to unit-quaternion inputs, so the
-scalar component of the returned value will be nonzero unless the input has
-*precisely* unit magnitude.
+Note that `q` may be either a `Quaternion` or a `Rotor`.  If it is a
+`Quaternion`, this function does not assume that it has unit norm, so the
+scalar component of the returned value will generally be nonzero unless the
+input has *precisely* unit magnitude (which is impossible with Float64 about
+52.07% of the time due to finite machine precision), and the return type is a
+`Quaternion`.  If the input is a `Rotor`, a `QuatVec` is returned, which has
+scalar part exactly 0.
 
 # Examples
 ```jldoctest
