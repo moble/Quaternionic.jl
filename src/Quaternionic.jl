@@ -40,8 +40,25 @@ include("examples.jl")
 function __init__()
     @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
         # Let ForwardDiff act naturally on quaternions.
-        @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion) where {T}
-            Quaternion(ForwardDiff.extract_derivative(T, y.components))
+        # This is cribbed from similar expressions enabling differentiation of complex-valued functions in
+        # https://github.com/JuliaDiff/ForwardDiff.jl/blob/78c73afd9a21593daf54f61c7d0db67130cf29e1/src/derivative.jl#L83-L88
+        @inline ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion) where {T} = zero(y)
+        # Both Quaternion and Rotor, when differentiated, result in a Quaternion
+        @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion{TD}) where {T, TD <: ForwardDiff.Dual}
+            Quaternion(
+                ForwardDiff.partials(T, y.w, 1),
+                ForwardDiff.partials(T, y.x, 1),
+                ForwardDiff.partials(T, y.y, 1),
+                ForwardDiff.partials(T, y.z, 1)
+            )
+        end
+        # But QuatVec results in a QuatVec
+        @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
+            QuatVec(
+                ForwardDiff.partials(T, y.x, 1),
+                ForwardDiff.partials(T, y.y, 1),
+                ForwardDiff.partials(T, y.z, 1)
+            )
         end
     end
 
