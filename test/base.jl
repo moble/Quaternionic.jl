@@ -250,4 +250,15 @@
         end
     end
 
+    @testset "Differential" begin
+        @variables t Q[1:4](t) R[1:4](t) V[1:3](t)
+        ∂ₜ = Differential(t)
+        Q = Quaternion(Q...)
+        R = Rotor(R...)
+        V = QuatVec(V...)
+        @test ∂ₜ(Q) == Quaternion(∂ₜ(Q.w), ∂ₜ(Q.x), ∂ₜ(Q.y), ∂ₜ(Q.z))
+        @test ∂ₜ(R) == Quaternion(∂ₜ(R.w), ∂ₜ(R.x), ∂ₜ(R.y), ∂ₜ(R.z))
+        @test ∂ₜ(V) == QuatVec(∂ₜ(V.x), ∂ₜ(V.y), ∂ₜ(V.z))
+    end
+
 end

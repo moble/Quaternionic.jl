@@ -146,3 +146,10 @@ function Base.write(s::IO, q::AbstractQuaternion)
 end
 
 #Broadcast.broadcasted(f, q::QT, args...) where {QT<:AbstractQuaternion{<:Real}} = wrapper(QT)(f.(q.components, args...))
+
+# Broadcast-like operations from Symbolics
+# (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q.w), d(q.x), d(q.y), d(q.z))
+# (d::Symbolics.Operator)(q::QuatVec) = QuatVec(d(q.x), d(q.y), d(q.z))
+(d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q.w), d(q.x), d(q.y), d(q.z))
+(d::Symbolics.Differential)(q::Rotor) = Quaternion(d(q.w), d(q.x), d(q.y), d(q.z))
+(d::Symbolics.Differential)(q::QuatVec) = QuatVec(d(q.x), d(q.y), d(q.z))
