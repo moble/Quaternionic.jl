@@ -62,7 +62,7 @@
 
         @testset "Euler phases" begin
             N = 5_000
-            ϵ = (T === Float16 ? 22eps(T) : 10eps(T))
+            ϵ = (T === Float16 ? 25eps(T) : 10eps(T))
 
             dumb_to_euler_phases(α, β, γ) = [exp(α*im), exp(β*im), exp(γ*im)]
 

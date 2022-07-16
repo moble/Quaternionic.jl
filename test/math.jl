@@ -62,7 +62,9 @@
                         for s ∈ S
                             cval = binary_function(c, float(s))
                             qval = ℍ_to_ℂ(binary_function(q, s), component)
-                            @test cval ≈ qval rtol=6ϵ nans=true
+                            let ϵ = (T === Float16 ? 10ϵ/6 : ϵ)
+                                @test cval ≈ qval rtol=6ϵ nans=true
+                            end
                             if !iszero(c)
                                 cval = binary_function(c/abs(c), s)
                                 qval = ℍ_to_ℂ(binary_function(Rotor(q), s), component)

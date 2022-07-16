@@ -255,7 +255,7 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
     Rotor(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
 end
 from_euler_phases(z) = from_euler_phases(z...)
-                       
+
 
 """
     to_spherical_coordinates(q)
@@ -319,7 +319,7 @@ for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6,
 p. 1085](http://dx.doi.org/10.2514/2.4654)
 
 """
-function from_rotation_matrix(ℛ)
+function from_rotation_matrix(ℛ::AbstractMatrix)
     @assert size(ℛ) == (3, 3)
     @inbounds begin
         K = Array{eltype(ℛ), 2}(undef, (4, 4))
