@@ -1,16 +1,19 @@
-using Documenter, Quaternionic
+using Quaternionic
+using Documenter
 
 DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
 
-makedocs(
+makedocs(;
+    modules=[Quaternionic],
+    authors="Michael Boyle <michael.oliver.boyle@gmail.com>",
+    repo="https://github.com/moble/Quaternionic.jl/blob/{commit}{path}#{line}",
     sitename="Quaternionic.jl",
-    modules = [Quaternionic],
-    format = Documenter.HTML(
-        prettyurls = !("local" in ARGS),  # Use clean URLs, unless built as a "local" build
-        edit_link = "main",  # Link out to "main" branch on github
-        canonical = "https://moble.github.io/Quaternionic.jl/stable/",
+    format=Documenter.HTML(
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://moble.github.io/Quaternionic.jl/stable/",
+        assets=String[],
     ),
-    pages = [
+    pages=[
         "Introduction" => "index.md",
         "Basics" => "manual.md",
         "Functions of time" => "functions_of_time.md",
@@ -18,7 +21,7 @@ makedocs(
     # doctest = false
 )
 
-deploydocs(
-    repo="github.com/moble/Quaternionic.jl.git",
-    devbranch="main"
+deploydocs(;
+    repo="github.com/moble/Quaternionic.jl",
+    devbranch="main",
 )
