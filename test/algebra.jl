@@ -55,7 +55,7 @@ module FundamentalTests
         end
     end
     test_involution(x::Quaternion) = @test conj(conj(x)) == x
-    test_involution_norm_real(x::Quaternion) = @test real(x * conj(x)) ≈ abs2(x) rtol=eps(x)
+    test_involution_norm_Number(x::Quaternion) = @test Number(x * conj(x)) ≈ abs2(x) rtol=eps(x)
     test_involution_norm_imag(x::Quaternion) = @test absvec(x * conj(x)) ≈ 0 atol=eps(abs(x))
 
     # Normed

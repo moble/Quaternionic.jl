@@ -21,7 +21,7 @@ export unflip, unflip!, slerp, squad
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
 
-abstract type AbstractQuaternion{T<:Real} <: Number end
+abstract type AbstractQuaternion{T<:Number} <: Number end
 
 
 include("quaternion.jl")

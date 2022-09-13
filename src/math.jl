@@ -11,8 +11,9 @@ julia> abs2(Quaternion(1,2,4,10))
 121
 ```
 """
-Base.abs2(q::AbstractQuaternion) = sum(q.components.^2)
-Base.abs2(q::Rotor{T}) where {T<:Real} = one(T)
+Base.abs2(q::AbstractQuaternion) = sum(@. real(q.components * conj(q.components)))
+Base.abs2(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = sum(q.components.^2)
+Base.abs2(q::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
     abs(q)
@@ -26,7 +27,7 @@ julia> abs(Quaternion(1,2,4,10))
 ```
 """
 Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
-Base.abs(q::Rotor{T}) where {T<:Real} = one(T)
+Base.abs(q::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
     abs2vec(q)
@@ -262,10 +263,10 @@ Base.angle(q::Quaternion{T}) where T = 2 * absvec(log(q))
 Base.angle(q::Rotor{T}) where T = 2 * absvec(log(q))
 
 
-function Base.:^(q::Quaternion, s::Real)
+function Base.:^(q::Quaternion, s::Number)
     exp(s * log(q))
 end
-function Base.:^(q::Rotor, s::Real)
+function Base.:^(q::Rotor, s::Number)
     q = float(q)
     absolutevec = absvec(q)
     if absolutevec ≤ eps(typeof(absolutevec))
