@@ -326,27 +326,76 @@ wrapper(::T) where {T} = wrapper(T)
 wrapper(T::UnionAll) = T
 wrapper(T::Type{Q}) where {S<:Number, Q<:AbstractQuaternion{S}} = T.name.wrapper
 wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
-wrapper(::Type{<:AbstractQuaternion}, ::Type{<:AbstractQuaternion}) = Quaternion
 
-wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
-wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Number}) where {OP} = Quaternion
-wrapper(::Type{<:Number}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
-wrapper(::Type{<:AbstractQuaternion}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
-wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:AbstractQuaternion}) where {OP} = Quaternion
+for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
+    for QT2 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
+        if QT1 === QT2
+            @eval wrapper(::Type{<:$QT1}, ::Type{<:$QT1}) = $QT1
+        else
+            @eval wrapper(::Type{<:$QT1}, ::Type{<:$QT2}) = Quaternion
+        end
+        @eval wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:$QT2}) where {OP} = Quaternion
+    end
+    @eval begin
+        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Number}) where {OP} = Quaternion
+        wrapper(::Type{<:Number}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
+        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
+        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
+    end
+end
 
 wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor
 wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:Rotor}) = Rotor
+wrapper(::Type{<:Rotor}, ::Val{+}, ::Type{<:Rotor}) = Quaternion
+wrapper(::Type{<:Rotor}, ::Val{-}, ::Type{<:Rotor}) = Quaternion
+for QT ∈ (AbstractQuaternion, Quaternion, QuatVec)
+    @eval begin
+        wrapper(::Type{<:Rotor}, ::Val{+}, ::Type{<:$QT}) = Quaternion
+        wrapper(::Type{<:Rotor}, ::Val{-}, ::Type{<:$QT}) = Quaternion
+        wrapper(::Type{<:$QT}, ::Val{+}, ::Type{<:Rotor}) = Quaternion
+        wrapper(::Type{<:$QT}, ::Val{-}, ::Type{<:Rotor}) = Quaternion
+    end
+end
+
+wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:QuatVec}) = Quaternion
+wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:QuatVec}) = Quaternion
+wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:Rotor}) = Quaternion
+wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:Rotor}) = Quaternion
 
 wrapper(::Type{<:QuatVec}, ::Val{+}, ::Type{<:QuatVec}) = QuatVec
 wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
-wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:Number}) = QuatVec
-wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:Number}) = QuatVec
-wrapper(::Type{<:Number}, ::Val{*}, ::Type{<:QuatVec}) = QuatVec
-wrapper(::Type{<:Number}, ::Val{/}, ::Type{<:QuatVec}) = QuatVec
-wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:Symbolics.Num}) = QuatVec
-wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:Symbolics.Num}) = QuatVec
-wrapper(::Type{<:Symbolics.Num}, ::Val{*}, ::Type{<:QuatVec}) = QuatVec
-wrapper(::Type{<:Symbolics.Num}, ::Val{/}, ::Type{<:QuatVec}) = QuatVec
+wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:QuatVec}) = Quaternion
+wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:QuatVec}) = Quaternion
+
+for QT ∈ (AbstractQuaternion, Quaternion, QuatVec)
+    for NT ∈ (Number, Symbolics.Num)
+        for OP ∈ (Val{*}, Val{/})
+            @eval begin
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = $QT
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = $QT
+            end
+        end
+    end
+end
+for QT ∈ (Rotor,)
+    for NT ∈ (Number, Symbolics.Num)
+        for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
+            @eval begin
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = Quaternion
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = Quaternion
+            end
+        end
+    end
+end
+for T ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor, Number, Symbolics.Num)
+    for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
+        @eval begin
+            wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
+            wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = Quaternion
+        end
+    end
+end
+
 
 Base.eltype(::Type{<:AbstractQuaternion{T}}) where {T} = T
 Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q))}
@@ -362,5 +411,7 @@ Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion, S<:Number}
     wrapper(Q){promote_type(eltype(Q),S)}
 Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number, S<:Number} =
     Quaternion{promote_type(T,S)}
+Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number, S<:AbstractQuaternion} =
+    wrapper(wrapper(QuatVec), wrapper(S)){promote_type(T,eltype(S))}
 Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion} =
     wrapper(wrapper(Q1), wrapper(Q2)){promote_type(eltype(Q1),eltype(Q2))}
