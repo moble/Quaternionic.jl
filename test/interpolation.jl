@@ -4,7 +4,7 @@
         function measure_flips(q)
             flips = 0
             for i in 2:size(q, 1)
-                if q[i].w*q[i-1].w+q[i].x*q[i-1].x+q[i].y*q[i-1].y+q[i].z*q[i-1].z < 0
+                if q[i][1]*q[i-1][1]+q[i][2]*q[i-1][2]+q[i][3]*q[i-1][3]+q[i][4]*q[i-1][4] < 0
                     flips += 1
                 end
             end

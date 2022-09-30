@@ -12,71 +12,71 @@ end
 
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
     (
-        iszero(Symbolics.simplify(q1.w-q2.w; expand=true)) &&
-        iszero(Symbolics.simplify(q1.x-q2.x; expand=true)) &&
-        iszero(Symbolics.simplify(q1.y-q2.y; expand=true)) &&
-        iszero(Symbolics.simplify(q1.z-q2.z; expand=true))
+        iszero(Symbolics.simplify(q1[1]-q2[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
     )
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion)
     (
-        iszero(Symbolics.simplify(q1.w-q2.w; expand=true)) &&
-        iszero(Symbolics.simplify(q1.x-q2.x; expand=true)) &&
-        iszero(Symbolics.simplify(q1.y-q2.y; expand=true)) &&
-        iszero(Symbolics.simplify(q1.z-q2.z; expand=true))
+        iszero(Symbolics.simplify(q1[1]-q2[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
     )
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Number)
     (
-        iszero(Symbolics.simplify(q1.w-q2; expand=true)) &&
-        iszero(Symbolics.simplify(q1.x; expand=true)) &&
-        iszero(Symbolics.simplify(q1.y; expand=true)) &&
-        iszero(Symbolics.simplify(q1.z; expand=true))
+        iszero(Symbolics.simplify(q1[1]-q2; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]; expand=true))
     )
 end
 function Base.:(==)(q1::Number, q2::AbstractQuaternion{Symbolics.Num})
     (
-        iszero(Symbolics.simplify(q1-q2.w; expand=true)) &&
-        iszero(Symbolics.simplify(q2.x; expand=true)) &&
-        iszero(Symbolics.simplify(q2.y; expand=true)) &&
-        iszero(Symbolics.simplify(q2.z; expand=true))
+        iszero(Symbolics.simplify(q1-q2[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[4]; expand=true))
     )
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Symbolics.Num)
     (
-        iszero(Symbolics.simplify(q1.w-q2; expand=true)) &&
-        iszero(Symbolics.simplify(q1.x; expand=true)) &&
-        iszero(Symbolics.simplify(q1.y; expand=true)) &&
-        iszero(Symbolics.simplify(q1.z; expand=true))
+        iszero(Symbolics.simplify(q1[1]-q2; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]; expand=true))
     )
 end
 function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
     (
-        iszero(Symbolics.simplify(q1-q2.w; expand=true)) &&
-        iszero(Symbolics.simplify(q2.x; expand=true)) &&
-        iszero(Symbolics.simplify(q2.y; expand=true)) &&
-        iszero(Symbolics.simplify(q2.z; expand=true))
+        iszero(Symbolics.simplify(q1-q2[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q2[4]; expand=true))
     )
 end
-Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1.w==q2.w) && (q1.x==q2.x) && (q1.y==q2.y) && (q1.z==q2.z)
+Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1[1]==q2[1]) && (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
 Base.:(==)(q::AbstractQuaternion{<:Number}, x::Number) = isreal(q) && real(q) == x
 Base.:(==)(x::Number, q::AbstractQuaternion) = isreal(q) && real(q) == x
 
-Base.isequal(q1::AbstractQuaternion, q2::AbstractQuaternion) = isequal(q1.w,q2.w) && isequal(q1.x,q2.x) && isequal(q1.y,q2.y) && isequal(q1.z,q2.z)
+Base.isequal(q1::AbstractQuaternion, q2::AbstractQuaternion) = isequal(q1[1],q2[1]) && isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
 
-Base.isreal(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isreal(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isinteger(q::AbstractQuaternion{T}) where {T<:Number} = isreal(q) && isinteger(real(q))
-Base.isfinite(q::AbstractQuaternion{T}) where {T<:Number} = isfinite(q.w) && isfinite(q.x) && isfinite(q.y) && isfinite(q.z)
-Base.isnan(q::AbstractQuaternion{T}) where {T<:Number} = isnan(q.w) || isnan(q.x) || isnan(q.y) || isnan(q.z)
-Base.isinf(q::AbstractQuaternion{T}) where {T<:Number} = isinf(q.w) || isinf(q.x) || isinf(q.y) || isinf(q.z)
-Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
-Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q.w) && iszero(q.x) && iszero(q.y) && iszero(q.z)
+Base.isfinite(q::AbstractQuaternion{T}) where {T<:Number} = isfinite(q[1]) && isfinite(q[2]) && isfinite(q[3]) && isfinite(q[4])
+Base.isnan(q::AbstractQuaternion{T}) where {T<:Number} = isnan(q[1]) || isnan(q[2]) || isnan(q[3]) || isnan(q[4])
+Base.isinf(q::AbstractQuaternion{T}) where {T<:Number} = isinf(q[1]) || isinf(q[2]) || isinf(q[3]) || isinf(q[4])
+Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
+Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 
 Base.in(q::AbstractQuaternion, r::AbstractRange{<:Number}) = isreal(q) && real(q) in r
 
 Base.flipsign(q::AbstractQuaternion, x::Number) = ifelse(signbit(x), -q, q)
 
-Base.bswap(q::Q) where {T<:Number, Q<:AbstractQuaternion{T}} = Q(bswap(q.w), bswap(q.x), bswap(q.y), bswap(q.z))
+Base.bswap(q::Q) where {T<:Number, Q<:AbstractQuaternion{T}} = Q(bswap(q[1]), bswap(q[2]), bswap(q[3]), bswap(q[4]))
 
 if UInt === UInt64
     const h_imagx = 0xdf13da9384000582
@@ -93,8 +93,8 @@ const hash_0_imagz = hash(0, h_imagz)
 
 function Base.hash(q::AbstractQuaternion, h::UInt)
     # TODO: with default argument specialization, this would be better:
-    # hash(q.w, h ⊻ hash(q.x, h ⊻ h_imagx) ⊻ hash(0, h ⊻ h_imagx) ⊻ hash(q.y, h ⊻ h_imagy) ⊻ hash(0, h ⊻ h_imagy) ⊻ hash(q.z, h ⊻ h_imagz) ⊻ hash(0, h ⊻ h_imagz))
-    hash(q.w, h ⊻ hash(q.x, h_imagx) ⊻ hash_0_imagx ⊻ hash(q.y, h_imagy) ⊻ hash_0_imagy ⊻ hash(q.z, h_imagz) ⊻ hash_0_imagz)
+    # hash(q[1], h ⊻ hash(q[2], h ⊻ h_imagx) ⊻ hash(0, h ⊻ h_imagx) ⊻ hash(q[3], h ⊻ h_imagy) ⊻ hash(0, h ⊻ h_imagy) ⊻ hash(q[4], h ⊻ h_imagz) ⊻ hash(0, h ⊻ h_imagz))
+    hash(q[1], h ⊻ hash(q[2], h_imagx) ⊻ hash_0_imagx ⊻ hash(q[3], h_imagy) ⊻ hash_0_imagy ⊻ hash(q[4], h_imagz) ⊻ hash_0_imagz)
 end
 
 function Base.show(io::IO, q::AbstractQuaternion)
@@ -112,10 +112,10 @@ function Base.show(io::IO, q::AbstractQuaternion)
     end
     print(
         io,
-        q.w,
-        pm(q.x), "𝐢",
-        pm(q.y), "𝐣",
-        pm(q.z), "𝐤"
+        q[1],
+        pm(q[2]), "𝐢",
+        pm(q[3]), "𝐣",
+        pm(q[4]), "𝐤"
     )
 end
 
@@ -133,10 +133,10 @@ function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
         s
     end
     s = latexstring(
-        latexify(q.w, env=:raw, bracket=true),
-        pm(q.x), "\\,\\mathbf{i}",
-        pm(q.y), "\\,\\mathbf{j}",
-        pm(q.z), "\\,\\mathbf{k}"
+        latexify(q[1], env=:raw, bracket=true),
+        pm(q[2]), "\\,\\mathbf{i}",
+        pm(q[3]), "\\,\\mathbf{j}",
+        pm(q[4]), "\\,\\mathbf{k}"
     )
     print(io, s)
 end
@@ -150,14 +150,14 @@ function Base.read(s::IO, QT::Type{Q}) where {T<:Number, Q<:AbstractQuaternion{T
 end
 
 function Base.write(s::IO, q::AbstractQuaternion)
-    write(s,q.w,q.x,q.y,q.z)
+    write(s,q[1],q[2],q[3],q[4])
 end
 
-#Broadcast.broadcasted(f, q::QT, args...) where {QT<:AbstractQuaternion{<:Number}} = wrapper(QT)(f.(q.components, args...))
+#Broadcast.broadcasted(f, q::QT, args...) where {QT<:AbstractQuaternion{<:Number}} = wrapper(QT)(f.(components(q), args...))
 
 # Broadcast-like operations from Symbolics
-# (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q.w), d(q.x), d(q.y), d(q.z))
-# (d::Symbolics.Operator)(q::QuatVec) = QuatVec(d(q.x), d(q.y), d(q.z))
-(d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q.w), d(q.x), d(q.y), d(q.z))
-(d::Symbolics.Differential)(q::Rotor) = Quaternion(d(q.w), d(q.x), d(q.y), d(q.z))
-(d::Symbolics.Differential)(q::QuatVec) = QuatVec(d(q.x), d(q.y), d(q.z))
+# (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+# (d::Symbolics.Operator)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::Rotor) = Quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))

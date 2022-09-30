@@ -24,12 +24,12 @@ module FundamentalTests
         @test v * one(eltype(v)) == v
     end
     function test_vector_scalar_multiplication(a, v::Quaternion)
-        @test a * v == Quaternion(a*v.w, a*v.x, a*v.y, a*v.z)
-        @test v * a == Quaternion(a*v.w, a*v.x, a*v.y, a*v.z)
+        @test a * v == Quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
+        @test v * a == Quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
     end
     function test_vector_scalar_division(a, v::Quaternion)
         if !iszero(a)
-            @test v / a == Quaternion(v.w / a, v.x / a, v.y / a, v.z / a)
+            @test v / a == Quaternion(v[1] / a, v[2] / a, v[3] / a, v[4] / a)
         end
         if !iszero(v)
             @test a / v ≈ a * conj(v) / abs2(v) rtol=eps(v)

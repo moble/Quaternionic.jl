@@ -94,7 +94,7 @@
                 @test typeof(n) === Q{float(T)}
                 @test q == n
                 @test q == normalize(2n)
-                twoq = Q{T}(2*(q.components))  # Won't normalize
+                twoq = Q{T}(2*(components(q)))  # Won't normalize
                 @test q == normalize(twoq)
             end
         end

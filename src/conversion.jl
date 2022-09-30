@@ -106,9 +106,9 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 """
 function to_euler_angles(q::AbstractQuaternion)
     q = float(q)
-    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
-    a1 = atan(q.z, q.w)
-    a2 = atan(-q.x, q.y)
+    a0 = 2acos(√((q[1]^2+q[4]^2)/abs2(q)))
+    a1 = atan(q[4], q[1])
+    a2 = atan(-q[2], q[3])
     @SVector [a1+a2, a0, a1-a2]
 end
 
@@ -273,9 +273,9 @@ radians.
 """
 function to_spherical_coordinates(q::Q) where {Q<:AbstractQuaternion}
     q = float(q)
-    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
-    a1 = atan(q.z, q.w)
-    a2 = atan(-q.x, q.y)
+    a0 = 2acos(√((q[1]^2+q[4]^2)/abs2(q)))
+    a1 = atan(q[4], q[1])
+    a2 = atan(-q[2], q[3])
     @SVector [a0, a1+a2]
 end
 
@@ -364,8 +364,8 @@ This function returns that matrix.
 function to_rotation_matrix(q::Q) where {Q<:AbstractQuaternion}
     n = inv(abs2(q))
     @SMatrix [
-        1 - 2*(q.y^2 + q.z^2) * n  2*(q.x*q.y - q.z*q.w) * n  2*(q.x*q.z + q.y*q.w) * n ;
-        2*(q.x*q.y + q.z*q.w) * n  1 - 2*(q.x^2 + q.z^2) * n  2*(q.y*q.z - q.x*q.w) * n ;
-        2*(q.x*q.z - q.y*q.w) * n  2*(q.y*q.z + q.x*q.w) * n  1 - 2*(q.x^2 + q.y^2) * n
+        1 - 2*(q[3]^2 + q[4]^2) * n  2*(q[2]*q[3] - q[4]*q[1]) * n  2*(q[2]*q[4] + q[3]*q[1]) * n ;
+        2*(q[2]*q[3] + q[4]*q[1]) * n  1 - 2*(q[2]^2 + q[4]^2) * n  2*(q[3]*q[4] - q[2]*q[1]) * n ;
+        2*(q[2]*q[4] - q[3]*q[1]) * n  2*(q[3]*q[4] + q[2]*q[1]) * n  1 - 2*(q[2]^2 + q[3]^2) * n
     ]
 end

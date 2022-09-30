@@ -47,18 +47,18 @@ function __init__()
         # Both Quaternion and Rotor, when differentiated, result in a Quaternion
         @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion{TD}) where {T, TD <: ForwardDiff.Dual}
             Quaternion(
-                ForwardDiff.partials(T, y.w, 1),
-                ForwardDiff.partials(T, y.x, 1),
-                ForwardDiff.partials(T, y.y, 1),
-                ForwardDiff.partials(T, y.z, 1)
+                ForwardDiff.partials(T, y[1], 1),
+                ForwardDiff.partials(T, y[2], 1),
+                ForwardDiff.partials(T, y[3], 1),
+                ForwardDiff.partials(T, y[4], 1)
             )
         end
         # But QuatVec results in a QuatVec
         @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
             QuatVec(
-                ForwardDiff.partials(T, y.x, 1),
-                ForwardDiff.partials(T, y.y, 1),
-                ForwardDiff.partials(T, y.z, 1)
+                ForwardDiff.partials(T, y[2], 1),
+                ForwardDiff.partials(T, y[3], 1),
+                ForwardDiff.partials(T, y[4], 1)
             )
         end
     end

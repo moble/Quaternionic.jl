@@ -160,6 +160,8 @@ struct QuatVec{T<:Number} <: AbstractQuaternion{T}
     QuatVec{T}(a::A) where {T<:Number, A<:AbstractArray} = new{T}(SVector{4, T}(a))
 end
 
+# We'll need this awkward way of getting the `components` field when we set `getproperty`
+components(q::AbstractQuaternion) = getfield(q, :components)
 
 # Untyped constructor from SVector
 # (::Type{QT})(v::SVector{4, T}) where {T<:Number, QT<:AbstractQuaternion} = QT{eltype(v)}(v)
@@ -197,15 +199,15 @@ QuatVec(w::Symbolics.Num) = QuatVec(SVector{4, typeof(w)}(false, false, false, f
 QuatVec{T}(w::Number) where {T<:Number} = QuatVec{T}(SVector{4, T}(false, false, false, false))
 
 # Copy constructor
-# (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT{eltype(q.components)}(q.components)
-# (::Type{QT})(q::AbstractQuaternion{S}) where {T<:Number, S<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(q.components))
-# (::Type{QT})(q::AbstractQuaternion{T}) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(q.components))
-Quaternion(q::AbstractQuaternion{T}) where {T<:Number} = Quaternion(q.components...)
-Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = Quaternion{T}(q.components...)
-Rotor(q::QT) where {T<:Number, QT<:AbstractQuaternion{T}} = Rotor(q.components...)
-Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = Rotor{T}(q.components...)
-QuatVec(q::AbstractQuaternion{T}) where {T<:Number} = QuatVec(q.components...)
-QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = QuatVec{T}(q.components...)
+# (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT{eltype(components(q))}(components(q))
+# (::Type{QT})(q::AbstractQuaternion{S}) where {T<:Number, S<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
+# (::Type{QT})(q::AbstractQuaternion{T}) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
+Quaternion(q::AbstractQuaternion{T}) where {T<:Number} = Quaternion(components(q)...)
+Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = Quaternion{T}(components(q)...)
+Rotor(q::QT) where {T<:Number, QT<:AbstractQuaternion{T}} = Rotor(components(q)...)
+Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = Rotor{T}(components(q)...)
+QuatVec(q::AbstractQuaternion{T}) where {T<:Number} = QuatVec(components(q)...)
+QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number, S<:Number} = QuatVec{T}(components(q)...)
 
 # Type constructors
 (::Type{QT})(::Type{T}) where {T<:Number, QT<:AbstractQuaternion} = QT{T}
@@ -286,9 +288,8 @@ Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 
 Base.one(::Type{QuatVec{T}}) where T = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
 
 # Getting pieces of quaternions
-components(q::AbstractQuaternion) = getfield(q, :components)
 @inline function Base.getindex(q::AbstractQuaternion, i::Integer)
-    @boundscheck checkbounds(q.components, i)
+    @boundscheck checkbounds(components(q), i)
     components(q)[i]
 end
 @inline function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
@@ -402,7 +403,7 @@ Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q)
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion{<:AbstractFloat}} = Q
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q))}
 Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
-Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(q){float(T)}(float(q.components))
+Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(q){float(T)}(float(components(q)))
 
 Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
 Base.big(q::AbstractQuaternion{T}) where {T<:Number} = wrapper(q){big(T)}(q)

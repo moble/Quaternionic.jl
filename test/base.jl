@@ -22,10 +22,10 @@
                 end
             end
         end
-        @test u.w==one(T) && u.x==zero(T) && u.y==zero(T) && u.z==zero(T)
-        @test i.w==zero(T) && i.x==one(T) && i.y==zero(T) && i.z==zero(T)
-        @test j.w==zero(T) && j.x==zero(T) && j.y==one(T) && j.z==zero(T)
-        @test k.w==zero(T) && k.x==zero(T) && k.y==zero(T) && k.z==one(T)
+        @test u[1]==one(T) && u[2]==zero(T) && u[3]==zero(T) && u[4]==zero(T)
+        @test i[1]==zero(T) && i[2]==one(T) && i[3]==zero(T) && i[4]==zero(T)
+        @test j[1]==zero(T) && j[2]==zero(T) && j[3]==one(T) && j[4]==zero(T)
+        @test k[1]==zero(T) && k[2]==zero(T) && k[3]==zero(T) && k[4]==one(T)
 
         # Check equality with constants; note that these are *equal*, but not *identical*
         @test u == one(T) + zero(T)*𝐢 == one(T)
@@ -256,9 +256,9 @@
         Q = Quaternion(Q...)
         R = Rotor(R...)
         V = QuatVec(V...)
-        @test ∂ₜ(Q) == Quaternion(∂ₜ(Q.w), ∂ₜ(Q.x), ∂ₜ(Q.y), ∂ₜ(Q.z))
-        @test ∂ₜ(R) == Quaternion(∂ₜ(R.w), ∂ₜ(R.x), ∂ₜ(R.y), ∂ₜ(R.z))
-        @test ∂ₜ(V) == QuatVec(∂ₜ(V.x), ∂ₜ(V.y), ∂ₜ(V.z))
+        @test ∂ₜ(Q) == Quaternion(∂ₜ(Q[1]), ∂ₜ(Q[2]), ∂ₜ(Q[3]), ∂ₜ(Q[4]))
+        @test ∂ₜ(R) == Quaternion(∂ₜ(R[1]), ∂ₜ(R[2]), ∂ₜ(R[3]), ∂ₜ(R[4]))
+        @test ∂ₜ(V) == QuatVec(∂ₜ(V[2]), ∂ₜ(V[3]), ∂ₜ(V[4]))
     end
 
 end

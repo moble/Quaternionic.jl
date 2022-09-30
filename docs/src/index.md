@@ -103,7 +103,7 @@ julia> imag(q)
 ```
 Alternatively, *and slightly less efficiently*, various parts can be accessed as fields:
 ```jldoctest example
-julia> q.w, q.x, q.y, q.z
+julia> q[1], q[2], q[3], q[4]
 (1.0, 2.0, 3.0, 4.0)
 julia> q.vec
 3-element Vector{Float64}:

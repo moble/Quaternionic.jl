@@ -6,7 +6,7 @@
     ### Test equivalence with complex math
     ℍ_to_ℂ(q::Real, component) = q + 0im
     function ℍ_to_ℂ(q::AbstractQuaternion, component)
-        c = q.w + im * getproperty(q, component)
+        c = q[1] + im * getproperty(q, component)
     end
     function ℂ_to_ℍ(c::Complex, component)
         Quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in components]...)
