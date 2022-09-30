@@ -319,8 +319,8 @@ Base.Number(q::AbstractQuaternion{T}) where {T<:Number} = real(q)
 Base.real(::Type{T}) where {T<:AbstractQuaternion} = eltype(T)
 Base.imag(::Type{T}) where {T<:AbstractQuaternion} = Vector{eltype(T)}
 Base.real(q::AbstractQuaternion{T}) where {T<:Number} = q[1]
-Base.imag(q::AbstractQuaternion{T}) where {T<:Number} = q[2:4]
-Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = q[2:4]
+Base.imag(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
+Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
 
 # Type games
 wrapper(::T) where {T} = wrapper(T)
@@ -349,7 +349,7 @@ wrapper(::Type{<:Rotor}, ::Val{*}, ::Type{<:Rotor}) = Rotor
 wrapper(::Type{<:Rotor}, ::Val{/}, ::Type{<:Rotor}) = Rotor
 wrapper(::Type{<:Rotor}, ::Val{+}, ::Type{<:Rotor}) = Quaternion
 wrapper(::Type{<:Rotor}, ::Val{-}, ::Type{<:Rotor}) = Quaternion
-for QT ∈ (AbstractQuaternion, Quaternion, QuatVec)
+for QT ∈ (AbstractQuaternion, QuatVec)  # Quaternion is handled below
     @eval begin
         wrapper(::Type{<:Rotor}, ::Val{+}, ::Type{<:$QT}) = Quaternion
         wrapper(::Type{<:Rotor}, ::Val{-}, ::Type{<:$QT}) = Quaternion
@@ -368,7 +368,7 @@ wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
 wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:QuatVec}) = Quaternion
 wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:QuatVec}) = Quaternion
 
-for QT ∈ (AbstractQuaternion, Quaternion, QuatVec)
+for QT ∈ (AbstractQuaternion, QuatVec)
     for NT ∈ (Number, Symbolics.Num)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
@@ -390,9 +390,9 @@ for QT ∈ (Rotor,)
 end
 for T ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor, Number, Symbolics.Num)
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
-        @eval begin
-            wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
-            wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = Quaternion
+        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
+        if T !== Quaternion
+            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = Quaternion
         end
     end
 end
