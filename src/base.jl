@@ -18,6 +18,14 @@ function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternio
         iszero(Symbolics.simplify(q1.z-q2.z; expand=true))
     )
 end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::AbstractQuaternion)
+    (
+        iszero(Symbolics.simplify(q1.w-q2.w; expand=true)) &&
+        iszero(Symbolics.simplify(q1.x-q2.x; expand=true)) &&
+        iszero(Symbolics.simplify(q1.y-q2.y; expand=true)) &&
+        iszero(Symbolics.simplify(q1.z-q2.z; expand=true))
+    )
+end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::Number)
     (
         iszero(Symbolics.simplify(q1.w-q2; expand=true)) &&
