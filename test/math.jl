@@ -9,7 +9,7 @@
         c = q.w + im * getproperty(q, component)
     end
     function ℂ_to_ℍ(c::Complex, component)
-        Quaternion(c.re, [comp_i == component ? c.im : zero(real(c)) for comp_i in components]...)
+        Quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in components]...)
     end
     @testset "Complex equivalence $T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
@@ -25,14 +25,14 @@
             for component in components
                 q = ℂ_to_ℍ(c, component)
                 for unary_function in basic_functions
-                    if unary_function ∈ [log, sqrt] && component!=:z && c.re < zero(T) && c.im == zero(T)
+                    if unary_function ∈ [log, sqrt] && component!=:z && real(c) < zero(T) && imag(c) == zero(T)
                         continue  # We arbitrarily chose the z component for these return values
                     end
                     cval = unary_function(c)
                     qval = ℍ_to_ℂ(unary_function(q), component)
                     @test cval ≈ qval rtol=ϵ nans=true
                     # Repeat the test on QuatVec for `exp` for pure-imaginary input
-                    if unary_function ∈ [exp] && iszero(c.re)
+                    if unary_function ∈ [exp] && iszero(real(c))
                         qval = ℍ_to_ℂ(unary_function(QuatVec(q)), component)
                         @test cval ≈ qval rtol=ϵ nans=true
                     end
@@ -54,7 +54,7 @@
                     end
                 end
                 for binary_function in [(^)]
-                    if binary_function ∈ [(^)] && ((component!=:z && c.re < zero(T) && c.im == zero(T)) || iszero(c))
+                    if binary_function ∈ [(^)] && ((component!=:z && real(c) < zero(T) && imag(c) == zero(T)) || iszero(c))
                         continue  # We arbitrarily chose the z component for these return values
                     end
                     if T !== BigFloat
@@ -77,7 +77,7 @@
                         cval = binary_function(c, s)
                         qval = ℍ_to_ℂ(binary_function(q, s), component)
                         @test cval ≈ qval rtol=ϵ nans=true
-                        if iszero(c.re)
+                        if iszero(real(c))
                             qval = ℍ_to_ℂ(binary_function(QuatVec(q), s), component)
                             @test cval ≈ qval rtol=ϵ nans=true
                         end

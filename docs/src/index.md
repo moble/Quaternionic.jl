@@ -67,29 +67,32 @@ quaternion with the type of the other number.
     as expected.  However, many functions (such as [`exp`](@ref), [`log`](@ref), etc.)  will then
     return a `Quaternion` of some different type, just as is the case for `Complex{<:Integer}`.
 
-Components of a quaternion can be accessed as fields:
+Components of the quaternion are stored as a four-element static array (even for `QuatVec`):
 ```jldoctest example
-julia> q.w, q.x, q.y, q.z
-(1.0, 2.0, 3.0, 4.0)
+julia> components(q)
+4-element StaticArraysCore.SVector{4, Float64} with indices SOneTo(4):
+ 1.0
+ 2.0
+ 3.0
+ 4.0
 ```
-You can also extract the "vector" component (the last three elements) as
+Those components can be indexed directly, just like an ordinary array:
 ```jldoctest example
-julia> q.vec
+julia> q[1], q[2], q[3], q[4]
+(1.0, 2.0, 3.0, 4.0)
+julia> q[2:4]
 3-element Vector{Float64}:
  2.0
  3.0
  4.0
+julia> q[[3, 2]]
+2-element Vector{Float64}:
+ 3.0
+ 2.0
 ```
 For convenience, the scalar and vector components can also be accessed in analogy with complex
 numbers as
 ```jldoctest example
-julia> q.re
-1.0
-julia> q.im
-3-element Vector{Float64}:
- 2.0
- 3.0
- 4.0
 julia> real(q)
 1.0
 julia> imag(q)
@@ -98,19 +101,30 @@ julia> imag(q)
  3.0
  4.0
 ```
-It is also possible to index an individual `Quaternion` just as you would an array (of length 4):
+Alternatively, *and slightly less efficiently*, various parts can be accessed as fields:
 ```jldoctest example
-julia> q[1]
-1.0
-julia> q[[3, 2]]
-2-element Vector{Float64}:
- 3.0
+julia> q.w, q.x, q.y, q.z
+(1.0, 2.0, 3.0, 4.0)
+julia> q.vec
+3-element Vector{Float64}:
  2.0
+ 3.0
+ 4.0
+julia> q.re
+1.0
+julia> q.im
+3-element Vector{Float64}:
+ 2.0
+ 3.0
+ 4.0
 ```
+Again, however, these field accesses incur a slight overhead, so it's more efficient to treat the
+quaternion as an array and use indexing.
+
 Functions may also be broadcast to *each component* of a `Quaternion`.  For example, this can be
 particularly helpful when simplifying `Symbolics` expressions:
 ```jldoctest symbolics
-julia> @variables q[1:4];
+julia> @variables q[1:4];  # Defines q[1] through q[4] as symbolic variables
 
 julia> Q = Quaternion(q...);
 

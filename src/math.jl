@@ -40,7 +40,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::AbstractQuaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
+abs2vec(q::AbstractQuaternion) = @inbounds q[2]^2 + q[3]^2 + q[4]^2
 
 """
     absvec(q)
@@ -173,7 +173,7 @@ The general formula whenever the denominator is nonzero is
 \sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q.w}}
 ```
 
-This can be proven by expanding `q` as `q.w + q.vec` and multiplying the
+This can be proven by expanding `q` as `q.w + vec(q)` and multiplying the
 expression above by itself.
 
 When the denominator is zero, this function has discontinuous (and fairly
@@ -283,6 +283,15 @@ function Base.:^(q::Rotor, s::Number)
     f2 = sin_f1 / absolutevec
     Rotor{typeof(cos_f1)}([cos_f1, f2*q.x, f2*q.y, f2*q.z])
 end
-Base.:^(q::Quaternion, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
-Base.:^(q::QuatVec, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
-Base.:^(q::Rotor, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
+
+# We need to be more specific about the quaternion types here because we had
+# to be specific about the quaternion type above, and Integer<:Number
+for QT ∈ [AbstractQuaternion, Quaternion, QuatVec, Rotor]
+    @eval function Base.:^(q::$QT, s::Integer)
+        if s ≥ 0
+            Base.power_by_squaring(q, s)
+        else
+            inv(Base.power_by_squaring(q, -s))
+        end
+    end
+end

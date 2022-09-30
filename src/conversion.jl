@@ -55,7 +55,7 @@ end
 function to_float_array(::Val{false}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Number}
     F = Array{T}(undef, (4, size(A)...))
     @inbounds for (i, j) in zip(eachindex(A), Base.Iterators.partition(eachindex(F), 4))
-        @views F[j] .= A[i].components[:]
+        @views F[j] .= components(A[i])
     end
     F
 end
@@ -252,7 +252,7 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
     if abs(zₐ - zp * zm) > abs(zₐ + zp * zm)
         zp *= -1
     end
-    Rotor(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
+    Rotor(real(zb) * real(zp), -imag(zb) * imag(zm), imag(zb) * real(zm), real(zb) * imag(zp))
 end
 from_euler_phases(z) = from_euler_phases(z...)
 

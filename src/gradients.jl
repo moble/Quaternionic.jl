@@ -31,7 +31,7 @@ julia> ∂log∂w, ∂log∂x, ∂log∂y, ∂log∂z = ∂log(randn(QuatVecF64)
 ```
 """
 function ∂log(Z::Rotor)
-    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * Z.vec
+    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * vec(Z)
     # f(Z) = atan(absvec / Z.w) / absvec = acos(Z.w) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
@@ -64,7 +64,7 @@ julia> l, ∂l = log∂log(randn(RotorF64));
 ```
 """
 function log∂log(Z::Rotor)
-    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * Z.vec
+    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * vec(Z)
     # f(Z) = atan(absvec / Z.w) / absvec = acos(Z.w) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
@@ -115,7 +115,7 @@ julia> ∂exp∂w, ∂exp∂x, ∂exp∂y, ∂exp∂z = ∂exp(randn(QuatVecF64)
 ```
 """
 function ∂exp(Z::QuatVec)
-    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * Z.vec
+    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * vec(Z)
     # g(Z) = exp(Z.w) * sin(absvec) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
@@ -150,7 +150,7 @@ julia> e, ∂e = exp∂exp(randn(QuatVecF64));
 ```
 """
 function exp∂exp(Z::QuatVec)
-    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * Z.vec
+    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * vec(Z)
     # g(Z) = exp(Z.w) * sin(absvec) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)

@@ -286,32 +286,40 @@ Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 
 Base.one(::Type{QuatVec{T}}) where T = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
 
 # Getting pieces of quaternions
+components(q::AbstractQuaternion) = getfield(q, :components)
+@inline function Base.getindex(q::AbstractQuaternion, i::Integer)
+    @boundscheck checkbounds(q.components, i)
+    components(q)[i]
+end
 @inline function Base.getproperty(q::AbstractQuaternion, sym::Symbol)
     @inbounds begin
         if sym === :w
-            return q.components[1]
+            return q[1]
         elseif sym === :x
-            return q.components[2]
+            return q[2]
         elseif sym === :y
-            return q.components[3]
+            return q[3]
         elseif sym === :z
-            return q.components[4]
+            return q[4]
         elseif sym === :re
-            return q.components[1]
+            return q[1]
         elseif sym === :im
-            return q.components[2:4]
+            return q[2:4]
         elseif sym === :vec
-            return q.components[2:4]
+            return q[2:4]
         else # fallback to getfield
             return getfield(q, sym)
         end
     end
 end
-@inline Base.getindex(q::AbstractQuaternion, i::Int) = (@boundscheck checkbounds(q.components,i); q.components[i])
 Base.@propagate_inbounds Base.getindex(q::AbstractQuaternion, I) = [q[i] for i in I]
 Base.Number(::Type{QT}) where {T<:Number, QT<:AbstractQuaternion{T}} = Number(T)
-Base.Number(q::AbstractQuaternion{T}) where {T<:Number} = q.re
-Base.imag(q::AbstractQuaternion{T}) where {T<:Number} = q.im
+Base.Number(q::AbstractQuaternion{T}) where {T<:Number} = real(q)
+Base.real(::Type{T}) where {T<:AbstractQuaternion} = eltype(T)
+Base.imag(::Type{T}) where {T<:AbstractQuaternion} = Vector{eltype(T)}
+Base.real(q::AbstractQuaternion{T}) where {T<:Number} = q[1]
+Base.imag(q::AbstractQuaternion{T}) where {T<:Number} = q[2:4]
+Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = q[2:4]
 
 # Type games
 wrapper(::T) where {T} = wrapper(T)

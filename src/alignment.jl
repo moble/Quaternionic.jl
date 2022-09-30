@@ -55,13 +55,13 @@ above.
 """
 function align(a⃗::AbstractArray{<:QuatVec}, b⃗::AbstractArray{<:QuatVec}, w::AbstractArray{<:Real})
     # This is Eq. (5.11) from Markley and Crassidis
-    S = sum(w[i] * a⃗[i].vec * b⃗[i].vec' for i in eachindex(a⃗, b⃗, w))
+    S = sum(w[i] * vec(a⃗[i]) * vec(b⃗[i])' for i in eachindex(a⃗, b⃗, w))
     return _align_Wahba(S)
 end
 
 function align(a⃗::AbstractArray{<:QuatVec}, b⃗::AbstractArray{<:QuatVec})
     # This is Eq. (5.11) from Markley and Crassidis
-    S = sum(a⃗[i].vec * b⃗[i].vec' for i in eachindex(a⃗, b⃗))
+    S = sum(vec(a⃗[i]) * vec(b⃗[i])' for i in eachindex(a⃗, b⃗))
     return _align_Wahba(S)
 end
 
@@ -70,9 +70,9 @@ function _align_Wahba(S)
     # conventions by flipping the sign of ``z``, and moving the final dimension
     # to the first dimension.
     M = Symmetric([
-            S[1,1]+S[2,2]+S[3,3]      S[3,2]-S[2,3]         S[1,3]-S[3,1]           S[2,1]-S[1,2]    
-                S[3,2]-S[2,3]      S[1,1]-S[2,2]-S[3,3]     S[1,2]+S[2,1]           S[1,3]+S[3,1]    
-                S[1,3]-S[3,1]         S[1,2]+S[2,1]      -S[1,1]+S[2,2]-S[3,3]      S[2,3]+S[3,2]    
+            S[1,1]+S[2,2]+S[3,3]      S[3,2]-S[2,3]         S[1,3]-S[3,1]           S[2,1]-S[1,2]
+                S[3,2]-S[2,3]      S[1,1]-S[2,2]-S[3,3]     S[1,2]+S[2,1]           S[1,3]+S[3,1]
+                S[1,3]-S[3,1]         S[1,2]+S[2,1]      -S[1,1]+S[2,2]-S[3,3]      S[2,3]+S[3,2]
                 S[2,1]-S[1,2]         S[1,3]+S[3,1]         S[2,3]+S[3,2]       -S[1,1]-S[2,2]+S[3,3]
     ])
     # This extracts the dominant eigenvector, and interprets it as a Rotor.  In

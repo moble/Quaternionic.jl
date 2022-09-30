@@ -251,7 +251,7 @@
     end
 
     @testset "Differential" begin
-        @variables t Q[1:4](t) R[1:4](t) V[1:3](t)
+        @variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
         ∂ₜ = Differential(t)
         Q = Quaternion(Q...)
         R = Rotor(R...)

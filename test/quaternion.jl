@@ -1,16 +1,15 @@
 @testset verbose=true "Quaternion" begin
     @test eltype([1.0, imx]) === QuaternionF64
-    @test [1.0, imx] == QuaternionF64[QuaternionF64(1.0, 0.0, 0.0, 0.0), QuaternionF64(0.0, 1.0, 0.0, 0.0)]
+    @test [1.0, imx] == QuaternionF64[
+        QuaternionF64(1.0, 0.0, 0.0, 0.0),
+        QuaternionF64(0.0, 1.0, 0.0, 0.0)
+    ]
 
     @testset "$Q{T}" for Q in [Quaternion, Rotor, QuatVec]
         for T in Types
             @test Q(T) === Q{T}
             @test Q(Q{T}) === Q{T}
-            if Q === Rotor
-                @test real(Q{T}) === T
-            else
-                @test real(Q{T}) === T
-            end
+            @test real(Q{T}) === T
         end
 
         for TypeGroup in [FloatTypes, IntTypes]
