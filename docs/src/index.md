@@ -156,7 +156,7 @@ vector `v`, this is expressed mathematically as
 
 Here, the first equality is the usual definition of conjugation of ``v`` by ``R``, while the second
 equality stems from the fact that for a rotor, ``R^{-1} = \\bar{R}``.  This second operation is
-sometimes referred to as "sandwiching" or "⋆-conjugation" (when working in a ⋆-algebra) to
+sometimes referred to as "sandwiching" or "∗-conjugation" (when working in a ∗-algebra) to
 distinguish it from the more usual group conjugation involving the inverse.  It is this second
 version that is implemented here by using `Quaternion`s or `Rotor`s as functions.  For a `Q` of either type, and a `v<:QuatVec`, we have
 ```julia
