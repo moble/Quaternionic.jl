@@ -134,7 +134,25 @@ end
     return Rotor(q)  # already normalizes
 end
 
-function (R::Rotor)(q::QuatVec)
-    s = R[1]
-    v + 2
+function (R::Rotor)(v::QuatVec)
+    QuatVec(SA[
+        false,
+        ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
+            + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
+        ((R[1]^2 - R[2]^2 + R[3]^2 - R[4]^2)*v[3]
+            + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
+        ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
+            + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
+    ])
+end
+function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
+    QT(SA[
+        abs2(R) * v[1],
+        ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
+            + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
+        ((R[1]^2 - R[2]^2 + R[3]^2 - R[4]^2)*v[3]
+            + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
+        ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
+            + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
+    ])
 end
