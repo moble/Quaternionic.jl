@@ -96,7 +96,7 @@ numbers as
 julia> real(q)
 1.0
 julia> imag(q)
-3-element Vector{Float64}:
+3-element view(::StaticArraysCore.SVector{4, Float64}, 2:4) with eltype Float64:
  2.0
  3.0
  4.0
