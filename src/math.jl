@@ -11,9 +11,8 @@ julia> abs2(Quaternion(1,2,4,10))
 121
 ```
 """
-Base.abs2(q::AbstractQuaternion) = sum(@. real(components(q) * conj(components(q))))
-Base.abs2(q::QT) where {T<:Real, QT<:AbstractQuaternion{T}} = sum(components(q).^2)
-Base.abs2(q::Rotor{T}) where {T<:Number} = one(real(T))
+Base.abs2(q::AbstractQuaternion) = sum(abs2, components(q))
+Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 """
     abs(q)
@@ -27,7 +26,7 @@ julia> abs(Quaternion(1,2,4,10))
 ```
 """
 Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
-Base.abs(q::Rotor{T}) where {T<:Number} = one(real(T))
+Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
     abs2vec(q)
@@ -40,7 +39,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::AbstractQuaternion) = @inbounds q[2]^2 + q[3]^2 + q[4]^2
+abs2vec(q::AbstractQuaternion) = sum(abs2, vec(q))
 
 """
     absvec(q)
