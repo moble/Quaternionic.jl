@@ -10,7 +10,7 @@ will also work with `Quaternion`.
 
 In addition to a basic `Quaternion{T}` type, we also have [`Rotor{T}`](@ref) and
 [`QuatVec{T}`](@ref) specializations, which can improve the accuracy and efficiency of certain
-applications.  Each of these can be defined over any `T<:Real`; in addition to the standard
+applications.  Each of these can be defined over any `T<:Number`; in addition to the standard
 primitive types (`Float64`, etc.), `BigFloat` and `Symbolics.Num` are tested extensively.
 
 ## Examples
@@ -131,6 +131,8 @@ julia> Q = Quaternion(q...);
 julia> simplify.(Q * imz * conj(Q))
 0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (2q[3]*q[4] - 2q[1]*q[2])𝐣 + (q[1]^2 + q[4]^2 - (q[2]^2) - (q[3]^2))𝐤
 ```
+(Though, note that you probably want to use `Q(imz)` instead of the last expression, when using
+floating-point numbers, for efficiency reasons.)
 
 The basic algebraic operations work as you would expect:
 ```jldoctest example
@@ -160,10 +162,10 @@ sometimes referred to as "sandwiching" or "∗-conjugation" (when working in a �
 distinguish it from the more usual group conjugation involving the inverse.  It is this second
 version that is implemented here by using `Quaternion`s or `Rotor`s as functions.  For a `Q` of either type, and a `v<:QuatVec`, we have
 ```julia
-Q(v) == Q * v * conj(Q)
+Q(v) ≈ Q * v * conj(Q)
 ```
-(at least within numerical precision).  In particular, `Q(v)` is slightly more efficient than
-performing the conjugation and two multiplications explicitly.
+In particular, `Q(v)` (the left-hand side) is about twice as efficient as performing the
+conjugation and two multiplications explicitly (the right-hand side).
 
 ## Contents
 
