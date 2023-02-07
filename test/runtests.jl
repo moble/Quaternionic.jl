@@ -37,13 +37,13 @@ QTypes = [Quaternion, Rotor, QuatVec]
 Base.eps(::Quaternion{T}) where {T} = eps(T)
 Base.eps(T::Type{<:Integer}) = zero(T)
 Base.eps(n::Num) = zero(n)
-Base.:≈(a::Num, b::Num; kwargs...) = Symbolics.simplify(a-b; expand=true) == 0
+Base.:≈(a::Num, b::Num; kwargs...) = iszero(Symbolics.simplify(a-b; expand=true))
 
 enabled_tests = lowercase.(ARGS)
 
 help = ("help" ∈ enabled_tests || "--help" ∈ enabled_tests)
 helptests = []
-    
+
 # This block is cribbed from StaticArrays.jl/test/runtests.jl
 function addtests(fname)
     key = lowercase(splitext(fname)[1])

@@ -50,8 +50,8 @@ module FundamentalTests
     end
     function test_inverse(v::Quaternion)
         if !iszero(v)
-            @test v * inv(v) == one(v)
-            @test inv(v) * v == one(v)
+            @test v * inv(v) ≈ one(v)
+            @test inv(v) * v ≈ one(v)
         end
     end
     test_involution(x::Quaternion) = @test conj(conj(x)) == x
