@@ -32,7 +32,7 @@
             @test f isa Vector{T}
             @test eltype(f) === T
             @test size(f) == (4,)
-            @test f == q.components
+            @test f == components(q)
         end
 
         @testset "Euler angles" begin
@@ -108,8 +108,8 @@
                 end
 
                 q4 = from_euler_angles(α, zero(T), γ)
-                @test iszero(q4.x)
-                @test iszero(q4.y)
+                @test iszero(q4[2])
+                @test iszero(q4[3])
                 z3 = dumb_to_euler_phases(α, zero(T), γ)
                 z4 = to_euler_phases(q4)
                 @test z3[2] ≈ one(T) atol=ϵ
@@ -117,15 +117,15 @@
                 @test z3[1]*z3[3] ≈ z4[1]*z4[3] atol=ϵ
 
                 q6 = from_euler_angles(α, T(π), γ)
-                @test q6.w ≈ zero(T) atol=ϵ
-                @test q6.z ≈ zero(T) atol=ϵ
+                @test q6[1] ≈ zero(T) atol=ϵ
+                @test q6[4] ≈ zero(T) atol=ϵ
                 z5 = dumb_to_euler_phases(α, T(π), γ)
                 z6 = to_euler_phases(q6)
                 @test z5[2] ≈ -one(T) atol=ϵ
                 @test z6[2] ≈ -one(T) atol=ϵ
                 @test z5[1]*conj(z5[3]) ≈ z6[1]*conj(z6[3]) atol=(T === Float16 ? 20ϵ : ϵ)
 
-                q7 = Quaternion(0, q6.x, q6.y, 0)
+                q7 = Quaternion(0, q6[2], q6[3], 0)
                 z7 = to_euler_phases(q7)
                 @test z7[2] == -one(T)
                 @test z7[1]*conj(z7[3]) ≈ exp((α-γ)*im) atol=10eps(T)

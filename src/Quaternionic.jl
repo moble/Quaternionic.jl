@@ -8,6 +8,7 @@ export AbstractQuaternion
 export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
 export Rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, QuatVecF64, QuatVecF32, QuatVecF16
+export components
 export (⋅), (×), (×̂), normalize
 export abs2vec, absvec
 export from_float_array, to_float_array,
@@ -21,7 +22,7 @@ export unflip, unflip!, slerp, squad
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
 
-abstract type AbstractQuaternion{T<:Real} <: Number end
+abstract type AbstractQuaternion{T<:Number} <: Number end
 
 
 include("quaternion.jl")
@@ -46,18 +47,18 @@ function __init__()
         # Both Quaternion and Rotor, when differentiated, result in a Quaternion
         @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion{TD}) where {T, TD <: ForwardDiff.Dual}
             Quaternion(
-                ForwardDiff.partials(T, y.w, 1),
-                ForwardDiff.partials(T, y.x, 1),
-                ForwardDiff.partials(T, y.y, 1),
-                ForwardDiff.partials(T, y.z, 1)
+                ForwardDiff.partials(T, y[1], 1),
+                ForwardDiff.partials(T, y[2], 1),
+                ForwardDiff.partials(T, y[3], 1),
+                ForwardDiff.partials(T, y[4], 1)
             )
         end
         # But QuatVec results in a QuatVec
         @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
             QuatVec(
-                ForwardDiff.partials(T, y.x, 1),
-                ForwardDiff.partials(T, y.y, 1),
-                ForwardDiff.partials(T, y.z, 1)
+                ForwardDiff.partials(T, y[2], 1),
+                ForwardDiff.partials(T, y[3], 1),
+                ForwardDiff.partials(T, y[4], 1)
             )
         end
     end

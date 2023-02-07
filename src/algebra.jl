@@ -12,25 +12,25 @@ julia> conj(Quaternion(1,2,3,4))
 1 - 2𝐢 - 3𝐣 - 4𝐤
 ```
 """
-Base.conj(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q.w, -q.x, -q.y, -q.z)
+Base.conj(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q[1], -q[2], -q[3], -q[4])
 
-Base.:-(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(-q.components)
+Base.:-(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(-components(q))
 
 
 for TA ∈ [AbstractQuaternion, Rotor, QuatVec]
     for TB ∈ [AbstractQuaternion, Rotor, QuatVec]
         @eval begin
-            Base.:+(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(+), $TB)(q.components+p.components)
-            Base.:-(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(-), $TB)(q.components-p.components)
+            Base.:+(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(+), $TB)(components(q)+components(p))
+            Base.:-(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(-), $TB)(components(q)-components(p))
         end
     end
     for TB ∈ [Real, Symbolics.Num]
         @eval begin
-            Base.:+(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(+), $TB)(q.w+p, q.x, q.y, q.z)
-            Base.:-(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(-), $TB)(q.w-p, q.x, q.y, q.z)
+            Base.:+(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(+), $TB)(q[1]+p, q[2], q[3], q[4])
+            Base.:-(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(-), $TB)(q[1]-p, q[2], q[3], q[4])
 
-            Base.:+(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(+), $TA)(p+q.w, q.x, q.y, q.z)
-            Base.:-(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(-), $TA)(p-q.w, -q.x, -q.y, -q.z)
+            Base.:+(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(+), $TA)(p+q[1], q[2], q[3], q[4])
+            Base.:-(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(-), $TA)(p-q[1], -q[2], -q[3], -q[4])
         end
     end
 end
@@ -38,10 +38,10 @@ end
 
 function Base.:*(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuaternion}
     wrapper(Q1, Val(*), Q2)(
-        q.w*p.w - q.x*p.x - q.y*p.y - q.z*p.z,
-        q.w*p.x + q.x*p.w + q.y*p.z - q.z*p.y,
-        q.w*p.y - q.x*p.z + q.y*p.w + q.z*p.x,
-        q.w*p.z + q.x*p.y - q.y*p.x + q.z*p.w
+        q[1]*p[1] - q[2]*p[2] - q[3]*p[3] - q[4]*p[4],
+        q[1]*p[2] + q[2]*p[1] + q[3]*p[4] - q[4]*p[3],
+        q[1]*p[3] - q[2]*p[4] + q[3]*p[1] + q[4]*p[2],
+        q[1]*p[4] + q[2]*p[3] - q[3]*p[2] + q[4]*p[1]
     )
 end
 
@@ -52,22 +52,22 @@ function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
     end
     den = abs2(p)
     wrapper(Q1, Val(/), Q2)(
-        (+q.w*p.w + q.x*p.x + q.y*p.y + q.z*p.z) / den,
-        (-q.w*p.x + q.x*p.w - q.y*p.z + q.z*p.y) / den,
-        (-q.w*p.y + q.x*p.z + q.y*p.w - q.z*p.x) / den,
-        (-q.w*p.z - q.x*p.y + q.y*p.x + q.z*p.w) / den
+        (+q[1]*p[1] + q[2]*p[2] + q[3]*p[3] + q[4]*p[4]) / den,
+        (-q[1]*p[2] + q[2]*p[1] - q[3]*p[4] + q[4]*p[3]) / den,
+        (-q[1]*p[3] + q[2]*p[4] + q[3]*p[1] - q[4]*p[2]) / den,
+        (-q[1]*p[4] - q[2]*p[3] + q[3]*p[2] + q[4]*p[1]) / den
     )
 end
 
 
 for S ∈ [Real, Symbolics.Num]
     @eval begin
-        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*p.components)
-        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*p.components)
-        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(/), $S)(p.components/s)
+        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*components(p))
+        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*components(p))
+        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(/), $S)(components(p)/s)
         function Base.:/(s::$S, p::Q) where {Q<:AbstractQuaternion}
             f = s / abs2(p)
-            wrapper($S, Val(/), Q)(p.w * f, -p.x * f, -p.y * f, -p.z * f)
+            wrapper($S, Val(/), Q)(p[1] * f, -p[2] * f, -p[3] * f, -p[4] * f)
         end
     end
 end
@@ -84,7 +84,7 @@ determine whether the two quaternions are more anti-parallel than parallel, for
 functions like [`unflip`](@ref).
 """
 @inline function ⋅(p::AbstractQuaternion, q::AbstractQuaternion)
-    p.w*q.w + p.x*q.x + p.y*q.y + p.z*q.z
+    p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]
 end
 
 """
@@ -95,9 +95,9 @@ commutator product `a*b-b*a`.
 """
 @inline function ×(a::QuatVec, b::QuatVec)
     QuatVec(
-        a.y * b.z - a.z * b.y,
-        a.z * b.x - a.x * b.z,
-        a.x * b.y - a.y * b.x
+        a[3] * b[4] - a[4] * b[3],
+        a[4] * b[2] - a[2] * b[4],
+        a[2] * b[3] - a[3] * b[2]
     )
 end
 
@@ -132,4 +132,27 @@ step.
 end
 @inline function normalize(q::Rotor)
     return Rotor(q)  # already normalizes
+end
+
+function (R::Rotor)(v::QuatVec)
+    QuatVec(SA[
+        false,
+        ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
+            + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
+        ((R[1]^2 - R[2]^2 + R[3]^2 - R[4]^2)*v[3]
+            + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
+        ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
+            + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
+    ])
+end
+function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
+    QT(SA[
+        abs2(R) * v[1],
+        ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
+            + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
+        ((R[1]^2 - R[2]^2 + R[3]^2 - R[4]^2)*v[3]
+            + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
+        ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
+            + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
+    ])
 end

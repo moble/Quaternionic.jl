@@ -38,5 +38,5 @@ distance2(q₁::Rotor, q₂::Rotor) = _abs2_small_vec_log(q₁ / q₂)
 
 @inline function _abs2_small_vec_log(q::Rotor{T}) where {T}
     # Like `min(abs2(log(q)), abs2(log(-q)))`, but assumes the norm of `q` is 1
-    atan(absvec(q), abs(q.w))^2
+    atan(absvec(q), abs(q[1]))^2
 end

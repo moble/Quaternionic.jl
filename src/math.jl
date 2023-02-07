@@ -11,8 +11,9 @@ julia> abs2(Quaternion(1,2,4,10))
 121
 ```
 """
-Base.abs2(q::AbstractQuaternion) = sum(q.components.^2)
-Base.abs2(q::Rotor{T}) where {T<:Real} = one(T)
+Base.abs2(q::AbstractQuaternion) = sum(abs2, components(q))
+Base.abs2(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, components(q))
+Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 """
     abs(q)
@@ -26,7 +27,7 @@ julia> abs(Quaternion(1,2,4,10))
 ```
 """
 Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
-Base.abs(q::Rotor{T}) where {T<:Real} = one(T)
+Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
     abs2vec(q)
@@ -39,7 +40,7 @@ julia> abs2vec(Quaternion(1,2,3,6))
 49
 ```
 """
-abs2vec(q::AbstractQuaternion) = @inbounds q.components[2]^2 + q.components[3]^2 + q.components[4]^2
+abs2vec(q::AbstractQuaternion) = sum(abs2, vec(q))
 
 """
     absvec(q)
@@ -74,7 +75,7 @@ numerical accuracy).  This function is the principal logarithm.
 This function has discontinuous (and fairly arbitrary) behavior along the
 negative real axis: if the "vector" components of the quaternion are precisely
 zero *and* the scalar component is negative, the returned quaternion will have
-scalar component `log(-q.w)`, but will also have a `z` component of π.  The
+scalar component `log(-q[1])`, but will also have a `z` component of π.  The
 choice of the `z` direction is arbitrary; the "vector" component of the
 returned quaternion could be π times any unit vector.
 
@@ -103,27 +104,27 @@ function Base.log(q::Quaternion{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        if q.w < 0
-            return Quaternion(log(-q.w), 0, 0, π)
+        if q[1] < 0
+            return Quaternion(log(-q[1]), 0, 0, π)
         end
-        return Quaternion(log(q.w), 0, 0, 0)
+        return Quaternion(log(q[1]), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    f = atan(absolutevec, q.w) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
-    Quaternion(log(abs2(q))/2, f*q.x, f*q.y, f*q.z)
+    f = atan(absolutevec, q[1]) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
+    Quaternion(log(abs2(q))/2, f*q[2], f*q[3], f*q[4])
 end
 function Base.log(q::Rotor{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        if q.w < 0
+        if q[1] < 0
             return QuatVec{float(T)}(0, 0, 0, π)
         end
         return QuatVec{float(T)}(0, 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    f = atan(absolutevec, q.w) / absolutevec  # acos(q.w) / absolutevec
-    QuatVec(0, f*q.x, f*q.y, f*q.z)
+    f = atan(absolutevec, q[1]) / absolutevec  # acos(q[1]) / absolutevec
+    QuatVec(0, f*q[2], f*q[3], f*q[4])
 end
 
 """
@@ -141,13 +142,13 @@ function Base.exp(q::Quaternion{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        return Quaternion(exp(q.w), 0, 0, 0)
+        return Quaternion(exp(q[1]), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
-    e = exp(q.w)
+    e = exp(q[1])
     s, c = sincos(absolutevec)
     esinc = e * s / absolutevec
-    Quaternion(e*c, esinc*q.x, esinc*q.y, esinc*q.z)
+    Quaternion(e*c, esinc*q[2], esinc*q[3], esinc*q[4])
 end
 function Base.exp(q::QuatVec{T}) where {T}
     q = float(q)
@@ -158,7 +159,7 @@ function Base.exp(q::QuatVec{T}) where {T}
     absolutevec = sqrt(absolute2vec)
     s, c = sincos(absolutevec)
     sinc = s / absolutevec
-    Rotor(c, sinc*q.x, sinc*q.y, sinc*q.z)
+    Rotor(c, sinc*q[2], sinc*q[3], sinc*q[4])
 end
 
 @doc raw"""
@@ -169,10 +170,10 @@ Square-root of a quaternion.
 The general formula whenever the denominator is nonzero is
 
 ```math
-\sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q.w}}
+\sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
 ```
 
-This can be proven by expanding `q` as `q.w + q.vec` and multiplying the
+This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the
 expression above by itself.
 
 When the denominator is zero, this function has discontinuous (and fairly
@@ -207,28 +208,28 @@ function Base.sqrt(q::Quaternion{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        if q.w < 0
-            return Quaternion(0, 0, 0, sqrt(-q.w))
+        if q[1] < 0
+            return Quaternion(0, 0, 0, sqrt(-q[1]))
         end
-        return Quaternion(sqrt(q.w), 0, 0, 0)
+        return Quaternion(sqrt(q[1]), 0, 0, 0)
     end
-    absolute2 = absolute2vec + q.w^2
-    c1 = sqrt(absolute2) + q.w
+    absolute2 = absolute2vec + q[1]^2
+    c1 = sqrt(absolute2) + q[1]
     c2 = sqrt(inv(2*c1))
-    Quaternion(c1*c2, q.x*c2, q.y*c2, q.z*c2)
+    Quaternion(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 function Base.sqrt(q::Rotor{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        if q.w < 0
+        if q[1] < 0
             return Rotor{float(T)}(0, 0, 0, 1)
         end
         return Rotor{float(T)}(1, 0, 0, 0)
     end
-    c1 = 1 + q.w
+    c1 = 1 + q[1]
     c2 = sqrt(inv(2*c1))
-    Rotor(c1*c2, q.x*c2, q.y*c2, q.z*c2)
+    Rotor(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 
 """
@@ -262,14 +263,14 @@ Base.angle(q::Quaternion{T}) where T = 2 * absvec(log(q))
 Base.angle(q::Rotor{T}) where T = 2 * absvec(log(q))
 
 
-function Base.:^(q::Quaternion, s::Real)
+function Base.:^(q::Quaternion, s::Number)
     exp(s * log(q))
 end
-function Base.:^(q::Rotor, s::Real)
+function Base.:^(q::Rotor, s::Number)
     q = float(q)
     absolutevec = absvec(q)
     if absolutevec ≤ eps(typeof(absolutevec))
-        if q.w < 0
+        if q[1] < 0
             # log(q) ≈ π𝐤
             sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
             return Rotor{eltype(q)}([cos_πs, 0, 0, sin_πs])
@@ -277,11 +278,20 @@ function Base.:^(q::Rotor, s::Real)
         # log(q) ≈ 0
         return one(q)
     end
-    f1 = s * atan(absolutevec, q.w)
+    f1 = s * atan(absolutevec, q[1])
     sin_f1, cos_f1 = sincos(f1)
     f2 = sin_f1 / absolutevec
-    Rotor{typeof(cos_f1)}([cos_f1, f2*q.x, f2*q.y, f2*q.z])
+    Rotor{typeof(cos_f1)}([cos_f1, f2*q[2], f2*q[3], f2*q[4]])
 end
-Base.:^(q::Quaternion, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
-Base.:^(q::QuatVec, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
-Base.:^(q::Rotor, s::Integer) = (s ≥ 0 ? Base.power_by_squaring(q, s) : inv(Base.power_by_squaring(q, -s)))
+
+# We need to be more specific about the quaternion types here because we had
+# to be specific about the quaternion type above, and Integer<:Number
+for QT ∈ [AbstractQuaternion, Quaternion, QuatVec, Rotor]
+    @eval function Base.:^(q::$QT, s::Integer)
+        if s ≥ 0
+            Base.power_by_squaring(q, s)
+        else
+            inv(Base.power_by_squaring(q, -s))
+        end
+    end
+end

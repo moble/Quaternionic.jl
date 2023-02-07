@@ -1,7 +1,7 @@
 """
     from_float_array(A)
 
-Reinterpret a real array as an array of quaternions
+Reinterpret a float array as an array of quaternions
 
 The input array must have an initial dimension whose size is 4, because
 successive indices in that dimension will be considered successive components
@@ -15,13 +15,13 @@ memory copied.
 See also [`to_float_array`](@ref).
 
 """
-function from_float_array(A::AbstractArray{T}) where {T<:Real}
+function from_float_array(A::AbstractArray{T}) where {T<:Number}
     isbitstype(T) ? from_float_array(Val(true), A) : from_float_array(Val(false), A)
 end
-function from_float_array(::Val{true}, A::AbstractArray{T}) where {T<:Real}
+function from_float_array(::Val{true}, A::AbstractArray{T}) where {T<:Number}
     reinterpret(reshape, Quaternion{T}, A)
 end
-function from_float_array(::Val{false}, A::AbstractArray{T}) where {T<:Real}
+function from_float_array(::Val{false}, A::AbstractArray{T}) where {T<:Number}
     @assert size(A, 1)==4 "First dimension of `A` must be 4, not $(size(A, 1))"
     Q = Array{Quaternion{T}}(undef, size(A)[2:end])
     @inbounds for (i, j) in zip(eachindex(Q), Base.Iterators.partition(eachindex(A), 4))
@@ -34,7 +34,7 @@ end
 """
     to_float_array(A)
 
-View a quaternion array as an array of real numbers
+View a quaternion array as an array of numbers
 
 The output array will have an extra initial dimension whose size is 4, because
 successive indices in that dimension correspond to successive components of the
@@ -46,16 +46,16 @@ and the memory copied.
 
 See also [`from_float_array`](@ref).
 """
-function to_float_array(A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
+function to_float_array(A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Number}
     isbitstype(T) ? to_float_array(Val(true), A) : to_float_array(Val(false), A)
 end
-function to_float_array(::Val{true}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
+function to_float_array(::Val{true}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Number}
     reinterpret(reshape, T, A)
 end
-function to_float_array(::Val{false}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Real}
+function to_float_array(::Val{false}, A::AbstractArray{<:AbstractQuaternion{T}}) where {T<:Number}
     F = Array{T}(undef, (4, size(A)...))
     @inbounds for (i, j) in zip(eachindex(A), Base.Iterators.partition(eachindex(F), 4))
-        @views F[j] .= A[i].components[:]
+        @views F[j] .= components(A[i])
     end
     F
 end
@@ -106,9 +106,9 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 """
 function to_euler_angles(q::AbstractQuaternion)
     q = float(q)
-    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
-    a1 = atan(q.z, q.w)
-    a2 = atan(-q.x, q.y)
+    a0 = 2acos(√((q[1]^2+q[4]^2)/abs2(q)))
+    a1 = atan(q[4], q[1])
+    a2 = atan(-q[2], q[3])
     @SVector [a1+a2, a0, a1-a2]
 end
 
@@ -252,7 +252,7 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
     if abs(zₐ - zp * zm) > abs(zₐ + zp * zm)
         zp *= -1
     end
-    Rotor(zb.re * zp.re, -zb.im * zm.im, zb.im * zm.re, zb.re * zp.im)
+    Rotor(real(zb) * real(zp), -imag(zb) * imag(zm), imag(zb) * real(zm), real(zb) * imag(zp))
 end
 from_euler_phases(z) = from_euler_phases(z...)
 
@@ -273,9 +273,9 @@ radians.
 """
 function to_spherical_coordinates(q::Q) where {Q<:AbstractQuaternion}
     q = float(q)
-    a0 = 2acos(√((q.w^2+q.z^2)/abs2(q)))
-    a1 = atan(q.z, q.w)
-    a2 = atan(-q.x, q.y)
+    a0 = 2acos(√((q[1]^2+q[4]^2)/abs2(q)))
+    a1 = atan(q[4], q[1])
+    a2 = atan(-q[2], q[3])
     @SVector [a0, a1+a2]
 end
 
@@ -364,8 +364,8 @@ This function returns that matrix.
 function to_rotation_matrix(q::Q) where {Q<:AbstractQuaternion}
     n = inv(abs2(q))
     @SMatrix [
-        1 - 2*(q.y^2 + q.z^2) * n  2*(q.x*q.y - q.z*q.w) * n  2*(q.x*q.z + q.y*q.w) * n ;
-        2*(q.x*q.y + q.z*q.w) * n  1 - 2*(q.x^2 + q.z^2) * n  2*(q.y*q.z - q.x*q.w) * n ;
-        2*(q.x*q.z - q.y*q.w) * n  2*(q.y*q.z + q.x*q.w) * n  1 - 2*(q.x^2 + q.y^2) * n
+        1 - 2*(q[3]^2 + q[4]^2) * n  2*(q[2]*q[3] - q[4]*q[1]) * n  2*(q[2]*q[4] + q[3]*q[1]) * n ;
+        2*(q[2]*q[3] + q[4]*q[1]) * n  1 - 2*(q[2]^2 + q[4]^2) * n  2*(q[3]*q[4] - q[2]*q[1]) * n ;
+        2*(q[2]*q[4] - q[3]*q[1]) * n  2*(q[3]*q[4] + q[2]*q[1]) * n  1 - 2*(q[2]^2 + q[3]^2) * n
     ]
 end

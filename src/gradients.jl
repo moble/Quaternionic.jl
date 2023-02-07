@@ -31,21 +31,21 @@ julia> ∂log∂w, ∂log∂x, ∂log∂y, ∂log∂z = ∂log(randn(QuatVecF64)
 ```
 """
 function ∂log(Z::Rotor)
-    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * Z.vec
-    # f(Z) = atan(absvec / Z.w) / absvec = acos(Z.w) / absvec
+    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * vec(Z)
+    # f(Z) = atan(absvec / Z[1]) / absvec = acos(Z[1]) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
         return Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
     end
-    f = acos(Z.w) / a
-    fprime = (Z.w - f) / a2
+    f = acos(Z[1]) / a
+    fprime = (Z[1] - f) / a2
     V = 1 + fprime * QuatVec(Z)
     [
         Quaternion(conj(Z)),
-        Z.x * V + f * imx,
-        Z.y * V + f * imy,
-        Z.z * V + f * imz,
+        Z[2] * V + f * imx,
+        Z[3] * V + f * imy,
+        Z[4] * V + f * imz,
     ]
 end
 
@@ -64,8 +64,8 @@ julia> l, ∂l = log∂log(randn(RotorF64));
 ```
 """
 function log∂log(Z::Rotor)
-    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * Z.vec
-    # f(Z) = atan(absvec / Z.w) / absvec = acos(Z.w) / absvec
+    # log(Z::Rotor) = log(abs2) / 2 + f(Z) * vec(Z)
+    # f(Z) = atan(absvec / Z[1]) / absvec = acos(Z[1]) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
@@ -74,14 +74,14 @@ function log∂log(Z::Rotor)
             Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
         )
     end
-    f = acos(Z.w) / a
-    fprime = (Z.w - f) / a2
+    f = acos(Z[1]) / a
+    fprime = (Z[1] - f) / a2
     V = 1 + fprime * QuatVec(Z)
     ∂log = [
         Quaternion(conj(Z)),
-        Z.x * V + f * imx,
-        Z.y * V + f * imy,
-        Z.z * V + f * imz,
+        Z[2] * V + f * imx,
+        Z[3] * V + f * imy,
+        Z[4] * V + f * imz,
     ]
     (f * QuatVec(Z), ∂log)
 end
@@ -115,8 +115,8 @@ julia> ∂exp∂w, ∂exp∂x, ∂exp∂y, ∂exp∂z = ∂exp(randn(QuatVecF64)
 ```
 """
 function ∂exp(Z::QuatVec)
-    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * Z.vec
-    # g(Z) = exp(Z.w) * sin(absvec) / absvec
+    # exp(Z::Quaternion) = exp(Z[1]) * cos(absvec) + g(Z) * vec(Z)
+    # g(Z) = exp(Z[1]) * sin(absvec) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
@@ -129,9 +129,9 @@ function ∂exp(Z::QuatVec)
     V = -sinca + gprime * Z
     [
         c + sinca * Z,
-        Z.x * V + g * imx,
-        Z.y * V + g * imy,
-        Z.z * V + g * imz,
+        Z[2] * V + g * imx,
+        Z[3] * V + g * imy,
+        Z[4] * V + g * imz,
     ]
 end
 
@@ -150,8 +150,8 @@ julia> e, ∂e = exp∂exp(randn(QuatVecF64));
 ```
 """
 function exp∂exp(Z::QuatVec)
-    # exp(Z::Quaternion) = exp(Z.w) * cos(absvec) + g(Z) * Z.vec
-    # g(Z) = exp(Z.w) * sin(absvec) / absvec
+    # exp(Z::Quaternion) = exp(Z[1]) * cos(absvec) + g(Z) * vec(Z)
+    # g(Z) = exp(Z[1]) * sin(absvec) / absvec
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
@@ -167,9 +167,9 @@ function exp∂exp(Z::QuatVec)
     V = -sinca + gprime * Z
     ∂exp = [
         c + sinca * Z,
-        Z.x * V + g * imx,
-        Z.y * V + g * imy,
-        Z.z * V + g * imz,
+        Z[2] * V + g * imx,
+        Z[3] * V + g * imy,
+        Z[4] * V + g * imz,
     ]
     (c+g*Z, ∂exp)
 end

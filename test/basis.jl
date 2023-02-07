@@ -3,6 +3,8 @@
 
 @testset verbose=true "Basis" begin
     @testset "$T" for T in Types
+
+        # Multiplication/division
         for Q in [Quaternion, Rotor]
             # Define basis elements
             u = Q{T}(1)
@@ -36,6 +38,7 @@
             @test k * k ≈ -u atol=eps(T)
         end
 
+        # Addition/subtraction
         for Q in [Quaternion, QuatVec]
             # Define basis elements
             u = Q{T}(1)
@@ -80,6 +83,7 @@
             end
         end
 
+        # Normalization
         let Q = Rotor
             # Define basis elements
             u = Q{T}(1)
@@ -94,11 +98,12 @@
                 @test typeof(n) === Q{float(T)}
                 @test q == n
                 @test q == normalize(2n)
-                twoq = Q{T}(2*(q.components))  # Won't normalize
+                twoq = Q{T}(2*(components(q)))  # Won't normalize
                 @test q == normalize(twoq)
             end
         end
 
+        # Cross products
         let Q = QuatVec
             i = Q{T}(𝐢)
             j = Q{T}(𝐣)
@@ -137,6 +142,30 @@
             @test 2j ×̂ i == -k
             @test 2k ×̂ j == -i
             @test 2i ×̂ k == -j
+        end
+
+        # Conjugation/"sandwich"ing
+        for Q in [Quaternion, Rotor]
+            # Define Rotor basis elements
+            u = Q{T}(1)
+            i = Q{T}(𝐢)
+            j = Q{T}(𝐣)
+            k = Q{T}(𝐤)
+            Qbasis = [u, i, j, k]
+
+            x = QuatVec{T}(𝐢)
+            y = QuatVec{T}(𝐣)
+            z = QuatVec{T}(𝐤)
+            vbasis = [x, y, z]
+
+            # Normalization
+            for Q in Qbasis
+                for v in vbasis
+                    v′ = Q(v)
+                    v′′ = Q * v * conj(Q)
+                    @test v′ ≈ v′′ atol=eps(T)
+                end
+            end
         end
 
     end
