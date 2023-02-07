@@ -15,6 +15,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
+EllipsisNotation = "1"
 LaTeXStrings = "1"
 Latexify = "0.15"
 Requires = "1"
