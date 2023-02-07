@@ -12,6 +12,7 @@ julia> abs2(Quaternion(1,2,4,10))
 ```
 """
 Base.abs2(q::AbstractQuaternion) = sum(abs2, components(q))
+Base.abs2(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, components(q))
 Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 """
