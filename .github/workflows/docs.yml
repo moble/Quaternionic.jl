@@ -1,6 +1,13 @@
 name: docs
 
-on: [push,workflow_dispatch,release]
+on:
+  push:
+    branches:
+      - main
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+  release:
 
 jobs:
 
