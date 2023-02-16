@@ -83,7 +83,7 @@ Note that this function is not very commonly used, except as a quick way to
 determine whether the two quaternions are more anti-parallel than parallel, for
 functions like [`unflip`](@ref).
 """
-@inline function ⋅(p::AbstractQuaternion, q::AbstractQuaternion)
+@inline function LinearAlgebra.:⋅(p::AbstractQuaternion, q::AbstractQuaternion)
     p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]
 end
 
