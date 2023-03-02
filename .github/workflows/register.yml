@@ -1,16 +1,16 @@
 name: Register Package
-
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to register or component to bump
+        description: Version to register or component to bump (major, minor, or patch)
         required: true
         default: "patch"
-
 jobs:
   register:
     runs-on: ubuntu-latest
+    permissions:
+        contents: write
     steps:
       - uses: julia-actions/RegisterAction@latest
         with:
