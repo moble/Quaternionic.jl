@@ -66,10 +66,10 @@ julia> q = [imx, -imx, imx, -imx];
 
 julia> unflip(q)
 4-element Vector{QuatVec{Int64}}:
- 0 + 1𝐢 + 0𝐣 + 0𝐤
- 0 + 1𝐢 + 0𝐣 + 0𝐤
- 0 + 1𝐢 + 0𝐣 + 0𝐤
- 0 + 1𝐢 + 0𝐣 + 0𝐤
+  + 1𝐢 + 0𝐣 + 0𝐤
+  + 1𝐢 + 0𝐣 + 0𝐤
+  + 1𝐢 + 0𝐣 + 0𝐤
+  + 1𝐢 + 0𝐣 + 0𝐤
 ```
 """
 function unflip(q::AbstractArray{<:AbstractQuaternion}; dim::Integer=1)
