@@ -24,4 +24,5 @@ makedocs(;
 deploydocs(;
     repo="github.com/moble/Quaternionic.jl",
     devbranch="main",
+    push_preview=true,
 )

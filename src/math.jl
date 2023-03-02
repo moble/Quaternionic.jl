@@ -90,7 +90,7 @@ scalar part exactly 0.
 # Examples
 ```jldoctest
 julia> log(exp(1.2imy))
-0.0 + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
+ + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
 
 julia> log(Quaternion(exp(7)))
 7.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
@@ -135,7 +135,7 @@ Exponential of a quaternion
 # Examples
 ```jldoctest
 julia> exp(imx*π/4)  # Rotation through π/2 (note the extra 1/2) about the x axis
-0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤
+Rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}

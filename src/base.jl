@@ -112,11 +112,17 @@ function Base.show(io::IO, q::AbstractQuaternion)
     end
     print(
         io,
-        q[1],
+        q isa QuatVec ? "" : q[1],
         pm(q[2]), "𝐢",
         pm(q[3]), "𝐣",
         pm(q[4]), "𝐤"
     )
+end
+
+function Base.show(io::IO, q::Rotor)
+    print(io, "Rotor(")
+    invoke(Base.show, Tuple{IO, AbstractQuaternion}, io, q)
+    print(io, ")")
 end
 
 function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
@@ -133,7 +139,7 @@ function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
         s
     end
     s = latexstring(
-        latexify(q[1], env=:raw, bracket=true),
+        q isa QuatVec ? "" : latexify(q[1], env=:raw, bracket=true),
         pm(q[2]), "\\,\\mathbf{i}",
         pm(q[3]), "\\,\\mathbf{j}",
         pm(q[4]), "\\,\\mathbf{k}"
