@@ -169,6 +169,9 @@ Quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
 Rotor(v::SVector{4,T}) where {T<:Number} = Rotor{eltype(v)}(v)
 QuatVec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
 
+# Constructor from AbstractVector
+(::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT{T}(v...)
+
 # Constructor from all 4 components
 (::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(w, x, y, z); QT{eltype(v)}(v))
 (::Type{QT})(w, x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(w, x, y, z))
