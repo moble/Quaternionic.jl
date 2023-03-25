@@ -24,6 +24,7 @@ julia> using Quaternionic
 
 julia> q = Quaternion(1.0, 2.0, 3.0, 4.0)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
+
 julia> p = Quaternion(4, 3, 2, 1)
 4 + 3𝐢 + 2𝐣 + 1𝐤
 ```
