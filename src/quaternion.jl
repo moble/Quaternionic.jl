@@ -41,7 +41,7 @@ julia> Quaternion(1)
 struct Quaternion{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     Quaternion{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Quaternion{T}(a::A) where {T<:Number,A<:AbstractArray} = new{T}(SVector{4,T}(a))
+    Quaternion{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
 end
 
 @doc raw"""
@@ -116,7 +116,7 @@ Rotor(1 + 0𝐢 + 0𝐣 + 0𝐤)
 struct Rotor{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     Rotor{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Rotor{T}(a::A) where {T<:Number,A<:AbstractArray} = new{T}(SVector{4,T}(a))
+    Rotor{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
 end
 
 """
@@ -157,7 +157,7 @@ julia> QuatVec(1)
 struct QuatVec{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     QuatVec{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    QuatVec{T}(a::A) where {T<:Number,A<:AbstractArray} = new{T}(SVector{4,T}(a))
+    QuatVec{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
 end
 
 # We'll need this awkward way of getting the `components` field when we set `getproperty`
@@ -168,6 +168,9 @@ components(q::AbstractQuaternion) = getfield(q, :components)
 Quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
 Rotor(v::SVector{4,T}) where {T<:Number} = Rotor{eltype(v)}(v)
 QuatVec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
+
+# Constructor from AbstractVector
+(::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT{T}(v...)
 
 # Constructor from all 4 components
 (::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(w, x, y, z); QT{eltype(v)}(v))
