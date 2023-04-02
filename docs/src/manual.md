@@ -81,7 +81,7 @@ be done just as with other types by passing the desired output type to the
 would be no geometric significance to such a `Quaternion`; `randn` results are
 independent of the orientation of the basis used to define the quaternions.
 Note that it is possible to get random *rotors* and *vectors* by passing the
-appropriate tyepes to the `randn` function.
+appropriate types to the `randn` function.
 
 ```@autodocs
 Modules = [Quaternionic]
