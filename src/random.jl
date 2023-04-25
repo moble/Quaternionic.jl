@@ -9,7 +9,7 @@ quaternionic normal distribution of variance 1 (corresponding to each component 
 independent normal distribution with mean zero and variance 1/4).
 
 Note that this function works with `Quaternion{BigFloat}`, even though `Base.randn` does
-not work with `BigFloat`; we just use the [Box-Muller
+not work with `BigFloat` on Julia <1.9; for earlier versions, we just use the [Box-Muller
 transform](https://en.wikipedia.org/wiki/Box–Muller_transform) to obtain the desired
 result.
 
@@ -34,27 +34,39 @@ julia> randn(QuaternionF16, 2, 2)
 Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{T}}) where {T<:AbstractFloat} =
     QT(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
 
-function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})
-    # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
-    c = rand(rng, BigFloat, 4)
-    l1 = √(-log(c[1])/2)
-    s2, c2 = sincospi(2*c[2])
-    l3 = √(-log(c[3])/2)
-    s4, c4 = sincospi(2*c[4])
-    QT(l1*c2, l1*s2, l3*c4, l3*s4)
-end
-
-_q3v_factor(::Type{T}) where T = inv(√T(3))
+Base.@irrational SQRT_ONE_THIRD 0.5773502691896257645 sqrt(inv(big(3.0)))
 
 Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
-    QT(0, randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T), randn(rng, T)*_q3v_factor(T))
+    QT(
+        zero(T),
+        SQRT_ONE_THIRD * randn(rng, T),
+        SQRT_ONE_THIRD * randn(rng, T),
+        SQRT_ONE_THIRD * randn(rng, T)
+    )
 
-function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{BigFloat}})
-    # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
-    c = rand(rng, BigFloat, 4)
-    l1 = √(-log(c[1])/2)
-    s2 = sinpi(2*c[2])
-    l3 = √(-log(c[3])/2)
-    s4, c4 = sincospi(2*c[4])
-    QuatVec(0, l1*s2, l3*c4, l3*s4)
+if Base.VERSION < v"1.9.0-alpha1"
+    # The fallback method of `randn` for float types only defining `rand` was first added
+    # in Julia v1.9.0-alpha1:
+    # https://github.com/JuliaLang/julia/commit/244ada361432462012835c93d3bac031e8046793
+
+    function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{BigFloat}})
+        # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
+        c = rand(rng, BigFloat, 4)
+        l1 = √(-log(c[1])/2)
+        s2 = sinpi(2*c[2])
+        l3 = √(-log(c[3])/2)
+        s4, c4 = sincospi(2*c[4])
+        QuatVec(0, l1*s2, l3*c4, l3*s4)
+    end
+
+    function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})
+        # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
+        c = rand(rng, BigFloat, 4)
+        l1 = √(-log(c[1])/2)
+        s2, c2 = sincospi(2*c[2])
+        l3 = √(-log(c[3])/2)
+        s4, c4 = sincospi(2*c[4])
+        QT(l1*c2, l1*s2, l3*c4, l3*s4)
+    end
+
 end
