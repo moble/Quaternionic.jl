@@ -12,7 +12,12 @@
         end
 
         @testset verbose=true "$T" for T in FloatTypes
-            q = randn(Quaternion{T}, 98_303);  # 98_303 because of https://github.com/JuliaLang/julia/issues/49501
+            N = 98_203
+            println("Constructing randn(Quaternion{$T}, $N)")
+            flush(stdout)
+            q = randn(Quaternion{T}, N);  # 98_303 because of https://github.com/JuliaLang/julia/issues/49501
+            println("Finished constructing randn(Quaternion{$T}, $N)")
+            flush(stdout)
             flips = measure_flips(q)
             @test flips > 0
             p = unflip(q)
