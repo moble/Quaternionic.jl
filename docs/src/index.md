@@ -101,7 +101,7 @@ an equal probability of being in any direction — the probability distribution 
 "isotropic".  This is, for example, and good way of choosing a random direction:
 ```jldoctest example
 julia> normalize(randn(QuatVecF64))
- - 0.3018853063494534𝐢 + 0.45712809106152974𝐣 - 0.8365997670169042𝐤
+ - 0.3018853063494534𝐢 + 0.4571280910615297𝐣 - 0.8365997670169042𝐤
 ```
 Note that we have called [`normalize`](@ref) to obtain a unit vector in an
 random direction.
