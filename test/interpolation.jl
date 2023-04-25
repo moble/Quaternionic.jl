@@ -12,7 +12,7 @@
         end
 
         @testset verbose=true "$T" for T in FloatTypes
-            q = randn(Quaternion{T}, 100_000);
+            q = randn(Quaternion{T}, 98_303);  # 98_303 because of https://github.com/JuliaLang/julia/issues/49501
             flips = measure_flips(q)
             @test flips > 0
             p = unflip(q)
