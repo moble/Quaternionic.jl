@@ -231,8 +231,8 @@ const QuatVecF16 = QuatVec{Float16}
 """
     imx
 
-The quaternionic unit associated with rotation about the `x` axis.  Can also be entered as Unicode
-bold: `𝐢`.
+The quaternionic unit associated with rotation about the `x` axis.  Can also be entered as
+Unicode bold `𝐢` (which can be input as `\\bfi<tab>`).
 
 # Examples
 ```jldoctest
@@ -248,8 +248,8 @@ const 𝐢 = imx
 """
     imy
 
-The quaternionic unit associated with rotation about the `y` axis.  Can also be entered as Unicode
-bold: `𝐣`.
+The quaternionic unit associated with rotation about the `y` axis.  Can also be entered as
+Unicode bold `𝐣` (which can be input as `\\bfj<tab>`).
 
 # Examples
 ```jldoctest
@@ -265,8 +265,8 @@ const 𝐣 = imy
 """
     imz
 
-The quaternionic unit associated with rotation about the `z` axis.  Can also be entered as Unicode
-bold: `𝐤`.
+The quaternionic unit associated with rotation about the `z` axis.  Can also be entered as
+Unicode bold `𝐤` (which can be input as `\\bfk<tab>`).
 
 # Examples
 ```jldoctest
@@ -409,6 +409,8 @@ Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
 Base.big(q::AbstractQuaternion{T}) where {T<:Number} = wrapper(q){big(T)}(q)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Number} =
+    wrapper(Q){promote_type(eltype(Q), S)}
+Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Symbolics.Num} =
     wrapper(Q){promote_type(eltype(Q), S)}
 Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number,S<:Number} =
     Quaternion{promote_type(T, S)}
