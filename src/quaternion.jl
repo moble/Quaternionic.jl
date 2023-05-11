@@ -192,13 +192,10 @@ QuatVec{T}(x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, x, y, z))
 # (::Type{QT})(w::Number) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, false, false, false); QT{eltype(v)}(v))
 # (::Type{QT})(w::Number) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, false, false, false))
 Quaternion(w::Number) = Quaternion(SVector{4}(w, false, false, false))
-Quaternion(w::Symbolics.Num) = Quaternion(SVector{4}(w, false, false, false))
 Quaternion{T}(w::Number) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
 Rotor(w::Number) = Rotor(SVector{4}(one(w), false, false, false))
-Rotor(w::Symbolics.Num) = Rotor(SVector{4}(one(w), false, false, false))
 Rotor{T}(w::Number) where {T<:Number} = Rotor{T}(SVector{4,T}(one(T), false, false, false))
 QuatVec(w::Number) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
-QuatVec(w::Symbolics.Num) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
 QuatVec{T}(w::Number) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
 
 # Copy constructor
@@ -340,8 +337,6 @@ for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
         wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Number}) where {OP} = Quaternion
         wrapper(::Type{<:Number}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
-        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
-        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
     end
 end
 
@@ -368,8 +363,8 @@ wrapper(::Type{<:QuatVec}, ::Val{-}, ::Type{<:QuatVec}) = QuatVec
 wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:QuatVec}) = Quaternion
 wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:QuatVec}) = Quaternion
 
-for QT ∈ (AbstractQuaternion, QuatVec)
-    for NT ∈ (Number, Symbolics.Num)
+let NT = Number
+    for QT ∈ (AbstractQuaternion, QuatVec)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
                 wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = $QT
@@ -377,9 +372,7 @@ for QT ∈ (AbstractQuaternion, QuatVec)
             end
         end
     end
-end
-for QT ∈ (Rotor,)
-    for NT ∈ (Number, Symbolics.Num)
+    for QT ∈ (Rotor,)
         for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
             @eval begin
                 wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = Quaternion
@@ -388,7 +381,7 @@ for QT ∈ (Rotor,)
         end
     end
 end
-for T ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor, Number, Symbolics.Num)
+for T ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor, Number)
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
         @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
         if T !== Quaternion
@@ -409,8 +402,6 @@ Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
 Base.big(q::AbstractQuaternion{T}) where {T<:Number} = wrapper(q){big(T)}(q)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Number} =
-    wrapper(Q){promote_type(eltype(Q), S)}
-Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Symbolics.Num} =
     wrapper(Q){promote_type(eltype(Q), S)}
 Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number,S<:Number} =
     Quaternion{promote_type(T, S)}

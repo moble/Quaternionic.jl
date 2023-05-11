@@ -3,7 +3,6 @@ module Quaternionic
 using StaticArrays, LinearAlgebra, PrecompileTools
 using Latexify, LaTeXStrings
 import Random: AbstractRNG, default_rng, randn!
-import Symbolics
 
 export AbstractQuaternion
 export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
@@ -48,6 +47,7 @@ end
 @static if !isdefined(Base, :get_extension)
     function __init__()
         @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
+        @require Symbolics="0c5d862f-8b57-4792-8d23-62f2024744c7" include("../ext/QuaternionicSymbolicsExt.jl")
     end
 end
 

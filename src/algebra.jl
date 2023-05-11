@@ -17,18 +17,17 @@ Base.conj(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q[1], -q[2], -q[3], -
 Base.:-(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(-components(q))
 
 
-for TA ∈ [AbstractQuaternion, Rotor, QuatVec]
-    for TB ∈ [AbstractQuaternion, Rotor, QuatVec]
+for TA ∈ (AbstractQuaternion, Rotor, QuatVec)
+    for TB ∈ (AbstractQuaternion, Rotor, QuatVec)
         @eval begin
             Base.:+(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(+), $TB)(components(q)+components(p))
             Base.:-(q::T1, p::T2) where {T1<:$TA, T2<:$TB} = wrapper($TA, Val(-), $TB)(components(q)-components(p))
         end
     end
-    for TB ∈ [Real, Symbolics.Num]
+    let TB = Number
         @eval begin
             Base.:+(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(+), $TB)(q[1]+p, q[2], q[3], q[4])
             Base.:-(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(-), $TB)(q[1]-p, q[2], q[3], q[4])
-
             Base.:+(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(+), $TA)(p+q[1], q[2], q[3], q[4])
             Base.:-(p::$TB, q::QT) where {QT<:$TA} = wrapper($TB, Val(-), $TA)(p-q[1], -q[2], -q[3], -q[4])
         end
@@ -60,7 +59,7 @@ function Base.:/(q::Q1, p::Q2) where {Q1<:AbstractQuaternion, Q2<:AbstractQuater
 end
 
 
-for S ∈ [Real, Symbolics.Num]
+let S = Number
     @eval begin
         Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*components(p))
         Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*components(p))
