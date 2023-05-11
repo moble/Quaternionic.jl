@@ -1,8 +1,8 @@
 module Quaternionic
 
-using StaticArrays, Latexify, LaTeXStrings, LinearAlgebra, Requires
+using StaticArrays, LinearAlgebra, PrecompileTools
+using Latexify, LaTeXStrings
 import Random: AbstractRNG, default_rng, randn!
-import Symbolics
 
 export AbstractQuaternion
 export Quaternion, QuaternionF64, QuaternionF32, QuaternionF16, imx, imy, imz, 𝐢, 𝐣, 𝐤
@@ -37,34 +37,18 @@ include("interpolation.jl")
 include("gradients.jl")
 include("examples.jl")
 
+include("precompilation.jl")
 
-function __init__()
-    @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" begin
-        # Let ForwardDiff act naturally on quaternions.
-        # This is cribbed from similar expressions enabling differentiation of complex-valued functions in
-        # https://github.com/JuliaDiff/ForwardDiff.jl/blob/78c73afd9a21593daf54f61c7d0db67130cf29e1/src/derivative.jl#L83-L88
-        @inline ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion) where {T} = zero(y)
-        # Both Quaternion and Rotor, when differentiated, result in a Quaternion
-        @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion{TD}) where {T, TD <: ForwardDiff.Dual}
-            Quaternion(
-                ForwardDiff.partials(T, y[1], 1),
-                ForwardDiff.partials(T, y[2], 1),
-                ForwardDiff.partials(T, y[3], 1),
-                ForwardDiff.partials(T, y[4], 1)
-            )
-        end
-        # But QuatVec results in a QuatVec
-        @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
-            QuatVec(
-                ForwardDiff.partials(T, y[2], 1),
-                ForwardDiff.partials(T, y[3], 1),
-                ForwardDiff.partials(T, y[4], 1)
-            )
-        end
+# This symbol is only defined on Julia versions that support extensions
+if !isdefined(Base, :get_extension)
+    using Requires
+end
+
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
+        @require Symbolics="0c5d862f-8b57-4792-8d23-62f2024744c7" include("../ext/QuaternionicSymbolicsExt.jl")
     end
-
-    # @require DifferentialEquations="0c46a032-eb83-5123-abaf-570d42b7fbaa" begin
-    # end
 end
 
 end  # module
