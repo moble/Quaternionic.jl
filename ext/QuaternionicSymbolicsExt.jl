@@ -1,6 +1,8 @@
 module QuaternionicSymbolicsExt
 
-using Quaternionic
+using StaticArrays: SVector
+import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
+    QuatVecF64, RotorF64, QuaternionF64, wrapper, components
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 
