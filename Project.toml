@@ -21,6 +21,7 @@ QuaternionicForwardDiffExt = "ForwardDiff"
 QuaternionicSymbolicsExt = "Symbolics"
 
 [compat]
+ForwardDiff = "0.10"
 LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 PrecompileTools = "1.1.1"
