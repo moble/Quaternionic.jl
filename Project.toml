@@ -23,6 +23,7 @@ QuaternionicSymbolicsExt = "Symbolics"
 [compat]
 LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
+PrecompileTools = "1.1.1"
 Requires = "1"
 StaticArrays = "1"
 Symbolics = "0.1, 1, 2, 3, 4, 5"
