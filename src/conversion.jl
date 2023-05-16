@@ -301,6 +301,11 @@ end
 from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 
 
+dominant_eigenvector(M::Symmetric{T,SMatrix{4,4,T,16}}) where T = eigen(M).vectors[:, 4]
+dominant_eigenvector(M::Symmetric{Float64,SMatrix{4,4,Float64,16}}) = eigen(M, 4:4).vectors[:, 1]
+dominant_eigenvector(M::Symmetric{Float32,SMatrix{4,4,Float32,16}}) = eigen(M, 4:4).vectors[:, 1]
+
+
 """
     from_rotation_matrix(ℛ)
 
@@ -314,32 +319,35 @@ we can also express this rotation in terms of a quaternion `R` such that
 
     v' = R * v * R⁻¹.
 
-This function returns that quaternion, using Bar-Itzhack's algorithm to allow
-for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6,
-p. 1085](http://dx.doi.org/10.2514/2.4654)
+This function returns that quaternion, using Bar-Itzhack's algorithm (version 3) to allow
+for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6, p.
+1085](http://dx.doi.org/10.2514/2.4654)
+
+!!! note
+    If you want to use this function for matrices with elements of types other than
+    `Float64` or `Float32`, you will need to (install and) import `GenericLinearAlgebra`
+    first.  The reason is that this function computes the eigen-decomposition of `ℛ`, which
+    is only available for more generic float types via that package.
 
 """
 function from_rotation_matrix(ℛ::AbstractMatrix)
     @assert size(ℛ) == (3, 3)
     @inbounds begin
-        K = Array{eltype(ℛ), 2}(undef, (4, 4))
-        K[1, 1] = (ℛ[1, 1] - ℛ[2, 2] - ℛ[3, 3])/3
-        K[1, 2] = (ℛ[2, 1] + ℛ[1, 2])/3
-        K[1, 3] = (ℛ[3, 1] + ℛ[1, 3])/3
-        K[1, 4] = (ℛ[2, 3] - ℛ[3, 2])/3
-        K[2, 2] = (ℛ[2, 2] - ℛ[1, 1] - ℛ[3, 3])/3
-        K[2, 3] = (ℛ[3, 2] + ℛ[2, 3])/3
-        K[2, 4] = (ℛ[3, 1] - ℛ[1, 3])/3
-        K[3, 3] = (ℛ[3, 3] - ℛ[1, 1] - ℛ[2, 2])/3
-        K[3, 4] = (ℛ[1, 2] - ℛ[2, 1])/3
-        K[4, 4] = (ℛ[1, 1] + ℛ[2, 2] + ℛ[3, 3])/3
-        H = Symmetric(K)
+        # Compute 3K₃ according to Eq. (2) of Bar-Itzhack.  We will just be looking for the
+        # eigenvector with the largest eigenvalue, so scaling by a strictly positive number
+        # (3, in this case) won't change that.
+        K₃3 = Symmetric(@SMatrix[
+            ℛ[1,1]-ℛ[2,2]-ℛ[3,3]  ℛ[2,1]+ℛ[1,2]         ℛ[3,1]+ℛ[1,3]         ℛ[2,3]-ℛ[3,2];
+            0                     ℛ[2,2]-ℛ[1,1]-ℛ[3,3]  ℛ[3,2]+ℛ[2,3]         ℛ[3,1]-ℛ[1,3];
+            0                     0                     ℛ[3,3]-ℛ[1,1]-ℛ[2,2]  ℛ[1,2]-ℛ[2,1];
+            0                     0                     0               ℛ[1,1]+ℛ[2,2]+ℛ[3,3]
+        ])
 
-        # compute the *dominant* (largest eigenvalue) eigenvector
-        eigenvec = eigen(H, 4:4).vectors[:, 1]
+        # Compute the *dominant* eigenvector (the one with the largest eigenvalue)
+        de = dominant_eigenvector(K₃3)
 
-        # convert it into a quaternion
-        R = Rotor(eigenvec[4], -eigenvec[1], -eigenvec[2], -eigenvec[3])
+        # Convert it into a quaternion
+        R = Rotor(de[4], -de[1], -de[2], -de[3])
     end
     R
 end
