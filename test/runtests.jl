@@ -20,7 +20,7 @@ around the code you don't want to measure:
 """
 
 using Quaternionic
-using Test, Random, Symbolics, StaticArrays, ForwardDiff
+using Test, Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra
 
 @variables w x y z a b c d e  # Symbolic variables
 
