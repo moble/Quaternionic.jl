@@ -327,7 +327,9 @@ for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6, p.
     If you want to use this function for matrices with elements of types other than
     `Float64` or `Float32`, you will need to (install and) import `GenericLinearAlgebra`
     first.  The reason is that this function computes the eigen-decomposition of `ℛ`, which
-    is only available for more generic float types via that package.
+    is only available for more generic float types via that package.  Note that you will
+    want at least version 0.3.11 of `GenericLinearAlgebra` because previous versions had a
+    bug.
 
 """
 function from_rotation_matrix(ℛ::AbstractMatrix)

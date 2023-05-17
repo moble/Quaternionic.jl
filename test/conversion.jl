@@ -152,12 +152,10 @@
         end
 
         @testset "Rotation matrices" begin
-            if isbitstype(T)
-                for _ in 1:5_000
-                    q1 = randn(Rotor{T})
-                    q2 = from_rotation_matrix(to_rotation_matrix(q1))
-                    @test min(abs(q1-q2), abs(q1+q2)) < 50eps(T)
-                end
+            for _ in 1:5_000
+                q1 = randn(Rotor{T})
+                q2 = from_rotation_matrix(to_rotation_matrix(q1))
+                @test min(abs(q1-q2), abs(q1+q2)) < 50eps(T)
             end
         end
     end
