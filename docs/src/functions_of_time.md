@@ -40,16 +40,51 @@ before passing quaternions to the interpolating functions.  For this purpose,
 there is the [`unflip`](@ref) utility function, which can also be called
 automatically by passing the corresponding keywords to `slerp` and `squad`.
 
-As noted [below](#Gradients), `slerp` can also be simultaneously evaluated and
-differentiated analytically with [`slerp∂slerp∂τ`](@ref) (or automatically with
-`ForwardDiff`).  While, `squad` and its derivative can be evaluated with
-[`squad∂squad∂t`](@ref), this is a relatively low-level function; it is easier
-to use the relevant keyword arguments to [`squad`](@ref).
+It can be very useful to compute the derivative of various functions with
+respect to their arguments — for example, when computing angular velocity of a
+`squad` interpolant.[^1]  See [Differentiating by quaternionic arguments](@ref) for
+more details.  The value *and derivative* of `slerp` can be simultaneously
+evaluated and differentiated analytically with [`slerp∂slerp∂τ`](@ref) (or
+automatically with `ForwardDiff`).  While, `squad` and its derivative can be
+evaluated with [`squad∂squad∂t`](@ref), this is a relatively low-level function;
+it is easier to use the relevant keyword arguments to [`squad`](@ref).
+
+[^1]:
+    Essentially, we treat each quaternionic argument as a series of four real
+    arguments.  For each input argument, the output is generally a quaternion;
+    interpreting those outputs as also being a series of four real quantities, these
+    derivatives could also be thought of as [Jacobian
+    matrices](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of the
+    relevant functions, though the actual return types are collections of
+    `Quaternion` objects.
 
 ```@autodocs
 Modules = [Quaternionic]
 Pages   = ["interpolation.jl"]
 ```
+
+Note that gradients can also be calculated automatically using
+[`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/).[^2] For example, we
+could compute the derivative of `slerp` with respect to the `y` component of
+the first input quaternion as
+```julia
+∂slerp∂q₁y(q₁, q₂, τ) = ForwardDiff.derivative(ϵ->slerp(q₁+ϵ*imy, q₂, τ), 0)
+```
+This is equal to
+```julia
+s, ∂s∂t = slerp∂slerp(q₁, q₂, τ)
+∂s∂t[3]
+```
+though `slerp∂slerp` computes the value and all derivatives of `slerp`
+simultaneously, and does at least as fast as most AD systems would.
+Nonetheless, it is useful to know that `ForwardDiff` can process functions
+*involving* `Quaternionic` methods.
+
+[^2]:
+    There is also support for using other AD systems via `ChainRulesCore`.  Those
+    are somewhat more complicated than just using `ForwardDiff`, so there may be
+    cases where the support is incomplete or incorrect.  Please open [an issue](https://github.com/moble/Quaternionic.jl/issues)
+    (or Pull Request) if you find such cases.
 
 
 ## Angular velocity
@@ -227,55 +262,3 @@ This rotor also aligns the axis correctly, but otherwise has the smallest
 possible angular velocity.  Here, ``R_\mathrm{axis}`` may be constructed in any
 convenient way, including using spherical coordinates or even Euler angles; the
 resulting ``R(t)`` will be independent of such poor life choices.
-
-
-## Derivatives and gradients
-
-It can be very useful to compute the derivative of various functions with
-respect to their arguments — for example, when computing angular velocity of a
-`squad` interpolant, one needs to use the chain rule, and therefore needs each
-of the derivatives of `exp`, `log`, etc.  Here, we provide the essential
-(nontrivial) derivatives, treating each quaternionic argument as a series of
-four real arguments.  For each input argument, the output is generally a
-quaternion; interpreting those outputs as also being a series of four real
-quantities, these derivatives could also be thought of as [Jacobian
-matrices](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant) of the
-relevant functions, though the actual return types are collections of
-`Quaternion` objects.
-
-Because of massive simplifications that result when using the right types,
-these derivatives are more strict about input types than the main functions
-themselves.  For example, the derivatives of `exp` are defined only for
-`QuatVec` arguments; the derivatives of `log` are defined only for `Rotor`
-arguments; etc.
-
-Note that gradients can also be calculated automatically using
-[`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/).[^2] For example, we
-could compute the derivative of `slerp` with respect to the `y` component of
-the first input quaternion as
-```julia
-∂slerp∂q₁y(q₁, q₂, τ) = ForwardDiff.derivative(ϵ->slerp(q₁+ϵ*imy, q₂, τ), 0)
-```
-This is equal to
-```julia
-slerp∂slerp(q₁, q₂, τ)[2][3]
-```
-though `slerp∂slerp` computes the value and all derivatives of `slerp`
-simultaneously, and does at least as fast as — and likely faster than — most AD
-systems would.  Nonetheless, it is useful to know that `ForwardDiff` can
-process functions *involving* `Quaternionic` methods.
-
-[^2]:
-    As of this writing, `Zygote.jl` does *not* work.  I'm not sure why, but I'm
-    guessing it's related to [`Zygote`'s troubles with complex
-    numbers](https://github.com/FluxML/Zygote.jl/issues/342).  I don't really
-    understand AD terminology, but [this
-    comment](https://discourse.julialang.org/t/automatic-differentiation-of-complex-valued-functions/30263/8)
-    suggests forward-mode AD is better for this kind of thing anyway.  In any
-    case, pull requests for improving this package's interaction with AD are
-    certainly welcome.
-
-```@autodocs
-Modules = [Quaternionic]
-Pages   = ["gradients.jl"]
-```
