@@ -20,7 +20,9 @@ around the code you don't want to measure:
 """
 
 using Quaternionic
-using Test, Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra
+using Test
+using Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra,
+    ChainRulesTestUtils, Zygote
 
 @variables w x y z a b c d e  # Symbolic variables
 
@@ -70,6 +72,7 @@ end
     addtests("alignment.jl")
     addtests("interpolation.jl")
     addtests("gradients.jl")
+    addtests("auto_differentiation.jl")
     addtests("doctests.jl")
 end
 
