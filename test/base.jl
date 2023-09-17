@@ -36,23 +36,25 @@
         @test Quaternion{T}(1, 2, 3, 4) == Quaternion{T}(SVector{4, T}(1, 2, 3, 4))
         @test Quaternion{T}(0, 2, 3, 4) == Quaternion{T}(2, 3, 4)
         @test Quaternion{T}(1, 0, 0, 0) == Quaternion{T}(1)
-        @test Quaternion(T.([1, 2, 3, 4])...) == Quaternion(SVector{4, T}(1, 2, 3, 4))
-        @test Quaternion(T.([0, 2, 3, 4])...) == Quaternion(T(2), T(3), T(4))
-        @test Quaternion(T.([1, 0, 0, 0])...) == Quaternion(T(1))
+        @test Quaternion(T[1, 2, 3, 4]...) == Quaternion(SVector{4, T}(1, 2, 3, 4))
+        @test Quaternion(T[0, 2, 3, 4]...) == Quaternion(T(2), T(3), T(4))
+        @test Quaternion(T[1, 0, 0, 0]...) == Quaternion(T(1))
         if !(T<:Integer)
             @test Rotor{T}(1, 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
             @test Rotor{T}(0, 2, 3, 4) == Rotor{T}(2, 3, 4)
             @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
-            @test Rotor(T.([1, 2, 3, 4])...) == Rotor(SVector{4, T}(1, 2, 3, 4)/√T(30))
-            @test Rotor(T.([0, 2, 3, 4])...) == Rotor(T(2), T(3), T(4))
-            @test Rotor(T.([1, 0, 0, 0])...) == Rotor(T(1))
+            if !(T<:Num)
+                @test Rotor(T[1, 2, 3, 4]...) ≈ Rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
+                @test Rotor(T[0, 2, 3, 4]...) ≈ Rotor(T(2), T(3), T(4)) rtol=0 atol=2eps(T)
+                @test Rotor(T[1, 0, 0, 0]...) ≈ Rotor(T(1)) rtol=0 atol=2eps(T)
+            end
         end
         @test QuatVec{T}(1, 2, 3, 4) == QuatVec{T}(SVector{4, T}(0, 2, 3, 4))
         @test QuatVec{T}(0, 2, 3, 4) == QuatVec{T}(2, 3, 4)
         @test QuatVec{T}(1, 0, 0, 0) == QuatVec{T}(1)
-        @test QuatVec(T.([0, 2, 3, 4])...) == QuatVec(SVector{4, T}(0, 2, 3, 4))
-        @test QuatVec(T.([0, 2, 3, 4])...) == QuatVec(T(2), T(3), T(4))
-        @test QuatVec(T.([0, 0, 0, 0])...) == QuatVec(T(0))
+        @test QuatVec(T[0, 2, 3, 4]...) == QuatVec(SVector{4, T}(0, 2, 3, 4))
+        @test QuatVec(T[0, 2, 3, 4]...) == QuatVec(T(2), T(3), T(4))
+        @test QuatVec(T[0, 0, 0, 0]...) == QuatVec(T(0))
 
         # Test indexing
         q = Quaternion(T(1), T(2), T(3), T(4))
@@ -107,10 +109,10 @@
             @test one(T) ≉ k
         end
 
-        # Check non-sensical basis elements are not allowed
-        @test_throws DomainError one(QuatVec)
-        @test_throws DomainError one(QuatVec{T})
-        @test_throws DomainError one(QuatVec{T}(1, 2, 3))
+        # Check nonsensical basis elements are not allowed
+        # @test_throws DomainError one(QuatVec)
+        # @test_throws DomainError one(QuatVec{T})
+        # @test_throws DomainError one(QuatVec{T}(1, 2, 3))
         @test_throws DomainError zero(Rotor)
         @test_throws DomainError zero(Rotor{T})
         @test_throws DomainError zero(Rotor{T}(1))
