@@ -5,7 +5,7 @@
         QuaternionF64(0.0, 1.0, 0.0, 0.0)
     ]
 
-    @testset "$Q{T}" for Q in [Quaternion, Rotor, QuatVec]
+    @testset "$Q{T}" for (Q,q) in ((Quaternion, quaternion), (Rotor,rotor), (QuatVec,quatvec))
         for T in Types
             @test Q(T) === Q{T}
             @test Q(Q{T}) === Q{T}
@@ -81,7 +81,7 @@
                 v = zeros(T, 4)
                 v[i] = one(T)
                 v = SVector(v...)
-                @test float(Q{T}(v)) == Q(float(T).(v))
+                @test float(Q{T}(v)) == q(float(T).(v))
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
                 v = Vector(v)
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
@@ -89,12 +89,13 @@
         end
 
         for T in SymbolicTypes
-            q = Q{T}(1, 2, 3, 4)
-            if Q !== Rotor
-                @test typeof(a * q) === Q{T}
-                @test typeof(a / q) === Q{T}
-                @test typeof(q * a) === Q{T}
-                @test typeof(q / a) === Q{T}
+            let q = Q{T}(1, 2, 3, 4)
+                if Q !== Rotor
+                    @test typeof(a * q) === Q{T}
+                    @test typeof(a / q) === Q{T}
+                    @test typeof(q * a) === Q{T}
+                    @test typeof(q / a) === Q{T}
+                end
             end
         end
     end

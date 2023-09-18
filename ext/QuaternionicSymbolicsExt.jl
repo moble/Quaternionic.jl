@@ -2,6 +2,7 @@ module QuaternionicSymbolicsExt
 
 using StaticArrays: SVector
 import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
+    quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64, wrapper, components
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
@@ -13,33 +14,33 @@ rotor(w::Symbolics.Num) = rotor(SVector{4}(one(w), false, false, false))
 quatvec(w::Symbolics.Num) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
-        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
-        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
+        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = quaternion
+        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = quaternion
     end
 end
 let NT = Symbolics.Num
-    for QT ∈ (AbstractQuaternion, QuatVec)
+    for QT ∈ (QuatVec,)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
-                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = $QT
-                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = $QT
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = quatvec
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = quatvec
             end
         end
     end
     for QT ∈ (Rotor,)
         for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
             @eval begin
-                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = Quaternion
-                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = Quaternion
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = quaternion
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = quaternion
             end
         end
     end
 end
 let T = Symbolics.Num
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
-        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
+        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = quaternion
         if T !== Quaternion
-            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = Quaternion
+            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = quaternion
         end
     end
 end
@@ -99,7 +100,7 @@ end
 # Broadcast-like operations from Symbolics
 # (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
 # (d::Symbolics.Operator)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::Quaternion) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
 (d::Symbolics.Differential)(q::Rotor) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
 (d::Symbolics.Differential)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
 

@@ -5,16 +5,16 @@ using StaticArrays
 isdefined(Base, :get_extension) ? (using ChainRulesCore) : (using ..ChainRulesCore)
 
 
-function ChainRulesCore.rrule(::Type{QT}, arg) where {QT<:AbstractQuaternion}
-    @info 1 QT arg typeof(arg)
-    AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-    return QT(arg), AbstractQuaternion_pullback
-end
-function ChainRulesCore.rrule(::Type{Rotor{T}}, arg) where {T}
-    @info 2 T arg typeof(arg)
-    Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-    return Rotor{T}(normalize(arg)), Rotor_pullback
-end
+# function ChainRulesCore.rrule(::Type{QT}, arg) where {QT<:AbstractQuaternion}
+#     @info 1 QT arg typeof(arg)
+#     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+#     return QT(arg), AbstractQuaternion_pullback
+# end
+# function ChainRulesCore.rrule(::Type{Rotor{T}}, arg) where {T}
+#     @info 2 T arg typeof(arg)
+#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+#     return Rotor{T}(normalize(arg)), Rotor_pullback
+# end
 function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector{T}) where {QT<:AbstractQuaternion, T}
     @info 3 QT arg typeof(arg)
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
@@ -25,12 +25,18 @@ function ChainRulesCore.rrule(::Type{Rotor{QT}}, arg::AbstractVector{VT}) where 
     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return Rotor{QT}(normalize(arg)), Rotor_pullback
 end
-function ChainRulesCore.rrule(::typeof(Rotor), arg::AbstractVector{T}) where {T}
-    @info 5 T arg typeof(arg)
-    Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-    return Rotor{T}(normalize(arg)), Rotor_pullback
+function ChainRulesCore.rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT}) where {QT, VT}
+    @info 4 QT VT arg typeof(arg)
+    QuatVec_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+    v = @SVector[false, arg[begin+1], arg[begin+2], arg[begin+3]]
+    return QuatVec{QT}(v), QuatVec_pullback
 end
-# function ChainRulesCore.rrule(::Type{QT}, arg) where {QT<:Rotor}
+# function ChainRulesCore.rrule(::typeof(rotor), arg::AbstractVector{T}) where {T}
+#     @info 5 T arg typeof(arg)
+#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+#     return Rotor{T}(normalize(arg)), Rotor_pullback
+# end
+# function ChainRulesCore.rrule(::Type{QT}, arg) where {QT<:Rotor}f
 #     @info 3 QT arg typeof(arg)
 #     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
 #     return QT(arg), Rotor_pullback
