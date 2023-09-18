@@ -163,19 +163,40 @@ end
 # We'll need this awkward way of getting the `components` field when we set `getproperty`
 components(q::AbstractQuaternion) = getfield(q, :components)
 
+normalize(v::AbstractVector) = v ./ √sum(abs2, v)
+
 # Untyped constructor from SVector
 # (::Type{QT})(v::SVector{4, T}) where {T<:Number, QT<:AbstractQuaternion} = QT{eltype(v)}(v)
 Quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
-Rotor(v::SVector{4,T}) where {T<:Number} = Rotor{eltype(v)}(v)
+function Rotor(v::SVector{4,T}) where {T<:Number}
+    v̂ = normalize(v)
+    Rotor{eltype(v̂)}(v̂)
+end
 QuatVec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
 
 # Constructor from AbstractVector
-(::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT{T}(v...)
+# (::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT(v...)
+function (::Type{QT})(v::AbstractVector) where {QT<:AbstractQuaternion}
+    if length(v) == 4
+        QT(v[begin], v[begin+1], v[begin+2], v[begin+3])
+    elseif length(v) == 3
+        QT(v[begin], v[begin+1], v[begin+2])
+    elseif length(v) == 1
+        QT(v[begin])
+    else
+        throw(DimensionMismatch("Quaternion must have 1, 3, or 4 inputs"))
+    end
+end
+#(::Type{QT})(v::AbstractVector{T}) where {QT<:Rotor, T} = normalize(QT{T}(v...))
 
 # Constructor from all 4 components
 (::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(w, x, y, z); QT{eltype(v)}(v))
 (::Type{QT})(w, x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(w, x, y, z))
-Rotor(w, x, y, z) = (n = √(w^2 + x^2 + y^2 + z^2); Rotor(SVector{4}(w / n, x / n, y / n, z / n)))
+function Rotor(w, x, y, z)
+    n = √(w^2 + x^2 + y^2 + z^2)
+    v = SVector{4}(w / n, x / n, y / n, z / n)
+    Rotor{eltype(v)}(v)
+end
 Rotor{T}(w, x, y, z) where {T<:Number} = (n = √T(w^2 + x^2 + y^2 + z^2); Rotor{T}(SVector{4,T}(w / n, x / n, y / n, z / n)))
 QuatVec(w, x, y, z) = QuatVec(SVector{4}(oftype(w, false), x, y, z))
 QuatVec{T}(w, x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(oftype(w, false), x, y, z))
@@ -194,7 +215,7 @@ QuatVec{T}(x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, x, y, z))
 Quaternion(w::Number) = Quaternion(SVector{4}(w, false, false, false))
 Quaternion{T}(w::Number) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
 Rotor(w::Number) = Rotor(SVector{4}(one(w), false, false, false))
-Rotor{T}(w::Number) where {T<:Number} = Rotor{T}(SVector{4,T}(one(T), false, false, false))
+Rotor{T}(w::Number) where {T<:Number} = Rotor(SVector{4,T}(true, false, false, false))
 QuatVec(w::Number) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
 QuatVec{T}(w::Number) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
 
@@ -284,8 +305,10 @@ Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not 
 
 Base.one(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
 Base.one(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
-Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
-Base.one(::Type{QuatVec{T}}) where {T} = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+#Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(T::Type{QuatVec}) = T(true, false, false, false)
+#Base.one(::Type{QuatVec{T}}) where {T} = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(::Type{QuatVec{T}}) where {T} = QuatVec{T}(true, false, false, false)
 
 # Getting pieces of quaternions
 @inline function Base.getindex(q::AbstractQuaternion, i::Integer)
