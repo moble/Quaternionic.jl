@@ -72,7 +72,7 @@ function Base.show(io::IO, q::AbstractQuaternion)
 end
 
 function Base.show(io::IO, q::Rotor)
-    print(io, "Rotor(")
+    print(io, "rotor(")
     invoke(Base.show, Tuple{IO, AbstractQuaternion}, io, q)
     print(io, ")")
 end

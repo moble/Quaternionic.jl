@@ -7,7 +7,7 @@ Sum the squares of the components of the quaternion
 
 # Examples
 ```jldoctest
-julia> abs2(Quaternion(1,2,4,10))
+julia> abs2(quaternion(1,2,4,10))
 121
 ```
 """
@@ -22,7 +22,7 @@ Square-root of the sum the squares of the components of the quaternion
 
 # Examples
 ```jldoctest
-julia> abs(Quaternion(1,2,4,10))
+julia> abs(quaternion(1,2,4,10))
 11.0
 ```
 """
@@ -36,7 +36,7 @@ Sum the squares of the "vector" components of the quaternion
 
 # Examples
 ```jldoctest
-julia> abs2vec(Quaternion(1,2,3,6))
+julia> abs2vec(quaternion(1,2,3,6))
 49
 ```
 """
@@ -49,7 +49,7 @@ Square-root of the sum of the squares of the "vector" components of the quaterni
 
 # Examples
 ```jldoctest
-julia> absvec(Quaternion(1,2,3,6))
+julia> absvec(quaternion(1,2,3,6))
 7.0
 ```
 """
@@ -92,10 +92,10 @@ scalar part exactly 0.
 julia> log(exp(1.2imy))
  + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
 
-julia> log(Quaternion(exp(7)))
+julia> log(quaternion(exp(7)))
 7.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
 
-julia> log(Quaternion(-exp(7)))
+julia> log(quaternion(-exp(7)))
 7.0 + 0.0𝐢 + 0.0𝐣 + 3.141592653589793𝐤
 ```
 
@@ -105,13 +105,13 @@ function Base.log(q::Quaternion{T}) where {T}
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
         if q[1] < 0
-            return Quaternion(log(-q[1]), 0, 0, π)
+            return quaternion(log(-q[1]), 0, 0, π)
         end
-        return Quaternion(log(q[1]), 0, 0, 0)
+        return quaternion(log(q[1]), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
     f = atan(absolutevec, q[1]) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
-    Quaternion(log(abs2(q))/2, f*q[2], f*q[3], f*q[4])
+    quaternion(log(abs2(q))/2, f*q[2], f*q[3], f*q[4])
 end
 function Base.log(q::Rotor{T}) where {T}
     q = float(q)
@@ -124,7 +124,7 @@ function Base.log(q::Rotor{T}) where {T}
     end
     absolutevec = sqrt(absolute2vec)
     f = atan(absolutevec, q[1]) / absolutevec  # acos(q[1]) / absolutevec
-    QuatVec(0, f*q[2], f*q[3], f*q[4])
+    quatvec(0, f*q[2], f*q[3], f*q[4])
 end
 
 """
@@ -135,20 +135,20 @@ Exponential of a quaternion
 # Examples
 ```jldoctest
 julia> exp(imx*π/4)  # Rotation through π/2 (note the extra 1/2) about the x axis
-Rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
+rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}
     q = float(q)
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
-        return Quaternion(exp(q[1]), 0, 0, 0)
+        return quaternion(exp(q[1]), 0, 0, 0)
     end
     absolutevec = sqrt(absolute2vec)
     e = exp(q[1])
     s, c = sincos(absolutevec)
     esinc = e * s / absolutevec
-    Quaternion(e*c, esinc*q[2], esinc*q[3], esinc*q[4])
+    quaternion(e*c, esinc*q[2], esinc*q[3], esinc*q[4])
 end
 function Base.exp(q::QuatVec{T}) where {T}
     q = float(q)
@@ -159,7 +159,7 @@ function Base.exp(q::QuatVec{T}) where {T}
     absolutevec = sqrt(absolute2vec)
     s, c = sincos(absolutevec)
     sinc = s / absolutevec
-    Rotor(c, sinc*q[2], sinc*q[3], sinc*q[4])
+    rotor(c, sinc*q[2], sinc*q[3], sinc*q[4])
 end
 
 @doc raw"""
@@ -190,17 +190,17 @@ direction.
 
 # Examples
 ```jldoctest
-julia> q = Quaternion(1.2, 3.4, 5.6, 7.8);
+julia> q = quaternion(1.2, 3.4, 5.6, 7.8);
 
 julia> sqrtq = √q;
 
 julia> sqrtq^2 ≈ q
 true
 
-julia> √Quaternion(4)
+julia> √quaternion(4)
 2.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
 
-julia> √Quaternion(-4)
+julia> √quaternion(-4)
 0.0 + 0.0𝐢 + 0.0𝐣 + 2.0𝐤
 ```
 """
@@ -209,14 +209,14 @@ function Base.sqrt(q::Quaternion{T}) where {T}
     absolute2vec = abs2vec(q)
     if iszero(absolute2vec)
         if q[1] < 0
-            return Quaternion(0, 0, 0, sqrt(-q[1]))
+            return quaternion(0, 0, 0, sqrt(-q[1]))
         end
-        return Quaternion(sqrt(q[1]), 0, 0, 0)
+        return quaternion(sqrt(q[1]), 0, 0, 0)
     end
     absolute2 = absolute2vec + q[1]^2
     c1 = sqrt(absolute2) + q[1]
     c2 = sqrt(inv(2*c1))
-    Quaternion(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
+    quaternion(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 function Base.sqrt(q::Rotor{T}) where {T}
     q = float(q)
@@ -229,7 +229,7 @@ function Base.sqrt(q::Rotor{T}) where {T}
     end
     c1 = 1 + q[1]
     c2 = sqrt(inv(2*c1))
-    Rotor(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
+    rotor(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 
 """

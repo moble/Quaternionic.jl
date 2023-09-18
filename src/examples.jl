@@ -31,7 +31,7 @@ return the orientation as a `Rotor`, followed by the angular velocity as a
 julia> R, ω⃗, Ṙ = precessing_nutating_example();
 
 julia> R(12.34)
-Rotor(0.9944579779058746 + 0.09804177421238346𝐢 - 0.00084850453525312𝐣 + 0.03795287510453948𝐤)
+rotor(0.9944579779058746 + 0.09804177421238346𝐢 - 0.00084850453525312𝐣 + 0.03795287510453948𝐤)
 julia> ω⃗(345.67)
  + 0.00046343007342867023𝐢 - 0.0007032818419003181𝐣 + 0.006214814810035088𝐤
 julia> ϵ = 1e-6; (R(ϵ) - R(-ϵ)) / 2ϵ  # Approximate derivative at t=0
@@ -62,6 +62,6 @@ function precessing_nutating_example(Ωₒ=2π/1_000, Ωₚ=2π/10_000, α=π/8,
         -R₀ * R₁(t) * R₄(t) * inv(R₁(t)) * R₃(t) * R₂(t) * inv(R₃(t)) * Ṙ₃(t) * inv(R₃(t)) * R₁(t) +
         R₀ * R₁(t) * R₄(t) * inv(R₁(t)) * R₃(t) * R₂(t) * inv(R₃(t)) * Ṙ₁(t)
     )
-    ω⃗(t) = 2 * QuatVec(Ṙ(t) * inv(R(t)))
+    ω⃗(t) = 2 * quatvec(Ṙ(t) * inv(R(t)))
     (R, ω⃗, Ṙ)
 end

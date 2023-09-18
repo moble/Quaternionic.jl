@@ -10,7 +10,7 @@ isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
 # Both Quaternion and Rotor, when differentiated, result in a Quaternion...
 @inline function ForwardDiff.extract_derivative(::Type{T}, y::AbstractQuaternion{TD}) where {T, TD <: ForwardDiff.Dual}
-    Quaternion(
+    quaternion(
         ForwardDiff.partials(T, y[1], 1),
         ForwardDiff.partials(T, y[2], 1),
         ForwardDiff.partials(T, y[3], 1),
@@ -20,7 +20,7 @@ end
 
 # ...but QuatVec results in a QuatVec
 @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
-    QuatVec(
+    quatvec(
         ForwardDiff.partials(T, y[2], 1),
         ForwardDiff.partials(T, y[3], 1),
         ForwardDiff.partials(T, y[4], 1)

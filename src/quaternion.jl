@@ -9,9 +9,9 @@ Quaternionic number type with elements of type `T`.
 
 The functions
 
-    Quaternion(w, x, y, z)
-    Quaternion(x, y, z)
-    Quaternion(w)
+    quaternion(w, x, y, z)
+    quaternion(x, y, z)
+    quaternion(w)
     Quaternion{T}(w, x, y, z)
 
 create a new quaternion with the given components.  The argument `w` is the
@@ -26,15 +26,15 @@ also be used like the complex `im` to create new `Quaternion` object.
 # Examples
 
 ```jldoctest
-julia> Quaternion(1, 2, 3, 4)
+julia> quaternion(1, 2, 3, 4)
 1 + 2𝐢 + 3𝐣 + 4𝐤
 julia> Quaternion{Float64}(1, 2, 3, 4)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
-julia> Quaternion(1.0, 2.0, 3.0, 4.0)
+julia> quaternion(1.0, 2.0, 3.0, 4.0)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
-julia> Quaternion(2, 3, 4)
+julia> quaternion(2, 3, 4)
 0 + 2𝐢 + 3𝐣 + 4𝐤
-julia> Quaternion(1)
+julia> quaternion(1)
 1 + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
@@ -76,9 +76,9 @@ different (cf. [`unflip`](@ref)).
 
 The functions
 
-    Rotor(w, x, y, z)
-    Rotor(x, y, z)
-    Rotor(w)
+    rotor(w, x, y, z)
+    rotor(x, y, z)
+    rotor(w)
     Rotor{T}(w, x, y, z)
 
 create a new rotor with the given components (where the components are as
@@ -101,16 +101,16 @@ function and get the desired result.
 # Examples
 
 ```jldoctest
-julia> Rotor(1, 2, 3, 4)
-Rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
-julia> Rotor(Quaternion(1, 2, 3, 4))
-Rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
+julia> rotor(1, 2, 3, 4)
+rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
+julia> rotor(quaternion(1, 2, 3, 4))
+rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
 julia> Rotor{Float16}(1, 2, 3, 4)
-Rotor(0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤)
-julia> Rotor(2, 3, 4)
-Rotor(0.0 + 0.3713906763541037𝐢 + 0.5570860145311556𝐣 + 0.7427813527082074𝐤)
-julia> Rotor(1)
-Rotor(1 + 0𝐢 + 0𝐣 + 0𝐤)
+rotor(0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤)
+julia> rotor(2, 3, 4)
+rotor(0.0 + 0.3713906763541037𝐢 + 0.5570860145311556𝐣 + 0.7427813527082074𝐤)
+julia> rotor(1)
+rotor(1 + 0𝐢 + 0𝐣 + 0𝐤)
 ```
 """
 struct Rotor{T<:Number} <: AbstractQuaternion{T}
@@ -132,9 +132,9 @@ significantly faster *and* more accurate in certain operations than general
 
 The functions
 
-    QuatVec(w, x, y, z)
-    QuatVec(x, y, z)
-    QuatVec(w)
+    quatvec(w, x, y, z)
+    quatvec(x, y, z)
+    quatvec(w)
     QuatVec{T}(w, x, y, z)
 
 create a new rotor with the given components (where the components are as
@@ -144,13 +144,13 @@ always set to 0.
 # Examples
 
 ```jldoctest
-julia> QuatVec(1, 2, 3, 4)
+julia> quatvec(1, 2, 3, 4)
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(Quaternion(1, 2, 3, 4))
+julia> quatvec(quaternion(1, 2, 3, 4))
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(2, 3, 4)
+julia> quatvec(2, 3, 4)
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(1)
+julia> quatvec(1)
  + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
@@ -167,67 +167,84 @@ normalize(v::AbstractVector) = v ./ √sum(abs2, v)
 
 # Untyped constructor from SVector
 # (::Type{QT})(v::SVector{4, T}) where {T<:Number, QT<:AbstractQuaternion} = QT{eltype(v)}(v)
-Quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
-function Rotor(v::SVector{4,T}) where {T<:Number}
+quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
+function rotor(v::SVector{4,T}) where {T<:Number}
     v̂ = normalize(v)
     Rotor{eltype(v̂)}(v̂)
 end
-QuatVec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
+quatvec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
 
 # Constructor from AbstractVector
-# (::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT(v...)
-function (::Type{QT})(v::AbstractVector) where {QT<:AbstractQuaternion}
-    if length(v) == 4
-        QT(v[begin], v[begin+1], v[begin+2], v[begin+3])
-    elseif length(v) == 3
-        QT(v[begin], v[begin+1], v[begin+2])
-    elseif length(v) == 1
-        QT(v[begin])
-    else
-        throw(DimensionMismatch("Quaternion must have 1, 3, or 4 inputs"))
+for q ∈ (:quaternion, :rotor, :quatvec)
+    @eval begin
+        function $q(v::AbstractVector)
+            if length(v) == 4
+                $q(v[begin], v[begin+1], v[begin+2], v[begin+3])
+            elseif length(v) == 3
+                $q(v[begin], v[begin+1], v[begin+2])
+            elseif length(v) == 1
+                $q(v[begin])
+            else
+                throw(DimensionMismatch("Quaternion must have 1, 3, or 4 inputs"))
+            end
+        end
     end
 end
-#(::Type{QT})(v::AbstractVector{T}) where {QT<:Rotor, T} = normalize(QT{T}(v...))
+# # (::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT(v...)
+# function (::Type{QT})(v::AbstractVector) where {QT<:AbstractQuaternion}
+#     if length(v) == 4
+#         QT(v[begin], v[begin+1], v[begin+2], v[begin+3])
+#     elseif length(v) == 3
+#         QT(v[begin], v[begin+1], v[begin+2])
+#     elseif length(v) == 1
+#         QT(v[begin])
+#     else
+#         throw(DimensionMismatch("Quaternion must have 1, 3, or 4 inputs"))
+#     end
+# end
+# #(::Type{QT})(v::AbstractVector{T}) where {QT<:Rotor, T} = normalize(QT{T}(v...))
 
 # Constructor from all 4 components
 (::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(w, x, y, z); QT{eltype(v)}(v))
-(::Type{QT})(w, x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(w, x, y, z))
-function Rotor(w, x, y, z)
+(::Type{QT})(w, x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT{T}(SVector{4,T}(w, x, y, z))
+quaternion(w, x, y, z) = quaternion(SVector{4}(w, x, y, z))
+Quaternion{T}(w, x, y, z) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, x, y, z))
+function rotor(w, x, y, z)
     n = √(w^2 + x^2 + y^2 + z^2)
     v = SVector{4}(w / n, x / n, y / n, z / n)
     Rotor{eltype(v)}(v)
 end
 Rotor{T}(w, x, y, z) where {T<:Number} = (n = √T(w^2 + x^2 + y^2 + z^2); Rotor{T}(SVector{4,T}(w / n, x / n, y / n, z / n)))
-QuatVec(w, x, y, z) = QuatVec(SVector{4}(oftype(w, false), x, y, z))
+quatvec(w, x, y, z) = quatvec(SVector{4}(oftype(w, false), x, y, z))
 QuatVec{T}(w, x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(oftype(w, false), x, y, z))
 
 # Constructor from vector components
-(::Type{QT})(x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(false, x, y, z); QT{eltype(v)}(v))
-(::Type{QT})(x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(false, x, y, z))
-Rotor(x, y, z) = (n = √(x^2 + y^2 + z^2); Rotor(SVector{4}(false, x / n, y / n, z / n)))
+# (::Type{QT})(x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(false, x, y, z); QT{eltype(v)}(v))
+# (::Type{QT})(x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(false, x, y, z))
+rotor(x, y, z) = (n = √(x^2 + y^2 + z^2); rotor(SVector{4}(false, x / n, y / n, z / n)))
 Rotor{T}(x, y, z) where {T<:Number} = (n = √T(x^2 + y^2 + z^2); Rotor{T}(SVector{4,T}(false, x / n, y / n, z / n)))
-QuatVec(x, y, z) = QuatVec(SVector{4}(false, x, y, z))
+quatvec(x, y, z) = quatvec(SVector{4}(false, x, y, z))
 QuatVec{T}(x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, x, y, z))
 
 # Constructor from scalar component
 # (::Type{QT})(w::Number) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, false, false, false); QT{eltype(v)}(v))
 # (::Type{QT})(w::Number) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, false, false, false))
-Quaternion(w::Number) = Quaternion(SVector{4}(w, false, false, false))
+quaternion(w::Number) = quaternion(SVector{4}(w, false, false, false))
 Quaternion{T}(w::Number) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
-Rotor(w::Number) = Rotor(SVector{4}(one(w), false, false, false))
-Rotor{T}(w::Number) where {T<:Number} = Rotor(SVector{4,T}(true, false, false, false))
-QuatVec(w::Number) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
+rotor(w::Number) = rotor(SVector{4}(one(w), false, false, false))
+Rotor{T}(w::Number) where {T<:Number} = rotor(SVector{4,T}(true, false, false, false))
+quatvec(w::Number) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 QuatVec{T}(w::Number) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
 
 # Copy constructor
 # (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT{eltype(components(q))}(components(q))
 # (::Type{QT})(q::AbstractQuaternion{S}) where {T<:Number, S<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
 # (::Type{QT})(q::AbstractQuaternion{T}) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
-Quaternion(q::AbstractQuaternion{T}) where {T<:Number} = Quaternion(components(q)...)
+quaternion(q::AbstractQuaternion{T}) where {T<:Number} = quaternion(components(q)...)
 Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Quaternion{T}(components(q)...)
-Rotor(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Rotor(components(q)...)
+rotor(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = rotor(components(q)...)
 Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Rotor{T}(components(q)...)
-QuatVec(q::AbstractQuaternion{T}) where {T<:Number} = QuatVec(components(q)...)
+quatvec(q::AbstractQuaternion{T}) where {T<:Number} = quatvec(components(q)...)
 QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = QuatVec{T}(components(q)...)
 
 # Type constructors
@@ -260,7 +277,7 @@ julia> 1.2imx
  + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
 ```
 """
-const imx = QuatVec(false, true, false, false)
+const imx = quatvec(false, true, false, false)
 const 𝐢 = imx
 
 """
@@ -277,7 +294,7 @@ julia> 1.2imy
  + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
 ```
 """
-const imy = QuatVec(false, false, true, false)
+const imy = quatvec(false, false, true, false)
 const 𝐣 = imy
 
 """
@@ -294,7 +311,7 @@ julia> 1.2imz
  + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
 ```
 """
-const imz = QuatVec(false, false, false, true)
+const imz = quatvec(false, false, false, true)
 const 𝐤 = imz
 
 # Essential constructors

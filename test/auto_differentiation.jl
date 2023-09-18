@@ -5,9 +5,9 @@
     @testset "abs2 Quaternion $T" for T ∈ [Float64]# [FloatTypes; SymbolicTypes]
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(Quaternion(a,b,c,d)),
-            (a,b,c,d)->abs2(Quaternion([a,b,c,d])),
-            (a,b,c,d)->abs2(Quaternion(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion(a,b,c,d)),
+            (a,b,c,d)->abs2(quaternion([a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion(@SVector[a,b,c,d])),
             (a,b,c,d)->abs2(Quaternion{T}(a,b,c,d)),
             (a,b,c,d)->abs2(Quaternion{T}([a,b,c,d])),
             (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
@@ -23,9 +23,9 @@
     @testset "abs2 Rotor $T" for T ∈ [Float64]# FloatTypes
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(Rotor(a,b,c,d)),
-            (a,b,c,d)->abs2(Rotor([a,b,c,d])),
-            #(a,b,c,d)->abs2(Rotor(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(rotor(a,b,c,d)),
+            (a,b,c,d)->abs2(rotor([a,b,c,d])),
+            #(a,b,c,d)->abs2(rotor(@SVector[a,b,c,d])),
             (a,b,c,d)->abs2(Rotor{T}(a,b,c,d)),
             #(a,b,c,d)->abs2(Rotor{T}([a,b,c,d])),  # Fail
             #(a,b,c,d)->abs2(Rotor{T}(@SVector[a,b,c,d])),  # Fail

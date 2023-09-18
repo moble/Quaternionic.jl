@@ -36,13 +36,13 @@ function ∂log(Z::Rotor)
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
-        return Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
+        return Quaternion.([quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
     end
     f = acos(Z[1]) / a
     fprime = (Z[1] - f) / a2
-    V = 1 + fprime * QuatVec(Z)
+    V = 1 + fprime * quatvec(Z)
     [
-        Quaternion(conj(Z)),
+        quaternion(conj(Z)),
         Z[2] * V + f * imx,
         Z[3] * V + f * imy,
         Z[4] * V + f * imz,
@@ -70,20 +70,20 @@ function log∂log(Z::Rotor)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
         return (
-            QuatVec(zero(a)),
-            Quaternion.([Quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
+            quatvec(zero(a)),
+            Quaternion.([quaternion(one(a)), zero(a)*imx, zero(a)*imy, one(a)*imz])
         )
     end
     f = acos(Z[1]) / a
     fprime = (Z[1] - f) / a2
-    V = 1 + fprime * QuatVec(Z)
+    V = 1 + fprime * quatvec(Z)
     ∂log = [
-        Quaternion(conj(Z)),
+        quaternion(conj(Z)),
         Z[2] * V + f * imx,
         Z[3] * V + f * imy,
         Z[4] * V + f * imz,
     ]
-    (f * QuatVec(Z), ∂log)
+    (f * quatvec(Z), ∂log)
 end
 
 
@@ -120,7 +120,7 @@ function ∂exp(Z::QuatVec)
     a2 = abs2vec(Z)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
-        return Quaternion.([Quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
+        return Quaternion.([quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
     end
     s, c = sincos(a)
     sinca = s / a
@@ -156,8 +156,8 @@ function exp∂exp(Z::QuatVec)
     a = sqrt(a2)
     if a < 2eps(typeof(a))
         return (
-            Quaternion(one(a)),
-            Quaternion.([Quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
+            quaternion(one(a)),
+            Quaternion.([quaternion(one(a)), one(a)*imx, one(a)*imy, one(a)*imz])
         )
     end
     s, c = sincos(a)

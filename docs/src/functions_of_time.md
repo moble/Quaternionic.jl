@@ -156,7 +156,7 @@ tspan = (0.0, 100.0)
 
 # Construct the ODE and `ODEProblem`
 angular_velocity_ode(q, ω⃗, t) = ω⃗(t) * q / 2
-angular_velocity_problem = ODEProblem(angular_velocity_ode, Quaternion(q₀), tspan, ω⃗)
+angular_velocity_problem = ODEProblem(angular_velocity_ode, quaternion(q₀), tspan, ω⃗)
 
 # Now, solve it
 q = solve(angular_velocity_problem, Vern9(), abstol=1e-12, reltol=0)
@@ -209,7 +209,7 @@ can check that our integration scheme agrees:
 R, ω⃗, Ṙ = precessing_nutating_example()
 angular_velocity_ode(q, ω⃗, t) = ω⃗(t) * q / 2
 tspan = (0., 100_000.)
-angular_velocity_problem = ODEProblem(angular_velocity_ode, Quaternion(R(tspan[1])), tspan, ω⃗)
+angular_velocity_problem = ODEProblem(angular_velocity_ode, quaternion(R(tspan[1])), tspan, ω⃗)
 q = solve(angular_velocity_problem, Vern9(), abstol=1e-12, reltol=0);
 ```
 To check the difference between the analytic `R` and the integrated `q.u`, we

@@ -22,17 +22,17 @@ to just give the components:
 ```jldoctest example
 julia> using Quaternionic
 
-julia> q = Quaternion(1.0, 2.0, 3.0, 4.0)
+julia> q = quaternion(1.0, 2.0, 3.0, 4.0)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
 
-julia> p = Quaternion(4, 3, 2, 1)
+julia> p = quaternion(4, 3, 2, 1)
 4 + 3𝐢 + 2𝐣 + 1𝐤
 ```
 For convenience, you can also pass a vector that will be unpacked for you:
 ```jldoctest example
 julia> c = [1.0, 2.0, 3.0, 4.0];
 
-julia> q = Quaternion(c)
+julia> q = quaternion(c)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
 ```
 Though, if the vector has the wrong number of elements, a `MethodError` will be
@@ -56,7 +56,7 @@ julia> using Quaternionic, Symbolics
 
 julia> @variables a b c d e;
 
-julia> Quaternion(a-b, b*c, c/d, d+e)
+julia> quaternion(a-b, b*c, c/d, d+e)
 a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤
 ```
 In analogy with the complex types, the aliases `QuaternionF64`, `QuaternionF32`,
@@ -93,7 +93,7 @@ julia> randn(QuaternionF64)
 -0.17986445341174084 + 0.5436042462142929𝐢 - 0.20979480846942436𝐣 + 0.3594549687329696𝐤
 
 julia> randn(RotorF32)
-Rotor(0.18842402 - 0.30743068𝐢 + 0.92128336𝐣 + 0.14567046𝐤)
+rotor(0.18842402 - 0.30743068𝐢 + 0.92128336𝐣 + 0.14567046𝐤)
 ```
 Each component of the quaternion is chosen from a normal distribution with mean
 0 and standard deviation 1, which means that the resulting quaternion will have
@@ -168,7 +168,7 @@ expressions:
 ```jldoctest symbolics
 julia> @variables q[1:4];  # Defines q[1] through q[4] as symbolic variables
 
-julia> Q = Quaternion(q...);
+julia> Q = quaternion(q...);
 
 julia> simplify.(Q * imz * conj(Q))
 0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (2q[3]*q[4] - 2q[1]*q[2])𝐣 + (q[1]^2 + q[4]^2 - (q[2]^2) - (q[3]^2))𝐤

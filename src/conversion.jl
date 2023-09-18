@@ -142,7 +142,7 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 - [`from_euler_phases`](@ref): Create quaternion from Euler phases
 """
 function from_euler_angles(α, β, γ)
-    Rotor(
+    rotor(
         cos(β/2)*cos((α+γ)/2),
         -sin(β/2)*sin((α-γ)/2),
         sin(β/2)*cos((α-γ)/2),
@@ -252,7 +252,7 @@ function from_euler_phases(zₐ, zᵦ, zᵧ)
     if abs(zₐ - zp * zm) > abs(zₐ + zp * zm)
         zp *= -1
     end
-    Rotor(real(zb) * real(zp), -imag(zb) * imag(zm), imag(zb) * real(zm), real(zb) * imag(zp))
+    rotor(real(zb) * real(zp), -imag(zb) * imag(zm), imag(zb) * real(zm), real(zb) * imag(zp))
 end
 from_euler_phases(z) = from_euler_phases(z...)
 
@@ -296,7 +296,7 @@ Both angles must be given in radians.
 function from_spherical_coordinates(θ, ϕ)
     sϕ, cϕ = sincos(ϕ/2)
     sθ, cθ = sincos(θ/2)
-    Rotor(cθ*cϕ, -sθ*sϕ, sθ*cϕ, cθ*sϕ)
+    rotor(cθ*cϕ, -sθ*sϕ, sθ*cϕ, cθ*sϕ)
 end
 from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 
@@ -349,7 +349,7 @@ function from_rotation_matrix(ℛ::AbstractMatrix)
         de = dominant_eigenvector(K₃3)
 
         # Convert it into a quaternion
-        R = Rotor(de[4], -de[1], -de[2], -de[3])
+        R = rotor(de[4], -de[1], -de[2], -de[3])
     end
     R
 end

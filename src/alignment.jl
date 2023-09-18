@@ -78,7 +78,7 @@ function _align_Wahba(S)
     # This extracts the dominant eigenvector, and interprets it as a Rotor.  In
     # particular, note that the _last_ eigenvector output by `eigen` (the 4th)
     # has the largest eigenvalue.
-    return Rotor(eigen(M, 4:4).vectors[:, 1]...)
+    return rotor(eigen(M, 4:4).vectors[:, 1]...)
 end
 
 
@@ -133,9 +133,9 @@ sum.
 
 """
 function align(A, B, w)
-    Rotor(sum(w[i] * A[i] * conj(B[i]) for i in eachindex(A, B, w)))
+    rotor(sum(w[i] * A[i] * conj(B[i]) for i in eachindex(A, B, w)))
 end
 
 function align(A, B)
-    Rotor(sum(A[i] * conj(B[i]) for i in eachindex(A, B)))
+    rotor(sum(A[i] * conj(B[i]) for i in eachindex(A, B)))
 end

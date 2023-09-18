@@ -125,7 +125,7 @@
                 @test z6[2] ≈ -one(T) atol=ϵ
                 @test z5[1]*conj(z5[3]) ≈ z6[1]*conj(z6[3]) atol=(T === Float16 ? 20ϵ : ϵ)
 
-                q7 = Quaternion(0, q6[2], q6[3], 0)
+                q7 = quaternion(0, q6[2], q6[3], 0)
                 z7 = to_euler_phases(q7)
                 @test z7[2] == -one(T)
                 @test z7[1]*conj(z7[3]) ≈ exp((α-γ)*im) atol=10eps(T)

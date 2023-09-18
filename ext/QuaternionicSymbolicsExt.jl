@@ -8,9 +8,9 @@ isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 
 
 ### Functions that used to appear in quaternion.jl
-Quaternion(w::Symbolics.Num) = Quaternion(SVector{4}(w, false, false, false))
-Rotor(w::Symbolics.Num) = Rotor(SVector{4}(one(w), false, false, false))
-QuatVec(w::Symbolics.Num) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
+quaternion(w::Symbolics.Num) = quaternion(SVector{4}(w, false, false, false))
+rotor(w::Symbolics.Num) = rotor(SVector{4}(one(w), false, false, false))
+quatvec(w::Symbolics.Num) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
         wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
@@ -98,10 +98,10 @@ function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
 end
 # Broadcast-like operations from Symbolics
 # (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-# (d::Symbolics.Operator)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))
+# (d::Symbolics.Operator)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
 (d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::Rotor) = Quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::Rotor) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
 
 
 ### Functions that used to appear in algebra.jl
@@ -139,9 +139,9 @@ end
     r = randn(RotorF64)
     q = randn(QuaternionF64)
     𝓈 = w
-    𝓋 = QuatVec(x, y, z)
-    𝓇 = Rotor(a, b, c, d)
-    𝓆 = Quaternion(w, x, y, z)
+    𝓋 = quatvec(x, y, z)
+    𝓇 = rotor(a, b, c, d)
+    𝓆 = quaternion(w, x, y, z)
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to

@@ -23,11 +23,11 @@ the rotation group.
 ```jldoctest example
 julia> distance(imx, imy)
 1.4142135623730951
-julia> distance(Rotor(imx), Rotor(imy))
+julia> distance(rotor(imx), rotor(imy))
 1.5707963267948966
 julia> distance(imz, -imz)
 2.0
-julia> distance(Rotor(imz), Rotor(-imz))
+julia> distance(rotor(imz), rotor(-imz))
 0.0
 ```
 """

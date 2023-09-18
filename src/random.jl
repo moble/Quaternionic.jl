@@ -56,7 +56,7 @@ if Base.VERSION < v"1.9.0-alpha1"
         s2 = sinpi(2*c[2])
         l3 = √(-log(c[3])/2)
         s4, c4 = sincospi(2*c[4])
-        QuatVec(0, l1*s2, l3*c4, l3*s4)
+        quatvec(0, l1*s2, l3*c4, l3*s4)
     end
 
     function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})

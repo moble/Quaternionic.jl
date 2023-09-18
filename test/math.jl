@@ -9,7 +9,7 @@
         c = q[1] + im * getproperty(q, component)
     end
     function ℂ_to_ℍ(c::Complex, component)
-        Quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in components]...)
+        quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in components]...)
     end
     @testset "Complex equivalence $T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
@@ -33,13 +33,13 @@
                     @test cval ≈ qval rtol=ϵ nans=true
                     # Repeat the test on QuatVec for `exp` for pure-imaginary input
                     if unary_function ∈ [exp] && iszero(real(c))
-                        qval = ℍ_to_ℂ(unary_function(QuatVec(q)), component)
+                        qval = ℍ_to_ℂ(unary_function(quatvec(q)), component)
                         @test cval ≈ qval rtol=ϵ nans=true
                     end
                     # Repeat the test on Rotor for `log` and `sqrt` for nonzero input
                     if unary_function ∈ [log, sqrt] && !iszero(c)
                         cval = unary_function(c/abs(c))
-                        qval = ℍ_to_ℂ(unary_function(Rotor(q)), component)
+                        qval = ℍ_to_ℂ(unary_function(rotor(q)), component)
                         @test cval ≈ qval rtol=ϵ nans=true
                     end
                 end
@@ -49,7 +49,7 @@
                     @test 2*abs(cval) ≈ qval rtol=ϵ nans=true
                     if !iszero(c)
                         cval = unary_function(c/abs(c))
-                        qval = ℍ_to_ℂ(unary_function(Rotor(q)), component)
+                        qval = ℍ_to_ℂ(unary_function(rotor(q)), component)
                         @test 2*abs(cval) ≈ qval rtol=ϵ nans=true
                     end
                 end
@@ -67,7 +67,7 @@
                             end
                             if !iszero(c)
                                 cval = binary_function(c/abs(c), s)
-                                qval = ℍ_to_ℂ(binary_function(Rotor(q), s), component)
+                                qval = ℍ_to_ℂ(binary_function(rotor(q), s), component)
                                 @test cval ≈ qval rtol=6ϵ nans=true
                             end
                         end
@@ -78,12 +78,12 @@
                         qval = ℍ_to_ℂ(binary_function(q, s), component)
                         @test cval ≈ qval rtol=ϵ nans=true
                         if iszero(real(c))
-                            qval = ℍ_to_ℂ(binary_function(QuatVec(q), s), component)
+                            qval = ℍ_to_ℂ(binary_function(quatvec(q), s), component)
                             @test cval ≈ qval rtol=ϵ nans=true
                         end
                         if !iszero(c)
                             cval = binary_function(c/abs(c), s)
-                            qval = ℍ_to_ℂ(binary_function(Rotor(q), s), component)
+                            qval = ℍ_to_ℂ(binary_function(rotor(q), s), component)
                             @test cval ≈ qval rtol=ϵ nans=true
                         end
                     end
@@ -91,8 +91,8 @@
 
                 @test exp(log(q)) ≈ q rtol=ϵ nans=true
                 @test exp(zero(q)) ≈ one(q) rtol=ϵ nans=true
-                @test exp(log(Rotor(q))) ≈ Rotor(q) rtol=ϵ nans=true
-                @test exp(zero(QuatVec(q))) ≈ one(q) rtol=ϵ nans=true
+                @test exp(log(rotor(q))) ≈ rotor(q) rtol=ϵ nans=true
+                @test exp(zero(quatvec(q))) ≈ one(q) rtol=ϵ nans=true
 
             end
         end

@@ -36,28 +36,28 @@
         @test Quaternion{T}(1, 2, 3, 4) == Quaternion{T}(SVector{4, T}(1, 2, 3, 4))
         @test Quaternion{T}(0, 2, 3, 4) == Quaternion{T}(2, 3, 4)
         @test Quaternion{T}(1, 0, 0, 0) == Quaternion{T}(1)
-        @test Quaternion(T[1, 2, 3, 4]...) == Quaternion(SVector{4, T}(1, 2, 3, 4))
-        @test Quaternion(T[0, 2, 3, 4]...) == Quaternion(T(2), T(3), T(4))
-        @test Quaternion(T[1, 0, 0, 0]...) == Quaternion(T(1))
+        @test quaternion(T[1, 2, 3, 4]...) == quaternion(SVector{4, T}(1, 2, 3, 4))
+        @test quaternion(T[0, 2, 3, 4]...) == quaternion(T(2), T(3), T(4))
+        @test quaternion(T[1, 0, 0, 0]...) == quaternion(T(1))
         if !(T<:Integer)
             @test Rotor{T}(1, 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
             @test Rotor{T}(0, 2, 3, 4) == Rotor{T}(2, 3, 4)
             @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
             if !(T<:Num)
-                @test Rotor(T[1, 2, 3, 4]...) ≈ Rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
-                @test Rotor(T[0, 2, 3, 4]...) ≈ Rotor(T(2), T(3), T(4)) rtol=0 atol=2eps(T)
-                @test Rotor(T[1, 0, 0, 0]...) ≈ Rotor(T(1)) rtol=0 atol=2eps(T)
+                @test rotor(T[1, 2, 3, 4]...) ≈ rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
+                @test rotor(T[0, 2, 3, 4]...) ≈ rotor(T(2), T(3), T(4)) rtol=0 atol=2eps(T)
+                @test rotor(T[1, 0, 0, 0]...) ≈ rotor(T(1)) rtol=0 atol=2eps(T)
             end
         end
         @test QuatVec{T}(1, 2, 3, 4) == QuatVec{T}(SVector{4, T}(0, 2, 3, 4))
         @test QuatVec{T}(0, 2, 3, 4) == QuatVec{T}(2, 3, 4)
         @test QuatVec{T}(1, 0, 0, 0) == QuatVec{T}(1)
-        @test QuatVec(T[0, 2, 3, 4]...) == QuatVec(SVector{4, T}(0, 2, 3, 4))
-        @test QuatVec(T[0, 2, 3, 4]...) == QuatVec(T(2), T(3), T(4))
-        @test QuatVec(T[0, 0, 0, 0]...) == QuatVec(T(0))
+        @test quatvec(T[0, 2, 3, 4]...) == quatvec(SVector{4, T}(0, 2, 3, 4))
+        @test quatvec(T[0, 2, 3, 4]...) == quatvec(T(2), T(3), T(4))
+        @test quatvec(T[0, 0, 0, 0]...) == quatvec(T(0))
 
         # Test indexing
-        q = Quaternion(T(1), T(2), T(3), T(4))
+        q = quaternion(T(1), T(2), T(3), T(4))
         @test q[[1, 2]] == [T(1), T(2)]
         @test q[[3, 4]] == [T(3), T(4)]
         @test q[[4, 2]] == [T(4), T(2)]
@@ -65,13 +65,13 @@
         @test q[[4, 2, 3, 1]] == [T(4), T(2), T(3), T(1)]
 
         # Test copy constructor and self-equality
-        @test Quaternion(u) == Quaternion{T}(u) == u
-        @test Quaternion(i) == Quaternion{T}(i) == i
-        @test Quaternion(j) == Quaternion{T}(j) == j
-        @test Quaternion(k) == Quaternion{T}(k) == k
-        @test Quaternionic.wrapper(Quaternion(u)) == Quaternion
-        @test Quaternionic.wrapper(Rotor(u)) == Rotor
-        @test Quaternionic.wrapper(QuatVec(u)) == QuatVec
+        @test quaternion(u) == Quaternion{T}(u) == u
+        @test quaternion(i) == Quaternion{T}(i) == i
+        @test quaternion(j) == Quaternion{T}(j) == j
+        @test quaternion(k) == Quaternion{T}(k) == k
+        @test Quaternionic.wrapper(quaternion(u)) == Quaternion
+        @test Quaternionic.wrapper(rotor(u)) == Rotor
+        @test Quaternionic.wrapper(quatvec(u)) == QuatVec
         @test u == one(T)
         @test one(T) == u
         @test i != one(T)
@@ -195,11 +195,11 @@
     end
 
     @testset "bswap" begin
-        @test bswap(Quaternion(1)) == Quaternion(2^56)
+        @test bswap(quaternion(1)) == quaternion(2^56)
         @test bswap(1imx) == (2^56)imx
         @test bswap(1imy) == (2^56)imy
         @test bswap(1imz) == (2^56)imz
-        @test bswap(bswap(Quaternion(1))) == Quaternion(1)
+        @test bswap(bswap(quaternion(1))) == quaternion(1)
         @test bswap(bswap(1imx)) == 1imx
         @test bswap(bswap(1imy)) == 1imy
         @test bswap(bswap(1imz)) == 1imz
@@ -216,11 +216,11 @@
 
         for T1 in FloatTypes
             for T2 in FloatTypes
-                q1 = Quaternion(T1(0.0))
-                q2 = Quaternion(T2(-0.0))
+                q1 = quaternion(T1(0.0))
+                q2 = quaternion(T2(-0.0))
                 @test !isequal(q1, q2) && hash(q1)!=hash(q2)
-                q1 = Quaternion(T1(NaN))
-                q2 = Quaternion(T2(NaN))
+                q1 = quaternion(T1(NaN))
+                q2 = quaternion(T2(NaN))
                 @test isequal(q1, q2) && hash(q1)==hash(q2)
             end
         end
@@ -233,30 +233,30 @@
         @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
         Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion(a-b, b*c, c/d, d+e))
+        Base.show(io, MIME("text/plain"), quaternion(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
         Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion(a-b, b*c, c/d, d+e))
+        Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), QuatVec{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == " + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
         Base.show(io, MIME("text/plain"), QuatVec{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == " + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), QuatVec(a-b, b*c, c/d, d+e))
+        Base.show(io, MIME("text/plain"), quatvec(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == " + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
         Base.show(io, MIME("text/latex"), QuatVec{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$ + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), QuatVec{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$ + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), QuatVec(a-b, b*c, c/d, d+e))
+        Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "\$ + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), Rotor{Float64}(1, 5, 5, 7))
-        @test String(take!(io)) == "Rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
+        @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
         Base.show(io, MIME("text/latex"), Rotor{Float64}(1, 3, 3, 9))
         @test String(take!(io)) == "\$0.1 + 0.3\\,\\mathbf{i} + 0.3\\,\\mathbf{j} + 0.9\\,\\mathbf{k}\$"
 
@@ -273,12 +273,12 @@
     @testset "Differential" begin
         @variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
         ∂ₜ = Differential(t)
-        Q = Quaternion(Q...)
-        R = Rotor(R...)
-        V = QuatVec(V...)
-        @test ∂ₜ(Q) == Quaternion(∂ₜ(Q[1]), ∂ₜ(Q[2]), ∂ₜ(Q[3]), ∂ₜ(Q[4]))
-        @test ∂ₜ(R) == Quaternion(∂ₜ(R[1]), ∂ₜ(R[2]), ∂ₜ(R[3]), ∂ₜ(R[4]))
-        @test ∂ₜ(V) == QuatVec(∂ₜ(V[2]), ∂ₜ(V[3]), ∂ₜ(V[4]))
+        Q = quaternion(Q...)
+        R = rotor(R...)
+        V = quatvec(V...)
+        @test ∂ₜ(Q) == quaternion(∂ₜ(Q[1]), ∂ₜ(Q[2]), ∂ₜ(Q[3]), ∂ₜ(Q[4]))
+        @test ∂ₜ(R) == quaternion(∂ₜ(R[1]), ∂ₜ(R[2]), ∂ₜ(R[3]), ∂ₜ(R[4]))
+        @test ∂ₜ(V) == quatvec(∂ₜ(V[2]), ∂ₜ(V[3]), ∂ₜ(V[4]))
     end
 
 end

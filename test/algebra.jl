@@ -7,10 +7,10 @@ module FundamentalTests
     # Algebra
     ## Vector space
     function test_vector_promotion(a, v::Quaternion)
-        @test a + v == Quaternion(a) + v
-        @test v + a == v + Quaternion(a)
-        @test a - v == Quaternion(a) - v
-        @test v - a == v - Quaternion(a)
+        @test a + v == quaternion(a) + v
+        @test v + a == v + quaternion(a)
+        @test a - v == quaternion(a) - v
+        @test v - a == v - quaternion(a)
     end
     test_vector_associativity(u::Quaternion, v::Quaternion, w::Quaternion) = @test u + (v + w) ≈ (u + v) + w rtol=eps(v)
     test_vector_commutativity(u::Quaternion, v::Quaternion) = @test u + v ≈ v + u rtol=eps(v)
@@ -24,12 +24,12 @@ module FundamentalTests
         @test v * one(eltype(v)) == v
     end
     function test_vector_scalar_multiplication(a, v::Quaternion)
-        @test a * v == Quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
-        @test v * a == Quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
+        @test a * v == quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
+        @test v * a == quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
     end
     function test_vector_scalar_division(a, v::Quaternion)
         if !iszero(a)
-            @test v / a == Quaternion(v[1] / a, v[2] / a, v[3] / a, v[4] / a)
+            @test v / a == quaternion(v[1] / a, v[2] / a, v[3] / a, v[4] / a)
         end
         if !iszero(v)
             @test a / v ≈ a * conj(v) / abs2(v) rtol=eps(v)
@@ -76,7 +76,7 @@ end
 
         # Construct a variety of arguments
         scalars = [zero(T), one(T), -one(T)]#, 2*one(T), -2*one(T)]#, eps(T), -eps(T)]
-        quaternions = [Quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
+        quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
 
         # Iterate over all tests above
         for n in names(FundamentalTests, all=true)
@@ -105,7 +105,7 @@ end
             x = Symbol(popfirst!(chars))
             # May have to work around <https://github.com/JuliaSymbolics/Symbolics.jl/issues/379>:
             xvar = @variables $x[1:4]
-            Quaternion(xvar[1]...)
+            quaternion(xvar[1]...)
         end
 
         # Iterate over all tests above

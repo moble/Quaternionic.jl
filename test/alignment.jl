@@ -25,7 +25,7 @@
 
             # Perturb b⃗ slightly
             δ = √eps(T)
-            b⃗′′′ = [b⃗i + QuatVec((2*(rand(T, 3) .- 1/T(2)) * δ/√T(3))...) for b⃗i in b⃗]
+            b⃗′′′ = [b⃗i + quatvec((2*(rand(T, 3) .- 1/T(2)) * δ/√T(3))...) for b⃗i in b⃗]
             R′′′ = align(a⃗, b⃗′′′)
             if N > 1
                 @test distance(R, conj(R′′′)) < 25δ
@@ -74,7 +74,7 @@
 
             # Perturb B slightly
             δ = √eps(T)
-            B′′′ = [Rotor(Bi + Quaternion((2*(rand(T, 4) .- 1/T(2)) * δ/√T(3))...)) for Bi in B]
+            B′′′ = [rotor(Bi + quaternion((2*(rand(T, 4) .- 1/T(2)) * δ/√T(3))...)) for Bi in B]
             R′′′ = align(A, B′′′)
             if N > 1
                 @test distance(R, conj(R′′′)) < 25δ

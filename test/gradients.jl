@@ -20,12 +20,12 @@
                 @test ∂3[i] ≈ ∂2[i] rtol=ϵ
             end
         end
-        ∂1 = ∂log(Rotor(1))
+        ∂1 = ∂log(rotor(1))
         ∂2 = QuaternionF64[1, 0, 0, imz]
         for i in 1:4
             @test ∂1[i] ≈ ∂2[i] rtol=ϵ
         end
-        l, ∂1 = log∂log(Rotor(1))
+        l, ∂1 = log∂log(rotor(1))
         ∂2 = QuaternionF64[1, 0, 0, imz]
         @test l ≈ QuaternionF64(0) rtol=4eps() atol=10eps()
         for i in 1:4
@@ -97,7 +97,7 @@
     end
 
     @testset verbose=true "squad" begin
-        qs = Rotor{Float64}[1, imx, imy, imz, -imy, -imz, -imx, -Rotor(1)]
+        qs = Rotor{Float64}[1, imx, imy, imz, -imy, -imz, -imx, -rotor(1)]
         ts = Float64.(1:length(qs))
         ∂squad(t) = ForwardDiff.derivative(τ->squad(qs, ts, τ), t)
         for i ∈ 1:length(ts)-1
