@@ -13,7 +13,7 @@ time, for which there are several important techniques:
     orientation as a function of time.
   * [Minimal rotation](@ref) — Finding the *least* dynamical motion that can achieve
     pointing in a certain direction.
-  * [Derivatives and gradients](@ref) — Thanks to the [chain
+  * [Differentiating by quaternionic arguments](@ref) — Thanks to the [chain
     rule](https://en.wikipedia.org/wiki/Chain_rule#Multivariable_case),
     differentiating many nontrivial quaternionic functions of time will also
     involve differentiating with respect to components of quaternionic
