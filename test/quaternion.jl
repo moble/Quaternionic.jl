@@ -81,7 +81,7 @@
                 v = zeros(T, 4)
                 v[i] = one(T)
                 v = SVector(v...)
-                @test float(Q{T}(v)) == q(float(T).(v))
+                @test float(q(v)) == q(float(T).(v))
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
                 v = Vector(v)
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))

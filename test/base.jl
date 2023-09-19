@@ -40,8 +40,7 @@
         @test quaternion(T[0, 2, 3, 4]...) == quaternion(T(2), T(3), T(4))
         @test quaternion(T[1, 0, 0, 0]...) == quaternion(T(1))
         if !(T<:Integer)
-            @test Rotor{T}(1, 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
-            @test Rotor{T}(0, 2, 3, 4) == Rotor{T}(2, 3, 4)
+            @test rotor(T(1), 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
             @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
             if !(T<:Num)
                 @test rotor(T[1, 2, 3, 4]...) ≈ rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
@@ -52,9 +51,9 @@
         @test QuatVec{T}(1, 2, 3, 4) == QuatVec{T}(SVector{4, T}(0, 2, 3, 4))
         @test QuatVec{T}(0, 2, 3, 4) == QuatVec{T}(2, 3, 4)
         @test QuatVec{T}(1, 0, 0, 0) == QuatVec{T}(1)
-        @test quatvec(T[0, 2, 3, 4]...) == quatvec(SVector{4, T}(0, 2, 3, 4))
-        @test quatvec(T[0, 2, 3, 4]...) == quatvec(T(2), T(3), T(4))
-        @test quatvec(T[0, 0, 0, 0]...) == quatvec(T(0))
+        @test quatvec(T[0, 2, 3, 4]) == quatvec(SVector{4, T}(0, 2, 3, 4))
+        @test quatvec(T[0, 2, 3, 4]) == quatvec(T(2), T(3), T(4))
+        @test quatvec(T[0, 0, 0, 0]) == quatvec(T(0))
 
         # Test indexing
         q = quaternion(T(1), T(2), T(3), T(4))
@@ -255,9 +254,9 @@
         Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "\$ + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
-        Base.show(io, MIME("text/plain"), Rotor{Float64}(1, 5, 5, 7))
+        Base.show(io, MIME("text/plain"), rotor(1, 5, 5, 7))
         @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
-        Base.show(io, MIME("text/latex"), Rotor{Float64}(1, 3, 3, 9))
+        Base.show(io, MIME("text/latex"), rotor(1, 3, 3, 9))
         @test String(take!(io)) == "\$0.1 + 0.3\\,\\mathbf{i} + 0.3\\,\\mathbf{j} + 0.9\\,\\mathbf{k}\$"
 
         for T in PrimitiveTypes

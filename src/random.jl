@@ -34,6 +34,9 @@ julia> randn(QuaternionF16, 2, 2)
 Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{T}}) where {T<:AbstractFloat} =
     QT(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
 
+Base.randn(rng::AbstractRNG, QT::Type{<:Rotor{T}}) where {T<:AbstractFloat} =
+    rotor(randn(rng, T), randn(rng, T), randn(rng, T), randn(rng, T))
+
 Base.@irrational SQRT_ONE_THIRD 0.5773502691896257645 sqrt(inv(big(3.0)))
 
 Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =

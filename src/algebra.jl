@@ -145,7 +145,7 @@ function (R::Rotor)(v::QuatVec)
     ])
 end
 function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
-    QT(SA[
+    wrapper(QT)(
         abs2(R) * v[1],
         ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
             + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
@@ -153,5 +153,5 @@ function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
             + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
         ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
             + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
-    ])
+    )
 end
