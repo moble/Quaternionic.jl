@@ -2,19 +2,21 @@
 
 !!! note "TL;DR:"
     As with complex arguments, differentiation with respect to quaternionic
-    arguments treats  the components of the quaternionic argument as
-    independent real arguments.  These rules are implemented for this package
-    in `ChainRulesCore`, which means that they should work seamlessly with
-    [any package that relies on `ChainRulesCore`](https://juliadiff.org/ChainRulesCore.jl/stable/#ChainRules-roll-out-status),
+    arguments treats the components of the quaternionic argument as independent
+    real arguments.  These rules are implemented for this package in
+    `ChainRulesCore`, which means that they should work seamlessly with [any
+    package that relies on
+    `ChainRulesCore`](https://juliadiff.org/ChainRulesCore.jl/stable/#ChainRules-roll-out-status),
     such as [`Zygote`](https://github.com/FluxML/Zygote.jl).  Derivatives can
-    also be calculated automatically using [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/)
+    also be calculated automatically using
+    [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/)
 
     As with complex differentiation, there are numerous notions of
     quaternionic differentiation — including generalizations of the
     holomorphic and Wirtinger derivatives, as well as left- and
     right-multiplicative derivatives.  The goal here is to provide the basic
     differentiation rules upon which these derivatives can be implemented, but
-    not to implement these derivatives themselves. It is recommended that you
+    not to implement those derivatives themselves. It is recommended that you
     carefully check how the definitions of `frule` and `rrule` translate into
     your specific notion of quaternionic derivatives, since getting this wrong
     will quietly give you wrong results.
