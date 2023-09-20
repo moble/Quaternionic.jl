@@ -6,7 +6,7 @@ DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursiv
 makedocs(;
     modules=[Quaternionic],
     authors="Michael Boyle <michael.oliver.boyle@gmail.com>",
-    repo=GitHub("moble", "Quaternionic.jl"),
+    repo=Remotes.GitHub("moble", "Quaternionic.jl"),
     sitename="Quaternionic.jl",
     format=Documenter.HTML(
         prettyurls=get(ENV, "CI", "false") == "true",
