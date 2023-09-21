@@ -35,30 +35,22 @@
         end
     end
 
-    @testset "abs2 QuatVec $T" for T ∈ FloatTypes # [FloatTypes; SymbolicTypes]
+    @testset "abs2 QuatVec $T" for T ∈ FloatTypes
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(quatvec(a,b,c,d)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(quatvec([a,b,c,d])),
             (a,b,c,d)->abs2(quatvec(@SVector[a,b,c,d])),
-        ])
-            @info 1 i T
-            @info Zygote.gradient(f, w, x, y, z)
-            @test all(Zygote.gradient(f, w, x, y, z) .≈ (0w, 2x, 2y, 2z))
-            println()
-            println()
-        end
-        @info "Next!"
-        for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(QuatVec{T}(a,b,c,d)),
             (a,b,c,d)->abs2(QuatVec{T}([a,b,c,d])),
             (a,b,c,d)->abs2(QuatVec{T}(@SVector[a,b,c,d])),
         ])
-            @info 2 i T
-            @info Zygote.gradient(f, w, x, y, z)
-            @test all(Zygote.gradient(f, w, x, y, z) .≈ (2w, 2x, 2y, 2z))
-            println()
-            println()
+            @test all(Zygote.gradient(f, w, x, y, z) .≈ (0w, 2x, 2y, 2z))
         end
     end
 

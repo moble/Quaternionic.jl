@@ -16,31 +16,40 @@ isdefined(Base, :get_extension) ? (using ChainRulesCore) : (using ..ChainRulesCo
 #     return Rotor{T}(normalize(arg)), Rotor_pullback
 # end
 function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector{T}) where {QT<:AbstractQuaternion, T}
-    @info 3 QT arg typeof(arg)
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return QT(arg), AbstractQuaternion_pullback
 end
 function ChainRulesCore.rrule(::Type{Rotor{QT}}, arg::AbstractVector{VT}) where {QT, VT}
-    @info 4 QT VT arg typeof(arg)
     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return Rotor{QT}(normalize(arg)), Rotor_pullback
 end
 function ChainRulesCore.rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT}) where {QT, VT}
-    @info 4 QT VT arg typeof(arg)
-    QuatVec_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+    function QuatVec_pullback(Δquat)
+        c = components(unthunk(Δquat))
+        (NoTangent(), @SVector[zero(eltype(c)), c[2], c[3], c[4]] )
+    end
+    # QuatVec_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     v = @SVector[false, arg[begin+1], arg[begin+2], arg[begin+3]]
     return QuatVec{QT}(v), QuatVec_pullback
 end
-# function ChainRulesCore.rrule(::typeof(rotor), arg::AbstractVector{T}) where {T}
-#     @info 5 T arg typeof(arg)
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-#     return Rotor{T}(normalize(arg)), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{QT}, arg) where {QT<:Rotor}f
-#     @info 3 QT arg typeof(arg)
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-#     return QT(arg), Rotor_pullback
-# end
+function ChainRulesCore.rrule(::Type{Quaternion{T}}, w, x, y, z) where {T}
+    Quaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
+    v = @SVector[w, x, y, z]
+    return Quaternion{T}(v), Quaternion_pullback
+end
+function ChainRulesCore.rrule(::Type{Rotor{T}}, w, x, y, z) where {T}
+    Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
+    v = normalize(@SVector[w, x, y, z])
+    return Rotor{eltype(v)}(v), Rotor_pullback
+end
+function ChainRulesCore.rrule(::Type{QuatVec{T}}, w, x, y, z) where {T}
+    function QuatVec_pullback(Δquat)
+        c = components(unthunk(Δquat))
+        (NoTangent(), zero(eltype(c)), c[2], c[3], c[4])
+    end
+    v = @SVector[false, x, y, z]
+    return QuatVec{eltype(v)}(v), QuatVec_pullback
+end
 
 
 ## Modified from `Complex` entries in ChainRulesCore.jl/src/projection.jl
