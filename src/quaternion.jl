@@ -40,17 +40,24 @@ julia> quaternion(1)
 struct Quaternion{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     Quaternion{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Quaternion(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Quaternion{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
+    Quaternion{T}(a::AbstractVector) where {T<:Number} = new{T}(SVector{4,T}(a))
+    Quaternion{T}(a::AbstractQuaternion) where {T<:Number} = new{T}(SVector{4,T}(components(a)))
     Quaternion{T}(w,x,y,z) where {T<:Number} = new{T}(SVector{4,T}(w,x,y,z))
     Quaternion{T}(x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
     Quaternion{T}(w::Number) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
-    Quaternion{T}(w) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
-    Quaternion(q::Quaternion{T}) where {T<:Number} = new{T}(components(q))
-    Quaternion(w,x,y,z) = (v=SVector{4}(w,x,y,z); new{eltype(v)}(v))
-    Quaternion(x,y,z) = (v=SVector{4}(false,x,y,z); new{eltype(v)}(v))
-    Quaternion(w::T) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
 end
+
+quaternion(a::SVector{4,T}) where {T<:Number} = Quaternion{T}(a)
+#quaternion(a::AbstractVector) = Quaternion{T}(SVector{4,T}(a))  # See below
+quaternion(a::AbstractQuaternion) = Quaternion{eltype(a)}(components(a))
+quaternion(w,x,y,z) = (v=SVector{4}(w,x,y,z); Quaternion{eltype(v)}(v))
+quaternion(x,y,z) = (v=SVector{4}(false,x,y,z); Quaternion{eltype(v)}(v))
+quaternion(w::T) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
+
+Quaternion(w,x,y,z) = quaternion(w,x,y,z)
+Quaternion(x,y,z) = quaternion(x,y,z)
+Quaternion(w) = quaternion(w)
+
 
 @doc raw"""
     Rotor{T<:Number} <: Number
@@ -187,7 +194,7 @@ components(q::AbstractQuaternion) = getfield(q, :components)
 normalize(v::AbstractVector) = v ./ √sum(abs2, v)
 
 # Untyped constructor from SVector
-quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
+#quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
 function rotor(v::SVector{4,T}) where {T<:Number}
     v̂ = normalize(v)
     Rotor{eltype(v̂)}(v̂)
@@ -201,7 +208,6 @@ end
 for q ∈ (:quaternion, :rotor, :quatvec)
     @eval begin
         function $q(v::AbstractVector)
-            @info "Constructor from AbstractVector:" v $q
             if length(v) == 4
                 $q(v[begin], v[begin+1], v[begin+2], v[begin+3])
             elseif length(v) == 3
@@ -216,7 +222,7 @@ for q ∈ (:quaternion, :rotor, :quatvec)
 end
 
 # Constructor from all 4 components
-quaternion(w, x, y, z) = (v = SVector{4}(w, x, y, z); Quaternion{eltype(v)}(v))
+#quaternion(w, x, y, z) = (v = SVector{4}(w, x, y, z); Quaternion{eltype(v)}(v))
 function rotor(w, x, y, z)
     n = √(w^2 + x^2 + y^2 + z^2)
     v = SVector{4}(w / n, x / n, y / n, z / n)
@@ -225,21 +231,21 @@ end
 quatvec(w, x, y, z) = (v = SVector{4}(false, x, y, z); QuatVec{eltype(v)}(v))
 
 # Constructor from vector components
-quaternion(x, y, z) = quaternion(false, x, y, z)
+#quaternion(x, y, z) = quaternion(false, x, y, z)
 rotor(x, y, z) = rotor(false, x, y, z)
 quatvec(x, y, z) = (v = SVector{4}(false, x, y, z); QuatVec{eltype(v)}(v))
 
 # Constructor from scalar component
-quaternion(w::Number) = quaternion(SVector{4,typeof(w)}(w, false, false, false))
+#quaternion(w::Number) = quaternion(SVector{4,typeof(w)}(w, false, false, false))
 rotor(w::Number) = rotor(SVector{4,typeof(w)}(true, false, false, false))
 quatvec(w::Number) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 
 # Copy constructor
-quaternion(q::AbstractQuaternion{T}) where {T<:Number} = quaternion(components(q)...)
+#quaternion(q::AbstractQuaternion{T}) where {T<:Number} = quaternion(components(q)...)
 rotor(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = rotor(components(q)...)
 quatvec(q::AbstractQuaternion{T}) where {T<:Number} = quatvec(components(q)...)
 (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT(components(q)...)
-Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Quaternion{T}(components(q)...)
+#Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Quaternion{T}(components(q)...)
 Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Rotor{T}(components(q)...)
 QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = QuatVec{T}(components(q)...)
 
