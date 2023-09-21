@@ -260,9 +260,17 @@ const QuatVecF16 = QuatVec{Float16}
 # Handy constants like `im`
 """
     imx
+    𝐢
 
 The quaternionic unit associated with rotation about the `x` axis.  Can also be entered as
 Unicode bold `𝐢` (which can be input as `\\bfi<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imx` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imy`](@ref) and [`imz`](@ref).
 
 # Examples
 ```jldoctest
@@ -270,6 +278,10 @@ julia> imx * imx
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imx
  + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
+julia> 1.2 + 3.4imx
+1.2 + 3.4𝐢 + 0.0𝐣 +  0.0𝐤
+julia> 1.2 + 3.4𝐢
+1.2 + 3.4𝐢 + 0.0𝐣 + 0.0𝐤
 ```
 """
 const imx = QuatVec{Bool}(false, true, false, false)
@@ -277,9 +289,17 @@ const 𝐢 = imx
 
 """
     imy
+    𝐣
 
 The quaternionic unit associated with rotation about the `y` axis.  Can also be entered as
 Unicode bold `𝐣` (which can be input as `\\bfj<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imy` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imx`](@ref) and [`imz`](@ref).
 
 # Examples
 ```jldoctest
@@ -287,6 +307,10 @@ julia> imy * imy
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imy
  + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
+julia> 1.2 + 3.4imy
+1.2 + 0.0𝐢 + 3.4𝐣 + 0.0𝐤
+julia> 1.2 + 3.4𝐣
+1.2 + 0.0𝐢 + 3.4𝐣 + 0.0𝐤
 ```
 """
 const imy = QuatVec{Bool}(false, false, true, false)
@@ -294,9 +318,17 @@ const 𝐣 = imy
 
 """
     imz
+    𝐤
 
 The quaternionic unit associated with rotation about the `z` axis.  Can also be entered as
 Unicode bold `𝐤` (which can be input as `\\bfk<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imz` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imx`](@ref) and [`imy`](@ref).
 
 # Examples
 ```jldoctest
@@ -304,6 +336,10 @@ julia> imz * imz
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imz
  + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
+julia> 1.2 + 3.4imz
+1.2 + 0.0𝐢 + 0.0𝐣 + 3.4𝐤
+julia> 1.2 + 3.4𝐤
+1.2 + 0.0𝐢 + 0.0𝐣 + 3.4𝐤
 ```
 """
 const imz = QuatVec{Bool}(false, false, false, true)
