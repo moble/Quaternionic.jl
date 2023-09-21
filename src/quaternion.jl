@@ -171,11 +171,11 @@ julia> quatvec(1)
 struct QuatVec{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     QuatVec{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    QuatVec(a::SVector{4,T}) where {T<:Number} = new{T}(a)
     QuatVec{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
     QuatVec{T}(w,x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
     QuatVec{T}(x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
     QuatVec{T}(w) where {T<:Number} = new{T}(SVector{4,T}(false, false, false, false))
+    QuatVec(a::SVector{4,T}) where {T<:Number} = new{T}(a)
     QuatVec(q::QuatVec{T}) where {T<:Number} = new{T}(components(q))
     QuatVec(w::T) where {T<:Number} = new{T}(SVector{4,T}(false, false, false, false))
     QuatVec(w,x,y,z) = (v=SVector{4}(false,x,y,z); new{eltype(v)}(v))
@@ -201,6 +201,7 @@ end
 for q ∈ (:quaternion, :rotor, :quatvec)
     @eval begin
         function $q(v::AbstractVector)
+            @info "Constructor from AbstractVector:" v $q
             if length(v) == 4
                 $q(v[begin], v[begin+1], v[begin+2], v[begin+3])
             elseif length(v) == 3
@@ -226,11 +227,11 @@ quatvec(w, x, y, z) = (v = SVector{4}(false, x, y, z); QuatVec{eltype(v)}(v))
 # Constructor from vector components
 quaternion(x, y, z) = quaternion(false, x, y, z)
 rotor(x, y, z) = rotor(false, x, y, z)
-quatvec(x, y, z) = quatvec(zero(z), x, y, z)
+quatvec(x, y, z) = (v = SVector{4}(false, x, y, z); QuatVec{eltype(v)}(v))
 
 # Constructor from scalar component
-quaternion(w::Number) = quaternion(SVector{4}(w, false, false, false))
-rotor(w::Number) = rotor(SVector{4}(one(w), false, false, false))
+quaternion(w::Number) = quaternion(SVector{4,typeof(w)}(w, false, false, false))
+rotor(w::Number) = rotor(SVector{4,typeof(w)}(true, false, false, false))
 quatvec(w::Number) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 
 # Copy constructor

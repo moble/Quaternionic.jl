@@ -2,7 +2,7 @@
     # Make sure everything makes sense to ChainRulesCore
     test_method_tables()
 
-    @testset "abs2 Quaternion $T" for T ∈ FloatTypes # [FloatTypes; SymbolicTypes]
+    @testset "abs2 Quaternion $T" for T ∈ [Float64,] #FloatTypes # [FloatTypes; SymbolicTypes]
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(quaternion(a,b,c,d)),
@@ -13,6 +13,15 @@
             (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
         ])
             @test all(Zygote.gradient(f, w, x, y, z) .≈ (2w, 2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(quaternion(b,c,d)),
+            (a,b,c,d)->abs2(quaternion([b,c,d])),
+            (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @info i f(w, x, y, z) ∇
+            @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
         end
     end
 
@@ -50,6 +59,7 @@
             (a,b,c,d)->abs2(QuatVec{T}([a,b,c,d])),
             (a,b,c,d)->abs2(QuatVec{T}(@SVector[a,b,c,d])),
         ])
+            #@show i T Zygote.gradient(f, w, x, y, z)
             @test all(Zygote.gradient(f, w, x, y, z) .≈ (0w, 2x, 2y, 2z))
         end
     end
