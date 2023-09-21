@@ -20,7 +20,7 @@
             (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
-            @info i f(w, x, y, z) ∇
+            #@info i f(w, x, y, z) ∇
             @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
         end
     end

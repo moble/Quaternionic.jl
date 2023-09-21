@@ -9,21 +9,20 @@ function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector) where {QT<:Abstra
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return QT(arg), AbstractQuaternion_pullback
 end
-function ChainRulesCore.rrule(::Type{Quaternion{T}}, w, x, y, z) where {T}
+function ChainRulesCore.rrule(::Type{QT}, w, x, y, z) where {QT<:AbstractQuaternion}
     Quaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
     v = @SVector[w, x, y, z]
-    return Quaternion{T}(v), Quaternion_pullback
+    return QT(v), Quaternion_pullback
 end
-function ChainRulesCore.rrule(::Type{Quaternion{T}}, x, y, z) where {T}
-    Quaternion_pullback(Δquat) = (@show Δquat; (NoTangent(), vec(unthunk(Δquat))...))
-    v = SVector{4, T}(false, x, y, z)
-    @info "rrule(::Type{Quaternion{T}}, x, y, z)" T x y z v Quaternion{T}(v)
-    return Quaternion{T}(v), Quaternion_pullback
+function ChainRulesCore.rrule(::Type{QT}, x, y, z) where {QT<:AbstractQuaternion}
+    Quaternion_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
+    v = @SVector[false, x, y, z]
+    return QT(v), Quaternion_pullback
 end
-function ChainRulesCore.rrule(::Type{Quaternion{T}}, w::Number) where {T}
+function ChainRulesCore.rrule(::Type{QT}, w::Number) where {QT<:AbstractQuaternion}
     Quaternion_pullback(Δquat) = (NoTangent(), real(unthunk(Δquat)))
     v = @SVector[w, false, false, false]
-    return Quaternion{T}(v), Quaternion_pullback
+    return QT(v), Quaternion_pullback
 end
 
 function ChainRulesCore.rrule(::Type{Rotor{QT}}, arg::AbstractVector{VT}) where {QT, VT}
