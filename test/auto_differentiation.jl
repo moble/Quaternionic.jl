@@ -2,7 +2,7 @@
     # Make sure everything makes sense to ChainRulesCore
     test_method_tables()
 
-    @testset "abs2 Quaternion $T" for T ∈ [Float64,] #FloatTypes # [FloatTypes; SymbolicTypes]
+    @testset "abs2 Quaternion $T" for T ∈ [FloatTypes; SymbolicTypes]
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
