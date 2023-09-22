@@ -9,6 +9,10 @@ function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector) where {QT<:Abstra
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return QT(arg), AbstractQuaternion_pullback
 end
+function ChainRulesCore.rrule(::Type{QT}, w::AbstractQuaternion) where {QT<:AbstractQuaternion}
+    Quaternion_pullback(Δquat) = (NoTangent(), unthunk(Δquat))
+    return QT(w), Quaternion_pullback
+end
 function ChainRulesCore.rrule(::Type{QT}, w, x, y, z) where {QT<:AbstractQuaternion}
     Quaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
     v = @SVector[w, x, y, z]

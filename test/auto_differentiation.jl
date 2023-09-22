@@ -5,23 +5,46 @@
     @testset "abs2 Quaternion $T" for T ∈ [Float64,] #FloatTypes # [FloatTypes; SymbolicTypes]
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(quaternion(a,b,c,d)),
-            (a,b,c,d)->abs2(quaternion([a,b,c,d])),
-            (a,b,c,d)->abs2(quaternion(@SVector[a,b,c,d])),
-            (a,b,c,d)->abs2(Quaternion{T}(a,b,c,d)),
-            (a,b,c,d)->abs2(Quaternion{T}([a,b,c,d])),
             (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
-        ])
-            @test all(Zygote.gradient(f, w, x, y, z) .≈ (2w, 2x, 2y, 2z))
-        end
-        for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(quaternion(b,c,d)),
-            (a,b,c,d)->abs2(quaternion([b,c,d])),
-            (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
+            (a,b,c,d)->abs2(Quaternion{T}([a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion{T}(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Quaternion{T}(a,b,c,d)),
+
+            (a,b,c,d)->abs2(quaternion(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion([a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(quaternion(a,b,c,d)),
+
+            (a,b,c,d)->abs2(Quaternion(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion([a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Quaternion(a,b,c,d)),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
-            #@info i f(w, x, y, z) ∇
+            #@info "A" i f(w, x, y, z) ∇
+            @test all(∇ .≈ (2w, 2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
+
+            (a,b,c,d)->abs2(quaternion(b,c,d)),
+            (a,b,c,d)->abs2(quaternion([b,c,d])),
+
+            (a,b,c,d)->abs2(Quaternion(b,c,d)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
             @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(Quaternion{T}(a)),
+
+            (a,b,c,d)->abs2(quaternion(a)),
+            (a,b,c,d)->abs2(quaternion([a])),
+
+            (a,b,c,d)->abs2(Quaternion(a)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @test all(isnothing, ∇[2:4]) && ∇[1] .≈ 2w
         end
     end
 

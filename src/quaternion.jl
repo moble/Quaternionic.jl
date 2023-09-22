@@ -57,6 +57,7 @@ quaternion(w::T) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false,
 Quaternion(w,x,y,z) = quaternion(w,x,y,z)
 Quaternion(x,y,z) = quaternion(x,y,z)
 Quaternion(w) = quaternion(w)
+Quaternion(w::AbstractQuaternion) = quaternion(w)
 
 
 @doc raw"""
@@ -244,7 +245,7 @@ quatvec(w::Number) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 #quaternion(q::AbstractQuaternion{T}) where {T<:Number} = quaternion(components(q)...)
 rotor(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = rotor(components(q)...)
 quatvec(q::AbstractQuaternion{T}) where {T<:Number} = quatvec(components(q)...)
-(::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT(components(q)...)
+#(::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT(components(q)...)
 #Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Quaternion{T}(components(q)...)
 Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Rotor{T}(components(q)...)
 QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = QuatVec{T}(components(q)...)
