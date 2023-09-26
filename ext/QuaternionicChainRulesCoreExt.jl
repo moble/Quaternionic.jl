@@ -6,154 +6,54 @@ isdefined(Base, :get_extension) ? (using ChainRulesCore) : (using ..ChainRulesCo
 
 
 function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector) where {QT<:AbstractQuaternion}
-    @info 1
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-    @info QT(arg)
-    println()
     return QT(arg), AbstractQuaternion_pullback
 end
 function ChainRulesCore.rrule(::Type{QT}, w::AbstractQuaternion) where {QT<:AbstractQuaternion}
-    @info 2
     Quaternion_pullback(Δquat) = (NoTangent(), unthunk(Δquat))
     return QT(w), Quaternion_pullback
 end
 function ChainRulesCore.rrule(::Type{QT}, w, x, y, z) where {QT<:AbstractQuaternion}
-    @info 3
     Quaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
-    v = @SVector[w, x, y, z]
-    return QT(v), Quaternion_pullback
+    return QT(@SVector[w, x, y, z]), Quaternion_pullback
 end
 function ChainRulesCore.rrule(::Type{QT}, x, y, z) where {QT<:AbstractQuaternion}
-    @info 4
     Quaternion_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
-    v = @SVector[false, x, y, z]
-    return QT(v), Quaternion_pullback
+    return QT(@SVector[false, x, y, z]), Quaternion_pullback
 end
 function ChainRulesCore.rrule(::Type{QT}, w::Number) where {QT<:AbstractQuaternion}
-    @info 5
     Quaternion_pullback(Δquat) = (NoTangent(), real(unthunk(Δquat)))
-    v = @SVector[w, false, false, false]
-    return QT(v), Quaternion_pullback
+    return QT(@SVector[w, false, false, false]), Quaternion_pullback
 end
 
-function ChainRulesCore.rrule(::Type{Rotor}, w, x, y, z)
-    @info "rrule(::Type{Rotor}, w, x, y, z)"
-    ChainRulesCore.rrule(rotor, w, x, y, z)
-end
-function ChainRulesCore.rrule(::Type{Rotor}, x, y, z)
-    @info "rrule(::Type{Rotor}, x, y, z)"
-    ChainRulesCore.rrule(rotor, x, y, z)
-end
-function ChainRulesCore.rrule(::Type{Rotor}, w::AbstractVector)
-    @info "rrule(::Type{Rotor}, w::AbstractVector)"
-    ChainRulesCore.rrule(rotor, w)
-end
-ChainRulesCore.rrule(::Type{Rotor}, w::AbstractQuaternion) = ChainRulesCore.rrule(rotor, w)
-# function ChainRulesCore.rrule(T::Type{Rotor}, w::AbstractQuaternion)
+ChainRulesCore.rrule(config::ChainRulesCore.RuleConfig, ::Type{Rotor}, args...) = ChainRulesCore.rrule_via_ad(config, rotor, args...)
+# function ChainRulesCore.rrule(::Type{Rotor}, w, x, y, z)
+#     Rotor_pullback(Δquat) = (NoTangent(), (false * components(unthunk(Δquat)))...)
+#     return rotor(w, x, y, z), Rotor_pullback
+# end
+# function ChainRulesCore.rrule(::Type{Rotor}, x, y, z)
+#     Rotor_pullback(Δquat) = (NoTangent(), (false * vec(unthunk(Δquat)))...)
+#     return rotor(x, y, z), Rotor_pullback
+# end
+# function ChainRulesCore.rrule(::Type{Rotor}, w::AbstractVector)
+#     Rotor_pullback(Δquat) = (NoTangent(), false * components(unthunk(Δquat)))
+#     return rotor(w), Rotor_pullback
+# end
+# function ChainRulesCore.rrule(::Type{Rotor}, w::AbstractQuaternion)
 #     Rotor_pullback(Δquat) = (NoTangent(), false * unthunk(Δquat))
 #     return rotor(w), Rotor_pullback
 # end
-function ChainRulesCore.rrule(::Type{Rotor}, w::Number)
-    @info "rrule(::Type{Rotor}, w::Number)"
-    ChainRulesCore.rrule(rotor, w)
-end
-
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, arg::AbstractVector) where {T}
-#     @info 6
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-#     return Rotor{T}(arg), Rotor_pullback
+# function ChainRulesCore.rrule(::Type{Rotor}, w::Number)
+#     Rotor_pullback(Δquat) = (NoTangent(), false * real(unthunk(Δquat)))
+#     return rotor(w), Rotor_pullback
 # end
+
 function ChainRulesCore.rrule(::typeof(rotor), arg::AbstractVector)
-    @info 7 rotor(arg) arg
     rotor_pullback(Δquat) = (NoTangent(), false * components(unthunk(Δquat)))
     return rotor(arg), rotor_pullback
 end
-# function ChainRulesCore.rrule(::Type{QT}, arg::AbstractVector) where {QT<:Rotor}
-#     @info 8
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-#     return QT(arg), Rotor_pullback
-# end
-
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, w::AbstractQuaternion) where {T}
-#     @info 9
-#     Rotor_pullback(Δquat) = (NoTangent(), unthunk(Δquat))
-#     return Rotor{T}(w), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::typeof(rotor), w::AbstractQuaternion)
-#     @info 10
-#     Rotor_pullback(Δquat) = (NoTangent(), unthunk(Δquat))
-#     return rotor(w), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{QT}, w::AbstractQuaternion) where {QT<:Rotor}
-#     @info 11
-#     Rotor_pullback(Δquat) = (NoTangent(), unthunk(Δquat))
-#     return QT(w), Rotor_pullback
-# end
-
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, w, x, y, z) where {T}
-#     @info 12
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
-#     return Rotor{T}(w, x, y, z), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::typeof(rotor), w, x, y, z)
-#     @info 13
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
-#     @info "rrule(::typeof(rotor), w, x, y, z)" rotor(w, x, y, z)
-#     return rotor(w, x, y, z), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{QT}, w, x, y, z) where {QT<:Rotor}
-#     @info 14
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
-#     return QT(w, x, y, z), Rotor_pullback
-# end
-
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, x, y, z) where {T}
-#     @info 15
-#     Rotor_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
-#     return Rotor{T}(x, y, z), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::typeof(rotor), x, y, z)
-#     @info 16
-#     Rotor_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
-#     return rotor(x, y, z), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{QT}, x, y, z) where {QT<:Rotor}
-#     @info 17
-#     Rotor_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
-#     return QT(x, y, z), Rotor_pullback
-# end
-
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, w::Number) where {T}
-#     @info 18
-#     Rotor_pullback(Δquat) = (NoTangent(), real(unthunk(Δquat)))
-#     return Rotor{T}(w), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::typeof(rotor), w::Number)
-#     @info 19
-#     Rotor_pullback(Δquat) = (NoTangent(), real(unthunk(Δquat)))
-#     return rotor(w), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{QT}, w::Number) where {QT<:Rotor}
-#     @info 20
-#     Rotor_pullback(Δquat) = (NoTangent(), real(unthunk(Δquat)))
-#     return QT(w), Rotor_pullback
-# end
-
-
-# function ChainRulesCore.rrule(::Type{Rotor{QT}}, arg::AbstractVector{VT}) where {QT, VT}
-#     @info "X"
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
-#     return Rotor{QT}(arg), Rotor_pullback
-# end
-# function ChainRulesCore.rrule(::Type{Rotor{T}}, w, x, y, z) where {T}
-#     @info "Y"
-#     Rotor_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat))...)
-#     v = @SVector[w, x, y, z]
-#     return Rotor{eltype(v)}(v), Rotor_pullback
-# end
 
 function ChainRulesCore.rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT}) where {QT, VT}
-    @info "rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT})"
     function QuatVec_pullback(Δquat)
         c = components(unthunk(Δquat))
         (NoTangent(), @SVector[zero(eltype(c)), c[2], c[3], c[4]])
@@ -162,7 +62,6 @@ function ChainRulesCore.rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT}) wher
     return QuatVec{QT}(v), QuatVec_pullback
 end
 function ChainRulesCore.rrule(::Type{QuatVec{T}}, w, x, y, z) where {T}
-    @info "rrule(::Type{QuatVec{T}}, w, x, y, z)"
     function QuatVec_pullback(Δquat)
         c = components(unthunk(Δquat))
         (NoTangent(), zero(eltype(c)), c[2], c[3], c[4])

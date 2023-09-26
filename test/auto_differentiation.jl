@@ -66,35 +66,27 @@
             (a,b,c,d)->abs2(Rotor{T}(@SVector[a,b,c,d])),
             (a,b,c,d)->abs2(Rotor{T}([a,b,c,d])),
             (a,b,c,d)->abs2(Rotor{T}(Rotor{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Rotor{T}(Quaternion{T}(@SVector[a,b,c,d]))),
             (a,b,c,d)->abs2(Rotor{T}(a,b,c,d)),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
-            @info "A1" i f(w, x, y, z) ∇
             @test all(∇ .≈ (2w, 2x, 2y, 2z))
-            println("="^80)
-            flush(stdout)
         end
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(rotor(@SVector[a,b,c,d])),
             (a,b,c,d)->abs2(rotor([a,b,c,d])),
             (a,b,c,d)->abs2(rotor(Rotor{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(rotor(Quaternion{T}(@SVector[a,b,c,d]))),
             (a,b,c,d)->abs2(rotor(a,b,c,d)),
 
             (a,b,c,d)->abs2(Rotor(@SVector[a,b,c,d])),
             (a,b,c,d)->abs2(Rotor([a,b,c,d])),
-            #(a,b,c,d)->abs2(Rotor(Rotor{T}(@SVector[a,b,c,d]))),
-            #(a,b,c,d)->abs2(Rotor(Quaternion{T}(@SVector[a,b,c,d]))),
-            #(a,b,c,d)->abs2(Rotor(a,b,c,d)),
+            (a,b,c,d)->abs2(Rotor(Rotor{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Rotor(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Rotor(a,b,c,d)),
         ])
-            @info "A2" i
-            try
-                ∇ = Zygote.gradient(f, w, x, y, z)
-                @info "A2" i f(w, x, y, z) ∇
-                @test maximum(abs, ∇) < 10eps(T)
-            catch e
-                display(stacktrace(catch_backtrace()))
-                @test false
-            end
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @test maximum(abs, ∇) < 10eps(T)
         end
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(Rotor{T}(b,c,d)),
@@ -106,7 +98,8 @@
             (a,b,c,d)->abs2(rotor(b,c,d)),
             (a,b,c,d)->abs2(rotor([b,c,d])),
 
-            #(a,b,c,d)->abs2(Rotor(b,c,d)),
+            (a,b,c,d)->abs2(Rotor(b,c,d)),
+            (a,b,c,d)->abs2(Rotor([b,c,d])),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test isnothing(∇[1]) && maximum(abs, ∇[2:4]) < 10eps(T)
@@ -119,6 +112,8 @@
         end
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(rotor(a)),
+
+            (a,b,c,d)->abs2(Rotor(a)),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test all(isnothing, ∇)  # Not really sure why it's not the following line...
@@ -127,31 +122,12 @@
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(rotor([a])),
 
-            #(a,b,c,d)->abs2(Rotor(a)),
+            (a,b,c,d)->abs2(Rotor([a])),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test abs(∇[1]) < 10eps(T) && all(isnothing, ∇[2:4])
         end
     end
-
-    # @testset "abs2 Rotor $T" for T ∈ FloatTypes
-    #     w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
-    #     n = √(w^2 + x^2 + y^2 + z^2)
-    #     for (i,f) ∈ enumerate([
-    #         (a,b,c,d)->abs2(rotor(a,b,c,d)),
-    #         (a,b,c,d)->abs2(rotor([a,b,c,d])),
-    #         (a,b,c,d)->abs2(rotor(@SVector[a,b,c,d])),
-    #     ])
-    #         @test maximum(abs, Zygote.gradient(f, w, x, y, z)) < 10eps(T)
-    #     end
-    #     for (i,f) ∈ enumerate([
-    #         (a,b,c,d)->abs2(Rotor{T}(a,b,c,d)),
-    #         (a,b,c,d)->abs2(Rotor{T}([a,b,c,d])),
-    #         (a,b,c,d)->abs2(Rotor{T}(@SVector[a,b,c,d])),
-    #     ])
-    #         @test all(Zygote.gradient(f, w, x, y, z) .≈ (2w, 2x, 2y, 2z)./n)
-    #     end
-    # end
 
     # @testset "abs2 QuatVec $T" for T ∈ FloatTypes
     #     w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)

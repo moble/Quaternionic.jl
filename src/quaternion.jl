@@ -163,6 +163,8 @@ rotor(w::T) where {T<:Number} = Rotor{T}(SVector{4,T}(one(w), false, false, fals
 Rotor(w,x,y,z) = rotor(w,x,y,z)
 Rotor(x,y,z) = rotor(x,y,z)
 Rotor(w) = rotor(w)
+Rotor(w::SVector{4,T}) where {T} = rotor(w)
+Rotor(w::AbstractVector) = rotor(w)
 Rotor(w::AbstractQuaternion) = rotor(w)
 
 """
