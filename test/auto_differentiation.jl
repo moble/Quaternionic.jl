@@ -1,54 +1,54 @@
 @testset verbose=true "Auto Diff" begin
-    # # Make sure everything makes sense to ChainRulesCore
-    # test_method_tables()
+    # Make sure everything makes sense to ChainRulesCore
+    test_method_tables()
 
-    # @testset "abs2 Quaternion $T" for T ∈ [FloatTypes; SymbolicTypes]
-    #     w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
-    #     for (i,f) ∈ enumerate([
-    #         (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
-    #         (a,b,c,d)->abs2(Quaternion{T}([a,b,c,d])),
-    #         (a,b,c,d)->abs2(Quaternion{T}(Quaternion{T}(@SVector[a,b,c,d]))),
-    #         (a,b,c,d)->abs2(Quaternion{T}(a,b,c,d)),
+    @testset "abs2 Quaternion $T" for T ∈ [FloatTypes; SymbolicTypes]
+        w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(Quaternion{T}(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion{T}([a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion{T}(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Quaternion{T}(a,b,c,d)),
 
-    #         (a,b,c,d)->abs2(quaternion(@SVector[a,b,c,d])),
-    #         (a,b,c,d)->abs2(quaternion([a,b,c,d])),
-    #         (a,b,c,d)->abs2(quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
-    #         (a,b,c,d)->abs2(quaternion(a,b,c,d)),
+            (a,b,c,d)->abs2(quaternion(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion([a,b,c,d])),
+            (a,b,c,d)->abs2(quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(quaternion(a,b,c,d)),
 
-    #         (a,b,c,d)->abs2(Quaternion(@SVector[a,b,c,d])),
-    #         (a,b,c,d)->abs2(Quaternion([a,b,c,d])),
-    #         (a,b,c,d)->abs2(Quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
-    #         (a,b,c,d)->abs2(Quaternion(a,b,c,d)),
-    #     ])
-    #         ∇ = Zygote.gradient(f, w, x, y, z)
-    #         #@info "A" i f(w, x, y, z) ∇
-    #         @test all(∇ .≈ (2w, 2x, 2y, 2z))
-    #     end
-    #     for (i,f) ∈ enumerate([
-    #         (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
+            (a,b,c,d)->abs2(Quaternion(@SVector[a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion([a,b,c,d])),
+            (a,b,c,d)->abs2(Quaternion(Quaternion{T}(@SVector[a,b,c,d]))),
+            (a,b,c,d)->abs2(Quaternion(a,b,c,d)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            #@info "A" i f(w, x, y, z) ∇
+            @test all(∇ .≈ (2w, 2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(Quaternion{T}(b,c,d)),
 
-    #         (a,b,c,d)->abs2(quaternion(b,c,d)),
-    #         (a,b,c,d)->abs2(quaternion([b,c,d])),
+            (a,b,c,d)->abs2(quaternion(b,c,d)),
+            (a,b,c,d)->abs2(quaternion([b,c,d])),
 
-    #         (a,b,c,d)->abs2(Quaternion(b,c,d)),
-    #     ])
-    #         ∇ = Zygote.gradient(f, w, x, y, z)
-    #         @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
-    #     end
-    #     for (i,f) ∈ enumerate([
-    #         (a,b,c,d)->abs2(Quaternion{T}(a)),
+            (a,b,c,d)->abs2(Quaternion(b,c,d)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
+        end
+        for (i,f) ∈ enumerate([
+            (a,b,c,d)->abs2(Quaternion{T}(a)),
 
-    #         (a,b,c,d)->abs2(quaternion(a)),
-    #         (a,b,c,d)->abs2(quaternion([a])),
+            (a,b,c,d)->abs2(quaternion(a)),
+            (a,b,c,d)->abs2(quaternion([a])),
 
-    #         (a,b,c,d)->abs2(Quaternion(a)),
-    #     ])
-    #         ∇ = Zygote.gradient(f, w, x, y, z)
-    #         @test all(isnothing, ∇[2:4]) && ∇[1] .≈ 2w
-    #     end
-    # end
+            (a,b,c,d)->abs2(Quaternion(a)),
+        ])
+            ∇ = Zygote.gradient(f, w, x, y, z)
+            @test all(isnothing, ∇[2:4]) && ∇[1] .≈ 2w
+        end
+    end
 
-    @testset "abs2 Rotor $T" for T ∈ [Float64,] # [FloatTypes; SymbolicTypes]
+    @testset "abs2 Rotor $T" for T ∈ FloatTypes
         # Note that we can define
         #   f(a,b,c,d) = sum(abs2, @SVector[a,b,c,d] / √(a^2 + b^2 + c^2 + d^2))
         #   g(a,b,c,d) = sum(abs2, @SVector[false,b,c,d] / √(b^2 + c^2 + d^2))
@@ -112,17 +112,17 @@
         end
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(rotor(a)),
+            (a,b,c,d)->abs2(rotor([a])),
 
             (a,b,c,d)->abs2(Rotor(a)),
+            (a,b,c,d)->abs2(Rotor([a])),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test all(isnothing, ∇)  # Not really sure why it's not the following line...
             # @test abs(∇[1]) < 10eps(T) && all(isnothing, ∇[2:4])
         end
         for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(rotor([a])),
 
-            (a,b,c,d)->abs2(Rotor([a])),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test abs(∇[1]) < 10eps(T) && all(isnothing, ∇[2:4])
