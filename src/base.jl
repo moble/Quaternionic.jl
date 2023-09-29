@@ -24,6 +24,8 @@ Base.isinf(q::AbstractQuaternion{T}) where {T<:Number} = isinf(q[1]) || isinf(q[
 Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 
+Base.round(q::QT, r::RoundingMode=RoundNearest; kwargs...) where {QT<:AbstractQuaternion} = QT(round.(components(q), r; kwargs...))
+
 Base.in(q::AbstractQuaternion, r::AbstractRange{<:Number}) = isreal(q) && real(q) in r
 
 Base.flipsign(q::AbstractQuaternion, x::Number) = ifelse(signbit(x), -q, q)

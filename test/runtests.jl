@@ -22,7 +22,12 @@ around the code you don't want to measure:
 using Quaternionic
 using Test
 using Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra,
-    ChainRulesTestUtils, Zygote
+    ChainRulesTestUtils, Zygote, ChainRulesTestUtils
+
+    import LinearAlgebra
+
+using ChainRulesCore
+ChainRulesCore.debug_mode() = true
 
 @variables w x y z a b c d e  # Symbolic variables
 

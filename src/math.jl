@@ -1,5 +1,39 @@
 # General math functions of quaternions
 
+# _sinc(x) = sin(x)/x, instead of the Julia built-in sinc(x)=sin(πx)/(πx)
+# Mostly copied from Julia:base/special/trig.jl
+_sinc_threshold(::Type{T}) where {T<:AbstractFloat} = sqrt(eps(T))
+@inline _sinc(x::T) where {T<:AbstractFloat} =
+    abs(x) < _sinc_threshold(T) ? evalpoly(x^2, (T(1), -inv(T(6)), inv(T(120)))) : sin(x)/x
+_sinc(x::Float16) = Float16(_sinc(Float32(x)))
+function _cosc(x::Number)
+    if abs(x) < 0.5
+        s = (term = -x)/3
+        x² = term^2
+        ε = eps(abs(term)) # error threshold to stop sum
+        n = 1
+        while true
+            n += 1
+            term *= x²/((1-2n)*(2n-2))
+            s += (δs = term/(1+2n))
+            fastabs(δs) ≤ ε && break
+        end
+        return s
+    else
+        return isinf_real(x) ? zero(x) : (x*cos(x)-sin(x))/(x^2)
+    end
+end
+_cosc(x::Union{Float64,ComplexF64}) =
+    fastabs(x) < 0.14 ? x*evalpoly(x^2, (-0.3333333333333333, 0.03333333333333333, -0.0011904761904761906, 2.2045855379188714e-5, -2.505210838544172e-7, 1.9270852604185937e-9)) :
+    isinf_real(x) ? zero(x) : (x*cos(x)-sin(x))/(x^2)
+_cosc(x::Union{Float32,ComplexF32}) =
+    fastabs(x) < 0.26f0 ? x*evalpoly(x^2, (-0.33333334f0, 0.033333335f0, -0.0011904762f0, 2.2045855f-5, -2.5052108f-7, 1.9270852f-9)) :
+    isinf_real(x) ? zero(x) : (x*cos(x)-sin(x))/(x^2)
+_cosc(x::Float16) = Float16(_cosc(Float32(x)))
+_cosc(x::ComplexF16) = ComplexF16(_cosc(ComplexF32(x)))
+
+
+
 """
     abs2(q)
 

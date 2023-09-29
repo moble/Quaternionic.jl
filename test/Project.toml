@@ -1,10 +1,13 @@
 [deps]
+ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Quaternionic = "0756cd96-85bf-4b6f-a009-b5012ea7a443"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"

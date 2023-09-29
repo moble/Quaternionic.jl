@@ -165,12 +165,43 @@
             @test isinf(T(Inf)imz)
         end
 
+        # Check "iszero"
+        @test iszero(0u)
+        @test iszero(0i)
+        @test iszero(0j)
+        @test iszero(0k)
+        @test !iszero(u)
+        @test !iszero(i)
+        @test !iszero(j)
+        @test !iszero(k)
+
         # Check "isone"
         @test isone(u)
         @test !isone(2u)
         @test !isone(i)
         @test !isone(j)
         @test !isone(k)
+
+        # Check "round"
+        if T<:AbstractFloat
+            @test eltype(round(T(1.2) + 0imx)) === T
+            @test round(T(1.2) + 0imx) == 1 + 0imx
+            @test round(T(1.2)imx) == 0 + 1imx
+            @test round(T(1.2)imy) == 0 + 1imy
+            @test round(T(1.2)imz) == 0 + 1imz
+            let q = randn(Quaternion{T})
+                @test components(round(q, digits=4)) == round.(components(q), digits=4)
+            end
+        end
+
+        if T != Num
+            # Check "in"
+            @test u ∈ 0:2
+            @test u ∉ 2:4
+            @test i ∉ 0:2
+            @test j ∉ 0:2
+            @test k ∉ 0:2
+        end
 
         # Check "flipsign"
         @test flipsign(u, 1) == u
@@ -181,15 +212,6 @@
         @test flipsign(j, -1) == -j
         @test flipsign(k, 1) == k
         @test flipsign(k, -1) == -k
-
-        if T != Num
-            # Check "in"
-            @test u ∈ 0:2
-            @test u ∉ 2:4
-            @test i ∉ 0:2
-            @test j ∉ 0:2
-            @test k ∉ 0:2
-        end
 
     end
 
