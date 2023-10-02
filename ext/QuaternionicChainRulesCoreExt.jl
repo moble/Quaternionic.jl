@@ -1,7 +1,7 @@
 module QuaternionicChainRulesCoreExt
 
 using Quaternionic
-import Quaternionic: _sinc, _cosc
+import Quaternionic: _sincu, _coscu
 using StaticArrays
 isdefined(Base, :get_extension) ?
     (using ChainRulesCore; import ChainRulesCore: rrule, rrule_via_ad, RuleConfig, ProjectTo) :

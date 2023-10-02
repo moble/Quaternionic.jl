@@ -25,6 +25,7 @@ export precessing_nutating_example
 abstract type AbstractQuaternion{T<:Number} <: Number end
 
 
+include("utilities.jl")
 include("quaternion.jl")
 include("base.jl")
 include("algebra.jl")
