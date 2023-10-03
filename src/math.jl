@@ -139,27 +139,15 @@ rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        return quaternion(exp(q[1]), 0, 0, 0)
-    end
-    absolutevec = sqrt(absolute2vec)
+    a = absvec(q)
     e = exp(q[1])
-    s, c = sincos(absolutevec)
-    esinc = e * s / absolutevec
-    quaternion(e*c, esinc*q[2], esinc*q[3], esinc*q[4])
+    esinc = e * _sincu(a)
+    Rotor{typeof(esinc)}(e*cos(a), esinc*q[2], esinc*q[3], esinc*q[4])
 end
-function Base.exp(q::QuatVec{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        return Rotor{float(T)}(1, 0, 0, 0)
-    end
-    absolutevec = sqrt(absolute2vec)
-    s, c = sincos(absolutevec)
-    sinc = s / absolutevec
-    rotor(c, sinc*q[2], sinc*q[3], sinc*q[4])
+function Base.exp(v⃗::QuatVec{T}) where {T}
+    a = absvec(v⃗)
+    sinc = _sincu(a)
+    Rotor{typeof(sinc)}(cos(a), sinc*v⃗[2], sinc*v⃗[3], sinc*v⃗[4])
 end
 
 @doc raw"""
