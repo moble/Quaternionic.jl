@@ -97,6 +97,61 @@ function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
         iszero(Symbolics.simplify(q2[4]; expand=true))
     )
 end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion)
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec)
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec)
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::Number)
+    false
+end
+function Base.:(==)(q1::Number, q2::QuatVec{Symbolics.Num})
+    false
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::Symbolics.Num)
+    false
+end
+function Base.:(==)(q1::Symbolics.Num, q2::QuatVec{Symbolics.Num})
+    false
+end
+
 # Broadcast-like operations from Symbolics
 # (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
 # (d::Symbolics.Operator)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))

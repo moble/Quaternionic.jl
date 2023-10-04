@@ -13,8 +13,16 @@ end
 Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1[1]==q2[1]) && (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
 Base.:(==)(q::AbstractQuaternion{<:Number}, x::Number) = isreal(q) && real(q) == x
 Base.:(==)(x::Number, q::AbstractQuaternion) = isreal(q) && real(q) == x
-
 Base.isequal(q1::AbstractQuaternion, q2::AbstractQuaternion) = isequal(q1[1],q2[1]) && isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+
+Base.:(==)(q1::QuatVec{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::QuatVec{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q1::QuatVec{<:Number}, q2::QuatVec{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q::QuatVec{<:Number}, x::Number) = false
+Base.:(==)(x::Number, q::QuatVec) = false
+Base.isequal(q1::AbstractQuaternion, q2::QuatVec) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+Base.isequal(q1::QuatVec, q2::AbstractQuaternion) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+Base.isequal(q1::QuatVec, q2::QuatVec) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
 
 Base.isreal(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isinteger(q::AbstractQuaternion{T}) where {T<:Number} = isreal(q) && isinteger(real(q))
