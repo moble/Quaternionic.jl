@@ -16,6 +16,7 @@ else
     _sincu(x::Float16) = Float16(_sincu(Float32(x)))
     _sincu(x::ComplexF16) = ComplexF16(_sincu(ComplexF32(x)))
 end
+
 if isdefined(Main, :coscu)
     const _coscu = Main.coscu
 else
@@ -53,3 +54,34 @@ else
     _coscu(x::Float16) = Float16(_coscu(Float32(x)))
     _coscu(x::ComplexF16) = ComplexF16(_coscu(ComplexF32(x)))
 end
+
+# Derivative of un-normalized sinc function divided by `x`
+function _cossu(x::Number)
+    if abs(x) < 0.5
+        # generic Taylor series: ∑ (-1)^n (x)^{2n-2}/a(n) where
+        # a(n) = (1+2n)*(2n-1)! (= OEIS A174549)
+        s = (term = -one(x)) / 3
+        x² = x^2
+        ε = eps(abs(x)) # error threshold to stop sum
+        n = 1
+        while true
+            n += 1
+            term *= x²/((1-2n)*(2n-2))
+            s += (δs = term/(1+2n))
+            abs(δs) ≤ ε && break
+        end
+        return s
+    else
+        return isinf(x) ? zero(x) : ((s,c)=sincos(x); (x*c-s)/(x^3))
+    end
+end
+# hard-code Float64/Float32 Taylor series, with coefficients
+#  Float64.([(-1)^n/((2n+1)*factorial(2n-1)) for n = 1:6])
+_cossu(x::Union{Float64,ComplexF64}) =
+    abs(x) < 0.44 ? evalpoly(x^2, (-0.3333333333333333, 0.03333333333333333, -0.0011904761904761906, 2.2045855379188714e-5, -2.505210838544172e-7, 1.9270852604185937e-9)) :
+    isinf(x) ? zero(x) : ((s,c)=sincos(x); (x*c-s)/(x^3))
+_cossu(x::Union{Float32,ComplexF32}) =
+    abs(x) < 0.817f0 ? evalpoly(x^2, (-0.333333335f0, 0.033333335f0, -0.0011904762f0, 2.2045855f-5)) :
+    isinf(x) ? zero(x) : ((s,c)=sincos(x); (x*c-s)/(x^3))
+_cossu(x::Float16) = Float16(_cossu(Float32(x)))
+_cossu(x::ComplexF16) = ComplexF16(_cossu(ComplexF32(x)))

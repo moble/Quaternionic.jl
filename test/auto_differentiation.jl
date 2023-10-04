@@ -2,16 +2,36 @@
     # Make sure everything makes sense to ChainRulesCore
     test_method_tables()
 
-    @testset "Quaternion $T rrules" for T ∈ [BigFloat, Float64]
+    @testset "Quaternion $T rrules" for T ∈ (BigFloat, Float64, Float32)
+        ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
-        test_rrule(Quaternion{T}, w, x, y, z)
-        test_rrule(Quaternion, w, x, y, z, check_inferred=true)
-        test_rrule(Quaternion{T}, x, y, z)
-        test_rrule(Quaternion, x, y, z, check_inferred=true)
-        test_rrule(Quaternion{T}, w)
-        test_rrule(Quaternion, w, check_inferred=true)
+        sv = @SVector[w,x,y,z]
+        v4 = [w,x,y,z]
+        v3 = [x,y,z]
+        v1 = [w]
+        test_rrule(Quaternion{T}, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion{T}, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, v4; rtol=ϵ, atol=ϵ)
+        #test_rrule(Quaternion{T}, v3)  # This method doesn't exist
+        test_rrule(Quaternion, v3; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, v3; rtol=ϵ, atol=ϵ)
+        #test_rrule(Quaternion{T}, v1)  # This method doesn't exist
+        test_rrule(Quaternion, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion{T}, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion{T}, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion{T}, w; rtol=ϵ, atol=ϵ)
+        test_rrule(Quaternion, w; rtol=ϵ, atol=ϵ)
+        test_rrule(quaternion, w; rtol=ϵ, atol=ϵ)
     end
-    @testset "Quaternion $T components" for T ∈ [BigFloat, Float64]
+    @testset "Quaternion $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         f(w,x,y,z) = components(Quaternion(w,x,y,z))
         @test all(
@@ -66,16 +86,36 @@
         end
     end
 
-    @testset "Rotor $T rrules" for T ∈ [BigFloat, Float64]
+    @testset "Rotor $T rrules" for T ∈ (BigFloat, Float64, Float32)
+        ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
-        test_rrule(Rotor{T}, w, x, y, z)
-        test_rrule(Rotor, w, x, y, z, check_inferred=false)
-        test_rrule(Rotor{T}, x, y, z)
-        test_rrule(Rotor, x, y, z, check_inferred=false)
-        test_rrule(Rotor{T}, w)
-        test_rrule(Rotor, w, check_inferred=false)
+        sv = @SVector[w,x,y,z]
+        v4 = [w,x,y,z]
+        v3 = [x,y,z]
+        v1 = [w]
+        test_rrule(Rotor{T}, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor{T}, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, v4; rtol=ϵ, atol=ϵ)
+        #test_rrule(Rotor{T}, v3)  # This method doesn't exist
+        test_rrule(Rotor, v3; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, v3; rtol=ϵ, atol=ϵ)
+        #test_rrule(Rotor{T}, v1)  # This method doesn't exist
+        test_rrule(Rotor, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor{T}, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor{T}, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor{T}, w; rtol=ϵ, atol=ϵ)
+        test_rrule(Rotor, w; rtol=ϵ, atol=ϵ)
+        test_rrule(rotor, w; rtol=ϵ, atol=ϵ)
     end
-    @testset "Rotor $T components" for T ∈ [BigFloat, Float64]
+    @testset "Rotor $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         f(w,x,y,z) = components(Rotor(w,x,y,z))
         n = √(w^2 + x^2 + y^2 + z^2)
@@ -159,27 +199,40 @@
             (a,b,c,d)->abs2(Rotor([a])),
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
-            @test all(isnothing, ∇)  # Not really sure why it's not the following line...
-            # @test abs(∇[1]) < 10eps(T) && all(isnothing, ∇[2:4])
-        end
-        for (i,f) ∈ enumerate([
-
-        ])
-            ∇ = Zygote.gradient(f, w, x, y, z)
             @test abs(∇[1]) < 10eps(T) && all(isnothing, ∇[2:4])
         end
     end
 
-    @testset "QuatVec $T rrules" for T ∈ [BigFloat, Float64]
+    @testset "QuatVec $T rrules" for T ∈ (BigFloat, Float64, Float32)
+        ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
-        test_rrule(QuatVec{T}, w, x, y, z)
-        test_rrule(QuatVec, w, x, y, z, check_inferred=false)
-        test_rrule(QuatVec{T}, x, y, z)
-        test_rrule(QuatVec, x, y, z, check_inferred=false)
-        test_rrule(QuatVec{T}, w)
-        test_rrule(QuatVec, w, check_inferred=false)
+        sv = @SVector[w,x,y,z]
+        v4 = [w,x,y,z]
+        v3 = [x,y,z]
+        v1 = [w]
+        test_rrule(QuatVec{T}, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, sv; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec{T}, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec, v4; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, v4; rtol=ϵ, atol=ϵ)
+        #test_rrule(QuatVec{T}, v3)  # This method doesn't exist
+        test_rrule(QuatVec, v3; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, v3; rtol=ϵ, atol=ϵ)
+        #test_rrule(QuatVec{T}, v1)  # This method doesn't exist
+        test_rrule(QuatVec, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, v1; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec{T}, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, w, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec{T}, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, x, y, z; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec{T}, w; rtol=ϵ, atol=ϵ)
+        test_rrule(QuatVec, w; rtol=ϵ, atol=ϵ)
+        test_rrule(quatvec, w; rtol=ϵ, atol=ϵ)
     end
-    @testset "QuatVec $T components" for T ∈ [BigFloat, Float64]
+    @testset "QuatVec $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
         f(w,x,y,z) = components(QuatVec(w,x,y,z))
         @test all(
@@ -232,14 +285,15 @@
             @test isnothing(∇[1]) && all(∇[2:4] .≈ (2x, 2y, 2z))
         end
         for (i,f) ∈ enumerate([
-            (a,b,c,d)->abs2(QuatVec{T}(a))
+            (a,b,c,d)->abs2(QuatVec{T}(a)),
+
+            (a,b,c,d)->abs2(quatvec([a]))
         ])
             ∇ = Zygote.gradient(f, w, x, y, z)
             @test all(isnothing, ∇[2:4]) && ∇[1] .≈ 0
         end
         for (i,f) ∈ enumerate([
             (a,b,c,d)->abs2(quatvec(a)),
-            (a,b,c,d)->abs2(quatvec([a])),
 
             (a,b,c,d)->abs2(QuatVec(a)),
         ])
@@ -248,34 +302,40 @@
         end
     end
 
-    @testset verbose=true "exp $T" for T ∈ [Float64,] #FloatTypes
-        # #f(θ) = exp((θ / 2) * 𝐣)(𝐢) ⋅ 𝐢
-        # f(θ) = (exp((θ / 2) * 𝐣)(𝐢))[2]
-        # @test f(T(0)) ≈ 1
-        # @test Zygote.gradient(f, T(0))[1] ≈ -sin(T(0))
-        # @test f(T(π)/2) ≈ 0 atol=10eps(T)
-        # @test Zygote.gradient(f, T(π)/2)[1] ≈ -sin(T(π)/2)
-        # @test f(T(π)) ≈ -1
-        # @test Zygote.gradient(f, T(π))[1] ≈ -sin(T(π))
-        # @test f(3T(π)/2) ≈ 0 atol=10eps(T)
-        # @test Zygote.gradient(f, 3T(π)/2)[1] ≈ -sin(3T(π)/2)
-        # @test f(2T(π)) ≈ 1
-        # @test Zygote.gradient(f, 2T(π))[1] ≈ -sin(2T(π))
-        # for θ ∈ LinRange(0, 2T(π), 2)#100)
-        #     @test f(θ) ≈ cos(θ)
-        #     @test Zygote.gradient(f, θ)[1] ≈ -sin(θ)
-        # end
-
-        for v̂ ∈ normalize.(randn(QuatVec{T}, 5))
-            f(t) = components(exp(t * v̂)) # = cos(t) + v̂*sin(t)
-            for t ∈ LinRange(0, 2T(π), 101)
-                @test f(t) ≈ components(cos(t) + v̂*sin(t))
-                @show Zygote.jacobian(f, t)
-                break
-                @test Zygote.jacobian(f, t)[1] ≈ components(-sin(t) + v̂*cos(t))
-            end
-            break
+    @testset "exp(QuatVec::$T) rrules" for T ∈ (Float64,)#(BigFloat, Float64, Float32)
+        ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
+        w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
+        v⃗ = QuatVec{T}(x,y,z)
+        R̄ = Quaternion{T}(x, y, z, w)
+        test_rrule(exp, v⃗; rtol=ϵ, atol=ϵ)
+        test_rrule(exp, v⃗ ⊢ R̄; rtol=ϵ, atol=ϵ)
+    end
+    @testset verbose=true "exp $T" for T ∈ FloatTypes
+        f(θ) = exp((θ / 2) * 𝐣)(𝐢) ⋅ 𝐢  # should equal cos(θ)
+        #f(θ) = (exp((θ / 2) * 𝐣)(𝐢))[2]  # should equal cos(θ)
+        @test f(T(0)) ≈ 1
+        @test Zygote.gradient(f, T(0))[1] ≈ -sin(T(0)) atol=10eps(T)
+        @test f(T(π)/2) ≈ 0 atol=10eps(T)
+        @test Zygote.gradient(f, T(π)/2)[1] ≈ -sin(T(π)/2)
+        @test f(T(π)) ≈ -1
+        @test Zygote.gradient(f, T(π))[1] ≈ -sin(T(π)) atol=10eps(T)
+        @test f(3T(π)/2) ≈ 0 atol=10eps(T)
+        @test Zygote.gradient(f, 3T(π)/2)[1] ≈ -sin(3T(π)/2)
+        @test f(2T(π)) ≈ 1
+        @test Zygote.gradient(f, 2T(π))[1] ≈ -sin(2T(π)) atol=10eps(T)
+        for θ ∈ LinRange(0, 2T(π), 100)
+            @test f(θ) ≈ cos(θ) atol=10eps(T)
+            @test Zygote.gradient(f, θ)[1] ≈ -sin(θ) atol=10eps(T)
         end
+
+        # for v̂ ∈ normalize.(randn(QuatVec{T}, 5))
+        #     g(t) = exp(t * v̂) # = cos(t) + v̂*sin(t)
+        #     for t ∈ LinRange(0, 2T(π), 100)
+        #         @test g(t) ≈ cos(t) + v̂*sin(t)
+        #         @show Zygote.gradient(g, t)
+        #         # @test Zygote.jacobian(g, t)[1] ≈ components(-sin(t) + v̂*cos(t))
+        #     end
+        # end
 
         # f(x,y,z) = exp(x*𝐢 + y*𝐣 + z*𝐤)(𝐢)[1:4]
         # @test f(T(0), T(0), T(0)) ≈ T[0, 1, 0, 0]
