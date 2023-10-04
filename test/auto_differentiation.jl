@@ -302,6 +302,14 @@
         end
     end
 
+    @testset "exp(Quaternion::$T) rrules" for T ∈ (Float64,)#(BigFloat, Float64, Float32)
+        ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
+        w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
+        Q = Quaternion{T}(w,x,y,z)
+        R̄ = Quaternion{T}(x, y, z, w)
+        test_rrule(exp, Q; rtol=ϵ, atol=ϵ)
+        test_rrule(exp, Q ⊢ R̄; rtol=ϵ, atol=ϵ)
+    end
     @testset "exp(QuatVec::$T) rrules" for T ∈ (Float64,)#(BigFloat, Float64, Float32)
         ϵ = max(√eps(T), 1e-9)  # Because Float64 is used internally by test_rrule
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)

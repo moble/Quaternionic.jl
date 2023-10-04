@@ -363,6 +363,55 @@ end
 #    + 𝐣 * (∂s/∂y Δs + ∂t/∂y Δt + ∂u/∂y Δu + ∂v/∂y Δv)
 #    + 𝐤 * (∂s/∂z Δs + ∂t/∂z Δt + ∂u/∂z Δu + ∂v/∂z Δv)
 
+function rrule(::typeof(exp), q::Quaternion{T}) where T
+    w, x, y, z = components(q)
+    a = absvec(q)
+    e = exp(w)
+    sinc = _sincu(a)
+    coss = _cossu(a)
+
+    s = e * cos(a)
+    t = e * x * sinc
+    u = e * y * sinc
+    v = e * z * sinc
+    R = quaternion(s, t, u, v)
+
+    ∂sinc∂x = coss * x
+    ∂sinc∂y = coss * y
+    ∂sinc∂z = coss * z
+    ∂s∂w = s
+    ∂t∂w = t
+    ∂u∂w = u
+    ∂v∂w = v
+    ∂s∂x = -e * x * sinc
+    ∂s∂y = -e * y * sinc
+    ∂s∂z = -e * z * sinc
+    ∂t∂x = e * sinc + e * x * ∂sinc∂x
+    ∂t∂y = e * x * ∂sinc∂y
+    ∂t∂z = e * x * ∂sinc∂z
+    ∂u∂x = e * y * ∂sinc∂x
+    ∂u∂y = e * sinc + e * y * ∂sinc∂y
+    ∂u∂z = e * y * ∂sinc∂z
+    ∂v∂x = e * z * ∂sinc∂x
+    ∂v∂y = e * z * ∂sinc∂y
+    ∂v∂z = e * sinc + e * z * ∂sinc∂z
+
+    function exp_pullback(ΔR)
+        Δs, Δt, Δu, Δv = components(unthunk(ΔR))
+        return (
+            NoTangent(),
+            quaternion(
+                (∂s∂w * Δs + ∂t∂w * Δt + ∂u∂w * Δu + ∂v∂w * Δv),
+                (∂s∂x * Δs + ∂t∂x * Δt + ∂u∂x * Δu + ∂v∂x * Δv),
+                (∂s∂y * Δs + ∂t∂y * Δt + ∂u∂y * Δu + ∂v∂y * Δv),
+                (∂s∂z * Δs + ∂t∂z * Δt + ∂u∂z * Δu + ∂v∂z * Δv)
+            )
+        )
+    end
+
+    return R, exp_pullback
+end
+
 function rrule(::typeof(exp), v⃗::QuatVec{T}) where T
     x, y, z = vec(v⃗)
     a = absvec(v⃗)
