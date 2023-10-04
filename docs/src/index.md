@@ -171,7 +171,7 @@ julia> @variables q[1:4];  # Defines q[1] through q[4] as symbolic variables
 julia> Q = quaternion(q...);
 
 julia> simplify.(Q * imz * conj(Q))
-0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (2q[3]*q[4] - 2q[1]*q[2])𝐣 + (q[1]^2 + q[4]^2 - (q[2]^2) - (q[3]^2))𝐤
+0 + (2q[1]*q[3] + 2q[2]*q[4])𝐢 + (-2q[1]*q[2] + 2q[3]*q[4])𝐣 + (q[1]^2 - (q[2]^2) - (q[3]^2) + q[4]^2)𝐤
 ```
 (Though, note that you probably want to use `Q(imz)` instead of the last
 expression, when using floating-point numbers, for efficiency reasons.)
