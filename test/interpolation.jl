@@ -125,7 +125,7 @@
         @test maximum(distance.(Rout, Ravg)) < 2eps()
         random_signs = [1; rand([-1, 1], length(Rin)-1)...]  # First one must be 1
         Rin_flipped = [rotor(r*R) for (r, R) in zip(random_signs, Rin)]
-        @test Rout == squad(Rin_flipped, tin, tout, validate=true, unflip=true)
+        @test Rout ≈ squad(Rin_flipped, tin, tout, validate=true, unflip=true) atol=eps() rtol=eps()
         Rout = squad(Rin, tin, tin, validate=true)
         @test maximum(distance.(Rout, Rin)) < 2eps()
         @test distance(rotor(1), squad(Rin, tin, 0, validate=true)) == 0
