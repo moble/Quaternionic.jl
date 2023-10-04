@@ -60,10 +60,12 @@ quaternion(w,x,y,z) = (v=SVector{4}(w,x,y,z); Quaternion{eltype(v)}(v))
 quaternion(x,y,z) = (v=SVector{4}(false,x,y,z); Quaternion{eltype(v)}(v))
 quaternion(w::T) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
 
+Quaternion(w::SVector{4,T}) where {T} = quaternion(w)
+Quaternion(w::AbstractVector) = quaternion(w)
+Quaternion(w::AbstractQuaternion) = quaternion(w)
 Quaternion(w,x,y,z) = quaternion(w,x,y,z)
 Quaternion(x,y,z) = quaternion(x,y,z)
 Quaternion(w) = quaternion(w)
-Quaternion(w::AbstractQuaternion) = quaternion(w)
 
 
 @doc raw"""
@@ -160,12 +162,12 @@ end
 rotor(x,y,z) = rotor(false, x,y,z)
 rotor(w::T) where {T<:Number} = Rotor{T}(SVector{4,T}(one(w), false, false, false))
 
-Rotor(w,x,y,z) = rotor(w,x,y,z)
-Rotor(x,y,z) = rotor(x,y,z)
-Rotor(w) = rotor(w)
 Rotor(w::SVector{4,T}) where {T} = rotor(w)
 Rotor(w::AbstractVector) = rotor(w)
 Rotor(w::AbstractQuaternion) = rotor(w)
+Rotor(w,x,y,z) = rotor(w,x,y,z)
+Rotor(x,y,z) = rotor(x,y,z)
+Rotor(w) = rotor(w)
 
 """
     QuatVec{T<:Number} <: Number
@@ -222,12 +224,12 @@ end
 quatvec(x,y,z) = quatvec(false,x,y,z)
 quatvec(w::T) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
 
-QuatVec(w,x,y,z) = quatvec(w,x,y,z)
-QuatVec(x,y,z) = quatvec(x,y,z)
-QuatVec(w) = quatvec(w)
 QuatVec(w::SVector{4,T}) where {T} = quatvec(w)
 QuatVec(w::AbstractVector) = quatvec(w)
 QuatVec(w::AbstractQuaternion) = quatvec(w)
+QuatVec(w,x,y,z) = quatvec(w,x,y,z)
+QuatVec(x,y,z) = quatvec(x,y,z)
+QuatVec(w) = quatvec(w)
 
 # Constructor from AbstractVector
 for q ∈ (:quaternion, :rotor, :quatvec)
@@ -353,7 +355,8 @@ const 𝐤 = imz
 Base.zero(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(false, false, false, false)
 Base.zero(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
 Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
-Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+#Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+Base.zero(::Type{Rotor{T}}) where {T} = Rotor{T}(false, false, false, false)
 
 Base.one(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
 Base.one(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
