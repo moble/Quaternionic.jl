@@ -261,7 +261,7 @@
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$a - b + \\left(b c\\right)\\,\\mathbf{i} + \\left(\\frac{c}{d}\\right)\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), QuatVec{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == " + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
@@ -274,7 +274,7 @@
         Base.show(io, MIME("text/latex"), QuatVec{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$ + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$ + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$ + \\left(b c\\right)\\,\\mathbf{i} + \\left(\\frac{c}{d}\\right)\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), rotor(1, 5, 5, 7))
         @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
