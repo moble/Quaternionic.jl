@@ -59,25 +59,27 @@ function Base.hash(q::AbstractQuaternion, h::UInt)
     hash(q[1], h ⊻ hash(q[2], h_imagx) ⊻ hash_0_imagx ⊻ hash(q[3], h_imagy) ⊻ hash_0_imagy ⊻ hash(q[4], h_imagz) ⊻ hash_0_imagz)
 end
 
-function Base.show(io::IO, q::AbstractQuaternion)
-    function pm(x)
-        s = "$x"
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+^/-]", s[2:end])
-            s = " " * s[1] * " " * "(" * s[2:end] * ")"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
+function _pm_ascii(x)
+    # Utility function to print a component of a quaternion
+    s = "$x"
+    if s[1] ∉ "+-"
+        s = "+" * s
     end
+    if occursin(r"[+^/-]", s[2:end])
+        s = " " * s[1] * " " * "(" * s[2:end] * ")"
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+function Base.show(io::IO, q::AbstractQuaternion)
     print(
         io,
         q isa QuatVec ? "" : q[1],
-        pm(q[2]), "𝐢",
-        pm(q[3]), "𝐣",
-        pm(q[4]), "𝐤"
+        _pm_ascii(q[2]), "𝐢",
+        _pm_ascii(q[3]), "𝐣",
+        _pm_ascii(q[4]), "𝐤"
     )
 end
 
@@ -87,24 +89,26 @@ function Base.show(io::IO, q::Rotor)
     print(io, ")")
 end
 
-function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
-    function pm(x)
-        s = latexify(x, env=:raw, bracket=true)
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+^/-]", s[2:end])
-            s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
+function _pm_latex(x)
+    # Utility function to print a component of a quaternion in LaTeX
+    s = latexify(x, env=:raw, bracket=true)
+    if s[1] ∉ "+-"
+        s = "+" * s
     end
+    if occursin(r"[+^/-]", s[2:end])
+        s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
     s = latexstring(
         q isa QuatVec ? "" : latexify(q[1], env=:raw, bracket=true),
-        pm(q[2]), "\\,\\mathbf{i}",
-        pm(q[3]), "\\,\\mathbf{j}",
-        pm(q[4]), "\\,\\mathbf{k}"
+        _pm_latex(q[2]), "\\,\\mathbf{i}",
+        _pm_latex(q[3]), "\\,\\mathbf{j}",
+        _pm_latex(q[4]), "\\,\\mathbf{k}"
     )
     print(io, s)
 end

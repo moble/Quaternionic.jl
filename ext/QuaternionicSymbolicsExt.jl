@@ -151,6 +151,41 @@ end
 function Base.:(==)(q1::Symbolics.Num, q2::QuatVec{Symbolics.Num})
     false
 end
+function _pm_ascii(x::Symbolics.Num)
+    # Utility function to print a component of a quaternion
+    s = "$x"
+    if s[1] ∉ "+-"
+        s = "+" * s
+    end
+    if occursin(r"[+^/-]", s[2:end])
+        if s[1] == '+'
+            s = " + " * "(" * s[2:end] * ")"
+        else
+            s = " + " * "(" * s * ")"
+        end
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+function _pm_latex(x::Num)
+    # Utility function to print a component of a quaternion in LaTeX
+    s = latexify(x, env=:raw, bracket=true)
+    if s[1] ∉ "+-"
+        s = "+" * s
+    end
+    if occursin(r"[+^/-]", s)
+        if s[1] == '+'
+            s = " + " * "\\left(" * s[2:end] * "\\right)"
+        else
+            s = " + " * "\\left(" * s * "\\right)"
+        end
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
 
 # Broadcast-like operations from Symbolics
 # (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
