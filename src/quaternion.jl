@@ -65,7 +65,7 @@ Quaternion(w::AbstractVector) = quaternion(w)
 Quaternion(w::AbstractQuaternion) = quaternion(w)
 Quaternion(w,x,y,z) = quaternion(w,x,y,z)
 Quaternion(x,y,z) = quaternion(x,y,z)
-Quaternion(w) = quaternion(w)
+Quaternion(w::T) where {T<:Number} = quaternion(w)
 
 
 @doc raw"""
@@ -167,7 +167,7 @@ Rotor(w::AbstractVector) = rotor(w)
 Rotor(w::AbstractQuaternion) = rotor(w)
 Rotor(w,x,y,z) = rotor(w,x,y,z)
 Rotor(x,y,z) = rotor(x,y,z)
-Rotor(w) = rotor(w)
+Rotor(w::T) where {T<:Number} = rotor(w)
 
 """
     QuatVec{T<:Number} <: Number
@@ -229,7 +229,7 @@ QuatVec(w::AbstractVector) = quatvec(w)
 QuatVec(w::AbstractQuaternion) = quatvec(w)
 QuatVec(w,x,y,z) = quatvec(w,x,y,z)
 QuatVec(x,y,z) = quatvec(x,y,z)
-QuatVec(w) = quatvec(w)
+QuatVec(w::T) where {T<:Number} = quatvec(w)
 
 # Constructor from AbstractVector
 for q ∈ (:quaternion, :rotor, :quatvec)
