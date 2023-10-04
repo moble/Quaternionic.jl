@@ -1,6 +1,7 @@
 module QuaternionicSymbolicsExt
 
 using StaticArrays: SVector
+using Latexify: latexify
 import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
