@@ -220,12 +220,12 @@ side).
 Depth = 4
 ```
 
-## Function list
 
-The following list contains the public functions inside the `Quaternionic`
-module.  Note that there are also many standard math functions defined for
-`Quaternion`s that live in the `Base` module, as noted above.
+## References
 
-```@index
-Modules = [Quaternionic]
-```
+A good source for information about floating-point implementations of basic
+quaternion functions is Neil Dantam's notes on ["Quaternion
+Computation"](http://www.neil.dantam.name/note/dantam-quaternion.pdf).  More
+advanced functions are discussed in [this
+paper](https://arxiv.org/abs/1110.2965) and [this
+one](https://arxiv.org/abs/1604.08139).

@@ -17,6 +17,7 @@ makedocs(;
         "Basics" => "manual.md",
         "Functions of time" => "functions_of_time.md",
         "Differentiating by quaternions" => "differentiation.md",
+        "All functions" => "functions.md"
     ],
     # doctest = false
 )
