@@ -31,7 +31,7 @@ implemented.
 This function is defined to be continuous at `x == 0`, and is implemented using a Taylor
 series for small `x`.
 """
-@inline invsinc(x::T) where {T<:Union{AbstractFloat,Complex{AbstractFloat}}} =
+@inline invsinc(x::T) where {T<:Union{Real,Complex{Real}}} =
     abs(x) < invsinc_tol(T) ? evalpoly(x^2,
         T.((1, 1//6, 7//360, 31//15120, 127//604800, 73//3421440, 1414477//653837184000))
     ) :
