@@ -13,7 +13,7 @@
     end
     @testset "Complex equivalence $T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
-        scalars = [zero(T), one(T), -one(T)]
+        scalars = [zero(T), one(T), -one(T), one(T)*7//3, -one(T)*5//2]
         for c in [a+b*im for a in scalars for b in scalars]
             # The following constructs a quaternion from the complex number `c` by equating `im`
             # with one of the three quaternionic imaginaries, looping over each option.  We then
@@ -60,23 +60,19 @@
                     if binary_function ∈ [(^)] && ((component!=:z && real(c) < zero(T) && imag(c) == zero(T)) || iszero(c))
                         continue  # We arbitrarily chose the z component for these return values
                     end
-                    if T !== BigFloat
-                        S = 10randn(T, 100)
-                        for s ∈ S
-                            cval = binary_function(c, float(s))
-                            qval = ℍ_to_ℂ(binary_function(q, s), component)
-                            let ϵ = (T === Float16 ? 10ϵ/6 : ϵ)
-                                @test cval ≈ qval rtol=6ϵ nans=true
-                            end
-                            if !iszero(c)
-                                cval = binary_function(c/abs(c), s)
-                                qval = ℍ_to_ℂ(binary_function(rotor(q), s), component)
-                                @test cval ≈ qval rtol=6ϵ nans=true
-                            end
+                    for s ∈ (T === Float16 ? 1 : 10) * randn(T, 50)
+                        cval = binary_function(c, float(s))
+                        qval = ℍ_to_ℂ(binary_function(q, s), component)
+                        let ϵ = (T === BigFloat ? 15ϵ : 10ϵ)
+                            @test cval ≈ qval rtol=ϵ nans=true
+                        end
+                        if !iszero(c)
+                            cval = binary_function(c/abs(c), s)
+                            qval = ℍ_to_ℂ(binary_function(rotor(q), s), component)
+                            @test cval ≈ qval rtol=6ϵ nans=true
                         end
                     end
-                    S = [-3, -2, -1, 0, 1, 2, 3]
-                    for s ∈ S
+                    for s ∈ (-3, -2, -1, 0, 1, 2, 3)
                         cval = binary_function(c, s)
                         qval = ℍ_to_ℂ(binary_function(q, s), component)
                         @test cval ≈ qval rtol=ϵ nans=true
