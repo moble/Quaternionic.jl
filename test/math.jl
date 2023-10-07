@@ -30,6 +30,9 @@
                     end
                     cval = unary_function(c)
                     qval = ℍ_to_ℂ(unary_function(q), component)
+                    if !≈(cval, qval, rtol=ϵ, nans=true)
+                        @info "A" unary_function c q cval qval unary_function(q)
+                    end
                     @test cval ≈ qval rtol=ϵ nans=true
                     # Repeat the test on QuatVec for `exp` for pure-imaginary input
                     if unary_function ∈ [exp] && iszero(real(c))
@@ -94,7 +97,62 @@
                 @test exp(log(rotor(q))) ≈ rotor(q) rtol=ϵ nans=true
                 @test exp(zero(quatvec(q))) ≈ one(q) rtol=ϵ nans=true
 
+                @test exp(2q) ≈ exp(q)^2 rtol=ϵ nans=true
             end
+        end
+    end
+
+    @testset "Special values for log $T" for T in FloatTypes
+        ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
+
+        # log(0) = -Inf
+        q = quaternion(zero(T), zero(T), zero(T), zero(T))
+        @test q ≈ exp(quaternion(-T(Inf), 0, 0, 0)) rtol=ϵ nans=true
+        @test log(q) ≈ quaternion(-T(Inf), 0, 0, 0) rtol=ϵ nans=true
+
+        # log(1) = 0
+        q = quaternion(one(T), zero(T), zero(T), zero(T))
+        @test q ≈ exp(quaternion(zero(T), 0, 0, 0)) rtol=ϵ nans=true
+        @test log(q) ≈ quaternion(zero(T), 0, 0, 0) rtol=ϵ nans=true
+        q = rotor(one(T), zero(T), zero(T), zero(T))
+        @test q ≈ exp(quatvec(0, zero(T), 0, 0)) rtol=ϵ nans=true
+        @test log(q) ≈ quatvec(0, zero(T), 0, 0) rtol=ϵ nans=true
+
+        # log(-1) = π𝐤
+        q = quaternion(-one(T), zero(T), zero(T), zero(T))
+        @test q ≈ exp(quaternion(0, 0, 0, T(π))) rtol=ϵ nans=true
+        @test log(q) ≈ quaternion(0, 0, 0, T(π)) rtol=ϵ nans=true
+        q = rotor(-one(T), zero(T), zero(T), zero(T))
+        @test q ≈ exp(quatvec(0, 0, 0, T(π))) rtol=ϵ nans=true
+        @test log(q) ≈ quatvec(0, 0, 0, T(π)) rtol=ϵ nans=true
+
+        for (s,f,v) ∈ ((s,f,v)
+                for s ∈ (-1,1)
+                for f ∈ (4√eps(T), √eps(T)/4, 4eps(T), eps(T))
+                for v ∈ (𝐢, 𝐣, 𝐤)
+            )
+            Δ = s*f*v
+
+            # log(1) + Δ = Δ
+            q = quaternion(one(T)) + Δ
+            @test q ≈ exp(quaternion(log(abs(q))) + Δ) rtol=ϵ nans=true
+            @test log(q) ≈ quaternion(log(abs(q))) + Δ rtol=ϵ nans=true
+            r = rotor(q)
+            @test r ≈ exp(Δ) rtol=ϵ nans=true
+            @test log(r) ≈ Δ rtol=ϵ nans=true
+
+            # log(-1) + Δ = (π - |Δ|) Δ/|Δ|
+            q = quaternion(-one(T)) + Δ
+            @test q ≈ exp(quaternion(log(abs(q))) + (T(π)-f)*s*v) rtol=ϵ nans=true
+            @test log(q) ≈ quaternion(log(abs(q))) + (T(π)-f)*s*v rtol=ϵ nans=true
+            r = rotor(q)
+            @test r ≈ exp((T(π)-f)*s*v) rtol=ϵ nans=true
+            @test log(r) ≈ (T(π)-f)*s*v rtol=ϵ nans=true
+
+            q = quaternion(one(T) * 3//2) + Δ
+            @test q ≈ exp(quaternion(log(abs(q))) + Δ * 2//3) rtol=ϵ nans=true
+            @test log(q) ≈ quaternion(log(abs(q))) + Δ * 2//3 rtol=ϵ nans=true
+
         end
     end
 
