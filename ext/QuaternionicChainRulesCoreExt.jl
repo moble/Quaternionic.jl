@@ -192,7 +192,7 @@ function rrule(::typeof(rotor), w::Number)
             ∂s∂w*Δs
         )
     end
-    v = SVector{4}(one(w), false, false, false)
+    v = SVector{4}(copysign(one(w), w), false, false, false)
     return Rotor{eltype(v)}(v), Rotor_pullback
 end
 
@@ -201,27 +201,6 @@ rrule(::Type{Rotor}, w::AbstractVector) = rrule(rotor, w)
 rrule(::Type{Rotor}, w::AbstractQuaternion) = rrule(rotor, w)
 rrule(::Type{Rotor}, w::Number) = rrule(rotor, w)
 
-
-
-# function rrule(::Type{QuatVec{QT}}, arg::AbstractVector{VT}) where {QT, VT}
-#     function QuatVec_pullback(Δquat)
-#         c = components(unthunk(Δquat))
-#         @info "6" QT typeof(Δquat) Δquat c typeof(arg) length(arg) arg[1] arg[2] arg[3] arg[4]
-#         (NoTangent(), SVector{4}(zero(eltype(c)), c[2], c[3], c[4]))
-#     end
-#     v = SVector{4}(false, arg[begin+1], arg[begin+2], arg[begin+3])
-#     return QuatVec{QT}(v), QuatVec_pullback
-# end
-
-# function rrule(::Type{QuatVec{T}}, w, x, y, z) where {T}
-#     function QuatVec_pullback(Δquat)
-#         c = components(unthunk(Δquat))
-#         @info "7" T typeof(Δquat) Δquat c typeof(w) w x y z
-#         (NoTangent(), zero(eltype(c)), c[2], c[3], c[4])
-#     end
-#     v = SVector{4}(false, x, y, z)
-#     return QuatVec{eltype(v)}(v), QuatVec_pullback
-# end
 
 function rrule(::typeof(quatvec), w, x, y, z)
     function QuatVec_pullback(ΔV)

@@ -160,7 +160,7 @@ function rotor(w, x, y, z)
     Rotor{eltype(v)}(v)
 end
 rotor(x,y,z) = rotor(false, x,y,z)
-rotor(w::T) where {T<:Number} = Rotor{T}(SVector{4,T}(one(w), false, false, false))
+rotor(w::T) where {T<:Number} = Rotor{T}(SVector{4,T}(copysign(one(w), w), false, false, false))
 
 Rotor(w::SVector{4,T}) where {T} = rotor(w)
 Rotor(w::AbstractVector) = rotor(w)
