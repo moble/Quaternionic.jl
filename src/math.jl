@@ -266,31 +266,21 @@ julia> √quaternion(-4)
 ```
 """
 function Base.sqrt(q::Quaternion{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return quaternion(0, 0, 0, sqrt(-q[1]))
-        end
-        return quaternion(sqrt(q[1]), 0, 0, 0)
+    c₁ = abs(q) + q[1]
+    if iszero(c₁)
+        quaternion(false, false, false, √(-q[1]))
+    else
+        c₂ = √inv(2c₁)
+        quaternion(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
     end
-    absolute2 = absolute2vec + q[1]^2
-    c1 = sqrt(absolute2) + q[1]
-    c2 = sqrt(inv(2*c1))
-    quaternion(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 function Base.sqrt(q::Rotor{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return Rotor{float(T)}(0, 0, 0, 1)
-        end
-        return Rotor{float(T)}(1, 0, 0, 0)
+    c₁ = abs(q) + q[1]
+    if iszero(c₁)
+        rotor(false, false, false, √(-q[1]))
+    else
+        rotor(c₁, q[2], q[3], q[4])
     end
-    c1 = 1 + q[1]
-    c2 = sqrt(inv(2*c1))
-    rotor(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
 
 """
