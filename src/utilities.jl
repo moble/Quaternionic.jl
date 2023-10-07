@@ -17,20 +17,20 @@ else
     _sincu(x::ComplexF16) = ComplexF16(_sincu(ComplexF32(x)))
 end
 
-"""
-    invsinc(x)
+# """
+#     invsinc(x)
 
-Inverse of the un-normalized sinc function, defined as `x/sin(x)` for `x != 0` and `1` for
-`x == 0`.
+# Inverse of the un-normalized sinc function, defined as `x/sin(x)` for `x != 0` and `1` for
+# `x == 0`.
 
-Note that this is only implemented accurately for ``|x| \\lesssim 1``.  When ``|x|``
-approaches ``n\\pi``, the function value blows up.  This could be avoided as something like
-``invsinc(mod(x, π)) * x / mod(x, π)``, but in the interest of efficiency this is not
-implemented.
+# Note that this is only implemented accurately for ``|x| \\lesssim 1``.  When ``|x|``
+# approaches ``n\\pi``, the function value blows up.  This could be avoided as something like
+# ``invsinc(mod(x, π)) * x / mod(x, π)``, but in the interest of efficiency this is not
+# implemented.
 
-This function is defined to be continuous at `x == 0`, and is implemented using a Taylor
-series for small `x`.
-"""
+# This function is defined to be continuous at `x == 0`, and is implemented using a Taylor
+# series for small `x`.
+# """
 @inline invsinc(x::T) where {T<:Union{Real,Complex{Real}}} =
     abs(x) < invsinc_tol(T) ? evalpoly(x^2,
         T.((1, 1//6, 7//360, 31//15120, 127//604800, 73//3421440, 1414477//653837184000))
