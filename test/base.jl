@@ -61,16 +61,44 @@
             @test isequal(quatvec(v), v)
             @test isequal(v, quatvec(v))
             @test isequal(quatvec(v), quatvec(v))
-            for v′ ∈ basis
-                if v != v′
+            for (i_v,v′) ∈ enumerate(basis)
+                if v !== v′
                     @test !(quatvec(v) == quatvec(v′))
                     @test !isequal(quatvec(v), quatvec(v′))
                     @test !(quatvec(v) == v′)
                     @test !isequal(quatvec(v), v′)
                     @test !(v == quatvec(v′))
                     @test !isequal(v, quatvec(v′))
+                elseif i_v>1
+                    @test quatvec(v) == quatvec(v′)
+                    @test isequal(quatvec(v), quatvec(v′))
+                    @test quatvec(v) == v′
+                    @test isequal(quatvec(v), v′)
+                    @test v == quatvec(v′)
+                    @test isequal(v, quatvec(v′))
                 end
             end
+        end
+
+        for v ∈ [𝐢, 𝐣, 𝐤]
+            @test Num(1)*v != one(T)
+            @test !isequal(Num(1)*v, one(T))
+            @test Quaternion(Num(one(T))) == one(T)
+            @test Quaternion(Num(7one(T))) == 7one(T)
+            @test one(T) == Quaternion(Num(one(T)))
+            @test 7one(T) == Quaternion(Num(7one(T)))
+
+            @test QuatVec(Num[1,2,3,4]) != one(T)
+            @test QuatVec(Num[7,2,3,4]) != 7one(T)
+            @test one(T) != QuatVec(Num[1,2,3,4])
+            @test 7one(T) != QuatVec(Num[7,2,3,4])
+
+            @test QuatVec(Num[1,2,3,4]) == QuatVec{T}(0,2,3,4)
+            @test QuatVec{T}(0,2,3,4) == QuatVec(Num[1,2,3,4])
+            @test QuatVec(Num[1,2,3,4]) == Quaternion{T}(0,2,3,4)
+            @test Quaternion{T}(0,2,3,4) == QuatVec(Num[1,2,3,4])
+            @test QuatVec(Num[1,2,3,4]) != Quaternion{T}(1,2,3,4)
+            @test Quaternion{T}(1,2,3,4) != QuatVec(Num[1,2,3,4])
         end
 
         # Test indexing

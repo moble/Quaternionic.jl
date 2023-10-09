@@ -101,6 +101,7 @@ function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
 end
 function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
     (
+        iszero(Symbolics.simplify(q2[1]; expand=true)) &&
         iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
         iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
         iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
@@ -108,6 +109,7 @@ function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion{Symbolics
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
     (
+        iszero(Symbolics.simplify(q1[1]; expand=true)) &&
         iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
         iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
         iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
@@ -122,6 +124,15 @@ function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
 end
 function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion)
     (
+        iszero(q2[1]) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q2::AbstractQuaternion, q1::QuatVec{Symbolics.Num})
+    (
+        iszero(q2[1]) &&
         iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
         iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
         iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
@@ -129,12 +140,27 @@ function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion)
 end
 function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec)
     (
+        iszero(Symbolics.simplify(q1[1]; expand=true)) &&
         iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
         iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
         iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
     )
 end
 function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec)
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q2::QuatVec, q1::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q2::QuatVec{Symbolics.Num}, q1::QuatVec{Symbolics.Num})
     (
         iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
         iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
