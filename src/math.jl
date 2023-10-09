@@ -214,20 +214,15 @@ The general formula whenever the denominator is nonzero is
 \sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
 ```
 
-This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the
-expression above by itself.
+This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the expression above
+by itself.
 
-When the denominator is zero, this function has discontinuous (and fairly
-arbitrary) behavior, just as with the quaternion [`log`](@ref) function.  In
-this case, either all components are zero — in which case the result is simply
-the zero quaternion — or the "vector" components of the quaternion are
-precisely zero and the scalar component is negative.  If the latter is true,
-the denominator above will be a pure-imaginary number.  Because the quaternions
-come with infinitely many elements that square to -1, it is not clear *which*
-imaginary should be used, so we arbitrarily choose to set the result
-proportional to the `z` quaternion.  The choice of the `z` direction is
-arbitrary; the "vector" component of the returned quaternion could be in any
-direction.
+Note that whenever the vector part is zero and the scalar part is negative, the solution is
+not unique (and the denominator above is zero), because it necessarily involves the
+square-root of -1, of which there are infinitely many in the space of quaternions.  In this
+case, we arbitrarily choose the vector part of the result to be in the `z` direction.  A
+reasonable alternative would be to throw an error; instead it is left to the user to check
+for that condition.
 
 # Examples
 ```jldoctest
@@ -238,30 +233,50 @@ julia> sqrtq = √q;
 julia> sqrtq^2 ≈ q
 true
 
-julia> √quaternion(4)
+julia> √quaternion(4.0)
 2.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
 
-julia> √quaternion(-4)
+julia> √quaternion(-4.0)
 0.0 + 0.0𝐢 + 0.0𝐣 + 2.0𝐤
 ```
+
+# Notes
+
+This function uses an algorithm for finding the square root that is very accurate (typically
+achieving the correct result to within machine precision) for *most* values.  However, naive
+application of the formula above can lead to catastrophic cancellation when the scalar part
+is negative and significantly larger in magnitude to the vector part.  Therefore, when `q[1]
+ < 0`, we transform the problem into the case where `q[1] > 0` as
+```math
+\sqrt{q} = \bar{\sqrt{-\bar{q}}}\, \sqrt{-1},
+```
+where the bar denotes quaternionic conjugation, and we interpret ``\sqrt{-1}`` to be a unit
+imaginary that commutes with ``q``.  The obvious candidate is the normalized vector part of
+``q`` if the vector part is nonzero; otherwise, as noted above, we arbitrarily choose it to
+be the unit vector in `z` direction.  The calculation of ``\sqrt{-\bar{q}}`` can use the
+naive approach, and the result is still accurate to within machine precision.
+
 """
-function Base.sqrt(q::Quaternion{T}) where {T}
-    c₁ = abs(q) + q[1]
-    if iszero(c₁)
-        quaternion(false, false, false, √(-q[1]))
-    else
-        c₂ = √inv(2c₁)
-        quaternion(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
+function Base.sqrt(q::T) where {T<:AbstractQuaternion}
+    if q[1] ≥ 0
+        if all(iszero, vec(q))
+            T(√(q[1]), false, false, false)
+        else
+            c₁ = abs(q) + q[1]
+            c₂ = √inv(2c₁)
+            T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
+        end
+    else # q[1] < 0
+        if all(iszero, vec(q))
+            T(false, false, false, √(-q[1]))
+        else
+            c₁ = abs(q) - q[1]
+            c₂ = √inv(2c₁)
+            T(c₁*c₂, -q[2]*c₂, -q[3]*c₂, -q[4]*c₂) * T(normalize(vec(q))...)
+        end
     end
 end
-function Base.sqrt(q::Rotor{T}) where {T}
-    c₁ = abs(q) + q[1]
-    if iszero(c₁)
-        rotor(false, false, false, √(-q[1]))
-    else
-        rotor(c₁, q[2], q[3], q[4])
-    end
-end
+
 
 """
     angle(q)

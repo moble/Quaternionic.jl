@@ -98,8 +98,8 @@
         end
     end
 
-    @testset "Special values for sqrt $T" for T in (Float64,)# FloatTypes
-        ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
+    @testset "Special values for sqrt $T" for T in FloatTypes
+        ϵ = (T === Float16 ? 4eps(T) : 2eps(T))
 
         # sqrt(0) = 0
         q = quaternion(zero(T), zero(T), zero(T), zero(T))
@@ -137,8 +137,7 @@
             for ε ∈ (4√eps(T), √eps(T)/4, 4eps(T), eps(T), eps(T)^T(7//3))
             for 𝐯 ∈ (𝐢, 𝐣, 𝐤)
         )
-            # NOTE: Unexplained (irrelevant) overall sign difference in the first of these:
-            @test sqrt(-1 + s*ε*𝐯) ≈ -ε/2 - s*𝐯 rtol=ϵ nans=true
+            @test sqrt(-1 + s*ε*𝐯) ≈ ε/2 + s*𝐯 rtol=ϵ nans=true
             @test sqrt(-1 + s*ε*𝐯)^2 ≈ -1 + s*ε*𝐯 rtol=ϵ nans=true
         end
 
