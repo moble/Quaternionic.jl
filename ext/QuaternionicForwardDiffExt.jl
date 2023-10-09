@@ -19,6 +19,7 @@ isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 end
 
 # ...but QuatVec results in a QuatVec
+# COV_EXCL_START
 @inline function ForwardDiff.extract_derivative(::Type{T}, y::QuatVec{TD}) where {T, TD <: ForwardDiff.Dual}
     quatvec(
         ForwardDiff.partials(T, y[2], 1),
@@ -26,5 +27,6 @@ end
         ForwardDiff.partials(T, y[4], 1)
     )
 end
+# COV_EXCL_STOP
 
 end # module

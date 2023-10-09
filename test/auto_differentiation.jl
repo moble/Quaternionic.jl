@@ -30,6 +30,7 @@
         test_rrule(Quaternion{T}, w; rtol=ϵ, atol=ϵ)
         test_rrule(Quaternion, w; rtol=ϵ, atol=ϵ)
         test_rrule(quaternion, w; rtol=ϵ, atol=ϵ)
+        @test_throws DimensionMismatch rrule(quaternion, T[1,2])
     end
     @testset "Quaternion $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
@@ -114,6 +115,7 @@
         test_rrule(Rotor{T}, w; rtol=ϵ, atol=ϵ)
         test_rrule(Rotor, w; rtol=ϵ, atol=ϵ)
         test_rrule(rotor, w; rtol=ϵ, atol=ϵ)
+        @test_throws DimensionMismatch rrule(rotor, T[1,2])
     end
     @testset "Rotor $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)
@@ -231,6 +233,7 @@
         test_rrule(QuatVec{T}, w; rtol=ϵ, atol=ϵ)
         test_rrule(QuatVec, w; rtol=ϵ, atol=ϵ)
         test_rrule(quatvec, w; rtol=ϵ, atol=ϵ)
+        @test_throws DimensionMismatch rrule(quatvec, T[1,2])
     end
     @testset "QuatVec $T components" for T ∈ (BigFloat, Float64)
         w, x, y, z = T(12//10), T(34//10), T(56//10), T(78//10)

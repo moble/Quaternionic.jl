@@ -277,6 +277,7 @@ function (::ProjectTo{QT})(dx::AbstractQuaternion{<:AbstractFloat}) where {T<:Ab
     #@info "ProjectTo{QT}(dx::AbstractQuaternion{<:AbstractFloat})" QT dx typeof(dx) convert(QT, dx)
     return convert(QT, dx)
 end
+# COV_EXCL_START
 function (::ProjectTo{QT})(dx::AbstractFloat) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
     #@info "ProjectTo{QT}(dx::AbstractFloat)"
     return convert(QT, dx)
@@ -292,6 +293,7 @@ end
 function (project::ProjectTo{QT})(dx::Real) where {QT<:AbstractQuaternion}
     return project(QT(dx))
 end
+# COV_EXCL_STOP
 function (project::ProjectTo{<:Number})(dx::Tangent{QT}) where {QT<:AbstractQuaternion}
     project(QT(dx[:components]))
 end
@@ -307,11 +309,12 @@ for pattern ∈ 1:15
     x = iszero(pattern & 2) ? :x : false
     y = iszero(pattern & 4) ? :y : false
     z = iszero(pattern & 8) ? :z : false
-    @eval (QT::Type{Quaternion})(w::$T1, x::$T2, y::$T3, z::$T4) = QT($w, $x, $y, $z)
+    @eval (QT::Type{Quaternion})(w::$T1, x::$T2, y::$T3, z::$T4) = QT($w, $x, $y, $z)  # COV_EXCL_LINE
 end
 
 
 ## Copied from `Complex` entries in ChainRulesCore.jl/src/tangent_types/thunks.jl
+# COV_EXCL_START
 function (::Type{QT})(a::AbstractThunk) where {QT<:AbstractQuaternion}
     QT(unthunk(a))
 end
@@ -321,6 +324,7 @@ end
 function (::Type{QT})(a::AbstractThunk, b::AbstractThunk, c::AbstractThunk, d::AbstractThunk) where {QT<:AbstractQuaternion}
     QT(unthunk(a, b, c, d))
 end
+# COV_EXCL_STOP
 
 
 # Following ChainRules <https://juliadiff.org/ChainRulesCore.jl/stable/maths/complex.html>,

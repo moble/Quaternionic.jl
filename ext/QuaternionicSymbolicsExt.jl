@@ -176,7 +176,7 @@ function _pm_latex(x::Num)
     if s[1] ∉ "+-"
         s = "+" * s
     end
-    if occursin(r"[+^/-]", s)
+    if occursin(r"[+^/-]", s[2:end])
         if s[1] == '+'
             s = " + " * "\\left(" * s[2:end] * "\\right)"
         else

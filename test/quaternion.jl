@@ -127,6 +127,26 @@
                     @test typeof(q / a) === Q{T}
                 end
             end
+
+            @test typeof(Rotor{T}(a,b,c,d) + Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) - Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) * Rotor{T}(w,x,y,z)) === Rotor{T}
+            @test typeof(Rotor{T}(a,b,c,d) / Rotor{T}(w,x,y,z)) === Rotor{T}
+
+            @test typeof(Rotor{T}(a,b,c,d) * QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) * Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) / QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) / Rotor{T}(w,x,y,z)) === Quaternion{T}
+
+            @test typeof(Rotor{T}(a,b,c,d) + QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) + Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) - QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) - Rotor{T}(w,x,y,z)) === Quaternion{T}
+
+            @test typeof(QuatVec{T}(a,b,c,d) + QuatVec{T}(w,x,y,z)) === QuatVec{T}
+            @test typeof(QuatVec{T}(a,b,c,d) - QuatVec{T}(w,x,y,z)) === QuatVec{T}
+            @test typeof(QuatVec{T}(a,b,c,d) * QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) / QuatVec{T}(w,x,y,z)) === Quaternion{T}
         end
     end
 

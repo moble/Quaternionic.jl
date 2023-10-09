@@ -353,16 +353,11 @@ const 𝐤 = imz
 
 # Essential constructors
 Base.zero(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(false, false, false, false)
-Base.zero(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
-#Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
-#Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+Base.zero(::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
 Base.zero(::Type{Rotor{T}}) where {T} = zero(Quaternion{T})
 
 Base.one(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
-Base.one(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
-#Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
-#Base.one(T::Type{QuatVec}) = T(true, false, false, false)
-#Base.one(::Type{QuatVec{T}}) where {T} = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
 Base.one(::Type{QuatVec{T}}) where {T} = one(Quaternion{T})
 
 # Getting pieces of quaternions

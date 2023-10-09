@@ -48,6 +48,7 @@
                 @test rotor(T[1, 0, 0, 0]...) ≈ rotor(T(1)) rtol=0 atol=2eps(T)
             end
         end
+        @test rotor(T[1, 0, 0, 0]...) == rotor(T(1))
         @test QuatVec{T}(1, 2, 3, 4) == QuatVec{T}(SVector{4, T}(1, 2, 3, 4))
         @test QuatVec{T}(0, 2, 3, 4) == QuatVec{T}(2, 3, 4)
         @test QuatVec{T}(1, 0, 0, 0) == QuatVec{T}(1)
@@ -125,7 +126,7 @@
             @test one(T) ≉ k
         end
 
-        ### Need to return nonsensical basis elements because of auto-diff packages
+        ### Actually, w need to return nonsensical basis elements because of auto-diff packages
         # # Check nonsensical basis elements are not allowed
         # @test_throws DomainError one(QuatVec)
         # @test_throws DomainError one(QuatVec{T})
@@ -133,6 +134,8 @@
         # @test_throws DomainError zero(Rotor)
         # @test_throws DomainError zero(Rotor{T})
         # @test_throws DomainError zero(Rotor{T}(1))
+        @test typeof(one(QuatVec{T})) === Quaternion{T}
+        @test typeof(zero(Rotor{T})) === Quaternion{T}
 
         # Check "real" part
         @test real(u) == one(T)
@@ -283,9 +286,9 @@
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quaternion(a, b, c, d))
-        @test String(take!(io)) == "\$a + \\left(b\\right)\\,\\mathbf{i} + \\left(c\\right)\\,\\mathbf{j} + \\left(d\\right)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$a + b\\,\\mathbf{i} + c\\,\\mathbf{j} + d\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + \\left(b c\\right)\\,\\mathbf{i} + \\left(\\frac{c}{d}\\right)\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$a - b + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), QuatVec{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == " + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
@@ -298,7 +301,7 @@
         Base.show(io, MIME("text/latex"), QuatVec{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$ + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$ + \\left(b c\\right)\\,\\mathbf{i} + \\left(\\frac{c}{d}\\right)\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+        @test String(take!(io)) == "\$ + b c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 
         Base.show(io, MIME("text/plain"), rotor(1, 5, 5, 7))
         @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
