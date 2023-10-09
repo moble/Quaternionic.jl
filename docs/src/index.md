@@ -221,9 +221,13 @@ Depth = 4
 
 ## References
 
-A good source for information about floating-point implementations of basic
-quaternion functions is Neil Dantam's notes on ["Quaternion
-Computation"](http://www.neil.dantam.name/note/dantam-quaternion.pdf).  More
-advanced functions are discussed in [this
+Several of the algorithms implemented here are — as far as I know — original to
+this package, including [`exp`](@ref), [`log`](@ref), and [`sqrt`](@ref).  But
+they took inspiration from a number of sources, including Neil Dantam's notes on
+["Quaternion
+Computation"](http://www.neil.dantam.name/note/dantam-quaternion.pdf) and
+[Kahan's work on
+triangles](https://people.eecs.berkeley.edu/~wkahan/Triangle.pdf).  More
+advanced functions of time were developed in [this
 paper](https://arxiv.org/abs/1110.2965) and [this
 one](https://arxiv.org/abs/1604.08139).
