@@ -86,14 +86,12 @@ number will be a quaternion with the type of the other number.
 
 It is also possible to construct random quaternions using [`randn`](@ref) with a
 `Quaternion` type.
-```jldoctest example
-julia> using Random; Random.seed!(1234);
-
+```jldoctest example; setup = :(using Random; Random.seed!(1234))
 julia> randn(QuaternionF64)
 -0.17986445341174084 + 0.5436042462142929𝐢 - 0.20979480846942436𝐣 + 0.3594549687329696𝐤
 
 julia> randn(RotorF32)
-rotor(0.18842402 - 0.30743068𝐢 + 0.92128336𝐣 + 0.14567046𝐤)
+rotor(0.188424 - 0.30743065𝐢 + 0.92128325𝐣 + 0.14567044𝐤)
 ```
 Each component of the quaternion is chosen from a normal distribution with mean
 0 and standard deviation 1, which means that the resulting quaternion will have
