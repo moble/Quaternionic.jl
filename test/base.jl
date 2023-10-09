@@ -54,6 +54,23 @@
         @test quatvec(T[0, 2, 3, 4]) == quatvec(SVector{4, T}(0, 2, 3, 4))
         @test quatvec(T[0, 2, 3, 4]) == quatvec(T(2), T(3), T(4))
         @test quatvec(T[0, 0, 0, 0]) == quatvec(T(0))
+        for v ∈ basis
+            @test !(quatvec(v) == one(T))
+            @test !(one(T) == quatvec(v))
+            @test isequal(quatvec(v), v)
+            @test isequal(v, quatvec(v))
+            @test isequal(quatvec(v), quatvec(v))
+            for v′ ∈ basis
+                if v != v′
+                    @test !(quatvec(v) == quatvec(v′))
+                    @test !isequal(quatvec(v), quatvec(v′))
+                    @test !(quatvec(v) == v′)
+                    @test !isequal(quatvec(v), v′)
+                    @test !(v == quatvec(v′))
+                    @test !isequal(v, quatvec(v′))
+                end
+            end
+        end
 
         # Test indexing
         q = quaternion(T(1), T(2), T(3), T(4))
@@ -108,11 +125,12 @@
             @test one(T) ≉ k
         end
 
-        # Check nonsensical basis elements are not allowed
+        ### Need to return nonsensical basis elements because of auto-diff packages
+        # # Check nonsensical basis elements are not allowed
         # @test_throws DomainError one(QuatVec)
         # @test_throws DomainError one(QuatVec{T})
         # @test_throws DomainError one(QuatVec{T}(1, 2, 3))
-        @test_throws DomainError zero(Rotor)
+        # @test_throws DomainError zero(Rotor)
         # @test_throws DomainError zero(Rotor{T})
         # @test_throws DomainError zero(Rotor{T}(1))
 
@@ -254,12 +272,18 @@
         @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
         Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
+        Base.show(io, MIME("text/plain"), quaternion(a, b, c, d))
+        @test String(take!(io)) == "a + b𝐢 + c𝐣 + d𝐤"
         Base.show(io, MIME("text/plain"), quaternion(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
         Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
+        Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4e-9))
+        @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + \\left(4.0e-9\\right)\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
         @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
+        Base.show(io, MIME("text/latex"), quaternion(a, b, c, d))
+        @test String(take!(io)) == "\$a + \\left(b\\right)\\,\\mathbf{i} + \\left(c\\right)\\,\\mathbf{j} + \\left(d\\right)\\,\\mathbf{k}\$"
         Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
         @test String(take!(io)) == "\$a - b + \\left(b c\\right)\\,\\mathbf{i} + \\left(\\frac{c}{d}\\right)\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
 

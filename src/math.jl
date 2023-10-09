@@ -46,6 +46,7 @@ julia> abs2vec(quaternion(1,2,3,6))
 ```
 """
 abs2vec(q::AbstractQuaternion) = sum(abs2, vec(q))
+abs2vec(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, vec(q))
 
 """
     absvec(q)

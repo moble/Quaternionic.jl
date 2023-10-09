@@ -5,6 +5,30 @@
         QuaternionF64(0.0, 1.0, 0.0, 0.0)
     ]
 
+    @testset "wrappers(::T)" begin
+        for T in FloatTypes
+            @test typeof(randn(Rotor{T}) + randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) - randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) * randn(Rotor{T})) === Rotor{T}
+            @test typeof(randn(Rotor{T}) / randn(Rotor{T})) === Rotor{T}
+
+            @test typeof(randn(Rotor{T}) * randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) * randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) / randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) / randn(Rotor{T})) === Quaternion{T}
+
+            @test typeof(randn(Rotor{T}) + randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) + randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) - randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) - randn(Rotor{T})) === Quaternion{T}
+
+            @test typeof(randn(QuatVec{T}) + randn(QuatVec{T})) === QuatVec{T}
+            @test typeof(randn(QuatVec{T}) - randn(QuatVec{T})) === QuatVec{T}
+            @test typeof(randn(QuatVec{T}) * randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) / randn(QuatVec{T})) === Quaternion{T}
+        end
+    end
+
     @testset "$Q{T}" for (Q,q) in ((Quaternion, quaternion), (Rotor,rotor), (QuatVec,quatvec))
         for T in Types
             @test Q(T) === Q{T}
@@ -70,6 +94,12 @@
                 @test typeof(rand(T) / Q{T}(1, 2, 3, 4)) === Q{T}
             end
             @test float(Q{T}(1, 2, 3, 4)) == Q{T}(1, 2, 3, 4)
+
+            @test typeof(Rotor(Q{T}(1, 2, 3, 4))) === Rotor{T}
+            @test typeof(QuatVec(Q{T}(1, 2, 3, 4))) === QuatVec{T}
+
+            @test_throws DimensionMismatch q(T[1,2])
+            @test_throws DimensionMismatch Q(T[1,2])
         end
 
         for T in IntTypes

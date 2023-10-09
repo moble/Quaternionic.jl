@@ -354,16 +354,16 @@ const 𝐤 = imz
 # Essential constructors
 Base.zero(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(false, false, false, false)
 Base.zero(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
-Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+#Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
 #Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not a possible rotor."))
-Base.zero(::Type{Rotor{T}}) where {T} = Rotor{T}(false, false, false, false)
+Base.zero(::Type{Rotor{T}}) where {T} = zero(Quaternion{T})
 
 Base.one(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
 Base.one(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
 #Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
-Base.one(T::Type{QuatVec}) = T(true, false, false, false)
+#Base.one(T::Type{QuatVec}) = T(true, false, false, false)
 #Base.one(::Type{QuatVec{T}}) where {T} = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
-Base.one(::Type{QuatVec{T}}) where {T} = QuatVec{T}(true, false, false, false)
+Base.one(::Type{QuatVec{T}}) where {T} = one(Quaternion{T})
 
 # Getting pieces of quaternions
 @inline function Base.getindex(q::AbstractQuaternion, i::Integer)
@@ -401,7 +401,7 @@ Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
 wrapper(::T) where {T} = wrapper(T)
 wrapper(T::UnionAll) = T
 wrapper(T::Type{Q}) where {S<:Number,Q<:AbstractQuaternion{S}} = wrapper(T.name.wrapper)
-wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
+wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)  # COV_EXCL_LINE
 
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     for QT2 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
