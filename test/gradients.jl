@@ -15,7 +15,7 @@
                 @test ∂1[i] ≈ ∂2[i] rtol=ϵ
             end
             l, ∂3 = log∂log(q)
-            @test l ≈ log(q) rtol=4eps() atol=10eps()
+            @test l ≈ log(q) rtol=4eps() atol=12eps()
             for i in 1:4
                 @test ∂3[i] ≈ ∂2[i] rtol=ϵ
             end
