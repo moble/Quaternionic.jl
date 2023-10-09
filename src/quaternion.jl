@@ -1,7 +1,7 @@
 # We'll need this awkward way of getting the `components` field when we set `getproperty`
 components(q::AbstractQuaternion) = getfield(q, :components)
 
-normalize(v::AbstractVector) = v ./ √sum(abs2, v)
+normalize(v::AbstractVector) = v ./ hypot(v...)
 
 
 """

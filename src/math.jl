@@ -13,6 +13,8 @@ julia> abs2(quaternion(1,2,4,10))
 """
 Base.abs2(q::AbstractQuaternion) = sum(abs2, components(q))
 Base.abs2(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, components(q))
+Base.abs2(q::QuatVec) = sum(abs2, vec(q))
+Base.abs2(q::QuatVec{T}) where {T<:Real} = sum(x->x^2, vec(q))
 Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 """
@@ -20,9 +22,7 @@ Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 Square-root of the sum the squares of the components of the quaternion
 
-Note that Julia's built-in `hypot` function uses tricks to avoid overflow and underflow that
-are not used here, for simplicity and efficiency's sake.  This function could also be
-implemented as `hypot(components(q)...)`.
+This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
 
 # Examples
 ```jldoctest
@@ -30,7 +30,8 @@ julia> abs(quaternion(1,2,4,10))
 11.0
 ```
 """
-Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
+Base.abs(q::AbstractQuaternion) = hypot(components(q)...)
+Base.abs(q::QuatVec) = hypot(vec(q)...)
 Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
@@ -51,36 +52,15 @@ abs2vec(q::AbstractQuaternion) = sum(abs2, vec(q))
 
 Square-root of the sum of the squares of the "vector" components of the quaternion.
 
-Note that Julia's built-in `hypot` function uses tricks to avoid overflow and underflow that
-are not used here, for simplicity and efficiency's sake.  This function could also be
-implemented as `hypot(vec(q)...)`.
+This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
 
 # Examples
 ```jldoctest
 julia> absvec(quaternion(1,2,3,6))
 7.0
 ```
-
-# Note
-In the interest of efficiency, this function uses the naive definition.  But [LAPACK
-defines](https://netlib.org/lapack/explore-html/df/dd1/group___o_t_h_e_rauxiliary_gad929930f6e7780e8a1d73b2515ddd42b.html)
-a function `dlapy3` that claims to avoid overflow and underflow.  It might be more relevant
-for small-range float types like `Float16`.  Here is my translation of it to Julia:
-```julia
-function dlapy3(x, y, z)
-    xabs = abs(x)
-    yabs = abs(y)
-    zabs = abs(z)
-    w = max(xabs, yabs, zabs)
-    if w == 0 || w > prevfloat(floatmax(typeof(w))/3, 1)
-        return xabs + yabs + zabs
-    else
-        return w * sqrt((xabs/w)^2 + (yabs/w)^2 + (zabs/w)^2)
-    end
-end
-```
 """
-absvec(q::AbstractQuaternion) = sqrt(abs2vec(q))
+absvec(q::AbstractQuaternion) = hypot(vec(q)...)
 
 # norm(q::Quaternion) = Base.abs2(q)  ## This might just be confusing
 
