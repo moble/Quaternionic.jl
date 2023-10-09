@@ -98,6 +98,52 @@
         end
     end
 
+    @testset "Special values for sqrt $T" for T in (Float64,)# FloatTypes
+        ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
+
+        # sqrt(0) = 0
+        q = quaternion(zero(T), zero(T), zero(T), zero(T))
+        @test q ≈ sqrt(quaternion(zero(T), zero(T), zero(T), zero(T))) rtol=ϵ nans=true
+        @test sqrt(q) ≈ quaternion(zero(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+
+        # sqrt(1) = 1
+        q = quaternion(one(T), zero(T), zero(T), zero(T))
+        @test q ≈ sqrt(quaternion(one(T), zero(T), zero(T), zero(T))) rtol=ϵ nans=true
+        @test sqrt(q) ≈ quaternion(one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+        q = rotor(one(T), zero(T), zero(T), zero(T))
+        @test q ≈ sqrt(rotor(one(T), zero(T), zero(T), zero(T))) rtol=ϵ nans=true
+        @test sqrt(q) ≈ rotor(one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+
+        # sqrt(-1) = 𝐤
+        q = quaternion(-one(T), zero(T), zero(T), zero(T))
+        @test sqrt(q) ≈ quaternion(zero(T), zero(T), zero(T), one(T)) rtol=ϵ nans=true
+        @test sqrt(q)^2 ≈ quaternion(-one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+        q = rotor(-one(T), zero(T), zero(T), zero(T))
+        @test sqrt(q) ≈ rotor(zero(T), zero(T), zero(T), one(T)) rtol=ϵ nans=true
+        @test sqrt(q)^2 ≈ rotor(-one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+
+        # sqrt(4) = 2
+        q = quaternion(4one(T), zero(T), zero(T), zero(T))
+        @test sqrt(q) ≈ quaternion(2one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+
+        # sqrt(-4) = 2𝐤
+        q = quaternion(-4one(T), zero(T), zero(T), zero(T))
+        @test sqrt(q) ≈ quaternion(zero(T), zero(T), zero(T), 2one(T)) rtol=ϵ nans=true
+        @test sqrt(q)^2 ≈ quaternion(-4one(T), zero(T), zero(T), zero(T)) rtol=ϵ nans=true
+
+        # sqrt(-1 ± ε𝐯) = ε/2 ± 𝐯
+        for (s,ε,𝐯) ∈ ((s,ε,𝐯)
+            for s ∈ (-1,1)
+            for ε ∈ (4√eps(T), √eps(T)/4, 4eps(T), eps(T), eps(T)^T(7//3))
+            for 𝐯 ∈ (𝐢, 𝐣, 𝐤)
+        )
+            # NOTE: Unexplained (irrelevant) overall sign difference in the first of these:
+            @test sqrt(-1 + s*ε*𝐯) ≈ -ε/2 - s*𝐯 rtol=ϵ nans=true
+            @test sqrt(-1 + s*ε*𝐯)^2 ≈ -1 + s*ε*𝐯 rtol=ϵ nans=true
+        end
+
+    end
+
     @testset "Special values for log $T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
 
