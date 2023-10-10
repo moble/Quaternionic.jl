@@ -13,8 +13,16 @@ end
 Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1[1]==q2[1]) && (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
 Base.:(==)(q::AbstractQuaternion{<:Number}, x::Number) = isreal(q) && real(q) == x
 Base.:(==)(x::Number, q::AbstractQuaternion) = isreal(q) && real(q) == x
-
 Base.isequal(q1::AbstractQuaternion, q2::AbstractQuaternion) = isequal(q1[1],q2[1]) && isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+
+Base.:(==)(q1::QuatVec{<:Number}, q2::AbstractQuaternion{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q1::AbstractQuaternion{<:Number}, q2::QuatVec{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q1::QuatVec{<:Number}, q2::QuatVec{<:Number}) = (q1[2]==q2[2]) && (q1[3]==q2[3]) && (q1[4]==q2[4])
+Base.:(==)(q::QuatVec{<:Number}, x::Number) = false
+Base.:(==)(x::Number, q::QuatVec) = false
+Base.isequal(q1::AbstractQuaternion, q2::QuatVec) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+Base.isequal(q1::QuatVec, q2::AbstractQuaternion) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
+Base.isequal(q1::QuatVec, q2::QuatVec) = isequal(q1[2],q2[2]) && isequal(q1[3],q2[3]) && isequal(q1[4],q2[4])
 
 Base.isreal(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isinteger(q::AbstractQuaternion{T}) where {T<:Number} = isreal(q) && isinteger(real(q))
@@ -23,6 +31,8 @@ Base.isnan(q::AbstractQuaternion{T}) where {T<:Number} = isnan(q[1]) || isnan(q[
 Base.isinf(q::AbstractQuaternion{T}) where {T<:Number} = isinf(q[1]) || isinf(q[2]) || isinf(q[3]) || isinf(q[4])
 Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
+
+Base.round(q::QT, r::RoundingMode=RoundNearest; kwargs...) where {QT<:AbstractQuaternion} = QT(round.(components(q), r; kwargs...))
 
 Base.in(q::AbstractQuaternion, r::AbstractRange{<:Number}) = isreal(q) && real(q) in r
 
@@ -49,52 +59,56 @@ function Base.hash(q::AbstractQuaternion, h::UInt)
     hash(q[1], h ⊻ hash(q[2], h_imagx) ⊻ hash_0_imagx ⊻ hash(q[3], h_imagy) ⊻ hash_0_imagy ⊻ hash(q[4], h_imagz) ⊻ hash_0_imagz)
 end
 
-function Base.show(io::IO, q::AbstractQuaternion)
-    function pm(x)
-        s = "$x"
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+^/-]", s[2:end])
-            s = " " * s[1] * " " * "(" * s[2:end] * ")"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
+function _pm_ascii(x)
+    # Utility function to print a component of a quaternion
+    s = "$x"
+    if s[1] ∉ "+-"
+        s = "+" * s
     end
+    if occursin(r"[+^/-]", s[2:end])
+        s = " " * s[1] * " " * "(" * s[2:end] * ")"
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+function Base.show(io::IO, q::AbstractQuaternion)
     print(
         io,
         q isa QuatVec ? "" : q[1],
-        pm(q[2]), "𝐢",
-        pm(q[3]), "𝐣",
-        pm(q[4]), "𝐤"
+        _pm_ascii(q[2]), "𝐢",
+        _pm_ascii(q[3]), "𝐣",
+        _pm_ascii(q[4]), "𝐤"
     )
 end
 
 function Base.show(io::IO, q::Rotor)
-    print(io, "Rotor(")
+    print(io, "rotor(")
     invoke(Base.show, Tuple{IO, AbstractQuaternion}, io, q)
     print(io, ")")
 end
 
-function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
-    function pm(x)
-        s = latexify(x, env=:raw, bracket=true)
-        if s[1] ∉ "+-"
-            s = "+" * s
-        end
-        if occursin(r"[+^/-]", s[2:end])
-            s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
-        else
-            s = " " * s[1] * " " * s[2:end]
-        end
-        s
+function _pm_latex(x)
+    # Utility function to print a component of a quaternion in LaTeX
+    s = latexify(x, env=:raw, bracket=true)
+    if s[1] ∉ "+-"
+        s = "+" * s
     end
+    if occursin(r"[+^/-]", s[2:end])
+        s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
     s = latexstring(
         q isa QuatVec ? "" : latexify(q[1], env=:raw, bracket=true),
-        pm(q[2]), "\\,\\mathbf{i}",
-        pm(q[3]), "\\,\\mathbf{j}",
-        pm(q[4]), "\\,\\mathbf{k}"
+        _pm_latex(q[2]), "\\,\\mathbf{i}",
+        _pm_latex(q[3]), "\\,\\mathbf{j}",
+        _pm_latex(q[4]), "\\,\\mathbf{k}"
     )
     print(io, s)
 end

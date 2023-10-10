@@ -15,6 +15,6 @@ end
 Pkg.activate()  # Activate Julia's base (home) directory
 using Coverage
 cd((@__DIR__) * "/..")
-coverage = Coverage.process_folder()
+coverage = vcat(Coverage.process_folder("src"), Coverage.process_folder("ext"))
 Coverage.writefile("lcov.info", coverage)
 Coverage.clean_folder(".")

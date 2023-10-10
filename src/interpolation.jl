@@ -179,7 +179,7 @@ function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:Ab
     elseif i==length(R)-1
         B = R[i+1]
     else # i==length(R)
-        B = Rotor{eltype(R)}((2*(R[i] ⋅ R[i-1]) * R[i] - R[i-1]).components...)  # COV_EXCL_LINE
+        B = normalize(Rotor{eltype(R)}((2*(R[i] ⋅ R[i-1]) * R[i] - R[i-1]).components...))  # COV_EXCL_LINE
     end
     A, B
 end

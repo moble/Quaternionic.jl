@@ -7,12 +7,14 @@ Sum the squares of the components of the quaternion
 
 # Examples
 ```jldoctest
-julia> abs2(Quaternion(1,2,4,10))
+julia> abs2(quaternion(1,2,4,10))
 121
 ```
 """
 Base.abs2(q::AbstractQuaternion) = sum(abs2, components(q))
 Base.abs2(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, components(q))
+Base.abs2(q::QuatVec) = sum(abs2, vec(q))
+Base.abs2(q::QuatVec{T}) where {T<:Real} = sum(x->x^2, vec(q))
 Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 """
@@ -20,13 +22,16 @@ Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 
 Square-root of the sum the squares of the components of the quaternion
 
+This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
+
 # Examples
 ```jldoctest
-julia> abs(Quaternion(1,2,4,10))
+julia> abs(quaternion(1,2,4,10))
 11.0
 ```
 """
-Base.abs(q::AbstractQuaternion) = sqrt(abs2(q))
+Base.abs(q::AbstractQuaternion) = hypot(components(q)...)
+Base.abs(q::QuatVec) = hypot(vec(q)...)
 Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
@@ -36,24 +41,27 @@ Sum the squares of the "vector" components of the quaternion
 
 # Examples
 ```jldoctest
-julia> abs2vec(Quaternion(1,2,3,6))
+julia> abs2vec(quaternion(1,2,3,6))
 49
 ```
 """
 abs2vec(q::AbstractQuaternion) = sum(abs2, vec(q))
+abs2vec(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, vec(q))
 
 """
     absvec(q)
 
-Square-root of the sum of the squares of the "vector" components of the quaternion
+Square-root of the sum of the squares of the "vector" components of the quaternion.
+
+This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
 
 # Examples
 ```jldoctest
-julia> absvec(Quaternion(1,2,3,6))
+julia> absvec(quaternion(1,2,3,6))
 7.0
 ```
 """
-absvec(q::AbstractQuaternion) = sqrt(abs2vec(q))
+absvec(q::AbstractQuaternion) = hypot(vec(q)...)
 
 # norm(q::Quaternion) = Base.abs2(q)  ## This might just be confusing
 
@@ -61,70 +69,116 @@ Base.inv(q::AbstractQuaternion) = conj(q) / abs2(q)
 Base.inv(q::Rotor) = conj(q)  # Specialize to ensure output is also a Rotor
 
 
-"""
+@doc raw"""
     log(q)
 
 Logarithm of a quaternion.
 
-As with the usual complex logarithm, the quaternion logarithm has multiple
-branches, though the quaternion branches are three-dimensional: for any unit
-"vector" quaternion q̂, you could add any integer multiple of 2πq̂ to the result
-of this function and still get the same result after exponentiating (within
-numerical accuracy).  This function is the principal logarithm.
+As with the usual complex logarithm, the quaternion logarithm has multiple branches, though
+the quaternion branches are three-dimensional: for any unit "vector" quaternion q̂, you
+could add any integer multiple of 2πq̂ to the result of this function and still get the same
+result after exponentiating (within numerical accuracy).  This function is the principal
+logarithm.
 
-This function has discontinuous (and fairly arbitrary) behavior along the
-negative real axis: if the "vector" components of the quaternion are precisely
-zero *and* the scalar component is negative, the returned quaternion will have
-scalar component `log(-q[1])`, but will also have a `z` component of π.  The
-choice of the `z` direction is arbitrary; the "vector" component of the
-returned quaternion could be π times any unit vector.
+This function has discontinuous (and fairly arbitrary) behavior along the negative real
+axis: if the "vector" components of the quaternion are precisely zero *and* the scalar
+component is negative, the returned quaternion will have scalar component `log(-q[1])`, but
+will also have a `z` component of π.  The choice of the `z` direction is arbitrary; the
+"vector" component of the returned quaternion could be π times any unit vector.
 
-Note that `q` may be either a `Quaternion` or a `Rotor`.  If it is a
-`Quaternion`, this function does not assume that it has unit norm, so the
-scalar component of the returned value will generally be nonzero unless the
-input has *precisely* unit magnitude (which is impossible with Float64 about
-52.07% of the time due to finite machine precision), and the return type is a
-`Quaternion`.  If the input is a `Rotor`, a `QuatVec` is returned, which has
-scalar part exactly 0.
+Note that `q` may be either a `Quaternion` or a `Rotor`.  If it is a `Quaternion`, this
+function does not assume that it has unit norm, so the scalar component of the returned
+value will generally be nonzero unless the input has *precisely* unit magnitude (which is
+impossible with Float64 about 52.07% of the time due to finite machine precision), and the
+return type is a `Quaternion`.  If the input is a `Rotor`, a `QuatVec` is returned, which
+has scalar part exactly 0.
 
 # Examples
 ```jldoctest
 julia> log(exp(1.2imy))
  + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
 
-julia> log(Quaternion(exp(7)))
+julia> log(quaternion(exp(7)))
 7.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
 
-julia> log(Quaternion(-exp(7)))
+julia> log(quaternion(-exp(7)))
 7.0 + 0.0𝐢 + 0.0𝐣 + 3.141592653589793𝐤
 ```
 
+# Notes
+
+This function uses an accurate algorithm for finding the logarithm.  For simplicity, we will
+assume that the input quaternion is a unit quaternion, so that the logarithm will be a pure
+vector ``\vec{v}``, which we write as ``v\hat{v}``, where ``v`` is just the scalar norm.
+Note that, because of the periodicity of the `exp` function, we can assume that ``v \in [0,
+\pi]`` and, in particular, ``\sin(v) \geq 0``.  Now, expand the exponential as
+```math
+\exp\left(\vec{v}\right) = \exp\left(v \hat{v}\right) = \cos(v) + \hat{v} \sin(v).
+```
+The input to this function is the right-hand side, but we do not yet know its decomposition
+into ``v`` and ``\hat{v}``.  But we can find ``\cos(v)`` as the scalar part of the input,
+and ``\sin(v)`` as the `absvec` (since we know that ``\sin(v) \geq 0``).  Then, we can
+compute ``v = \mathrm{atan}(\sin(v), \cos(v))``.  And finally, we simply multiply the vector
+part of the input by ``v / \sin(v)`` to obtain the logarithm.  This factor is given
+accurately by `invsinc(v)` whenever ``|v| \leq \pi/2``.
+
+When that condition is not satisfied (which also implies ``\cos(v)<0``, we can rewrite the
+problem as
+```math
+\exp\left(v \hat{v}\right) = \cos(v) + \hat{v} \sin(v) = -\cos(v-\pi) - \hat{v} \sin(v-\pi)
+= -\cos(v') - \hat{v} \sin(v').
+```
+Here, we want to multiply the vector component by ``-v / \sin(v') = -(v'+\pi) / sin(v')``.
+Note that we can easily compute ``v' = \mathrm{atan}(\sin(v), -\cos(v))``.  This algorithm
+is surprisingly accurate, even when ``v`` is extremely close to ``\pi``, which implies that
+the vector part of the input is extremely small.
+
+The only special case remaining to handle is when ``\cos(v) < 0`` but ``\sin(v)`` is
+*identically* zero.  In this case, we could throw an error, but this is not usually helpful.
+Instead, we arbitrarily choose to return ``\pi z``.
+
+Finally, we can return to our assumption that the input has unit magnitude.  In the
+preceding, this didn't matter because we only computed ``v`` as the *ratio* of the scalar
+part and the magnitude of the vector part, so the overall magnitude cancelled out.  So that
+part of the computation remains unchanged.  Instead, we note that for scalar ``s``, we have
+```math
+\exp\left(s + \vec{v}\right) = \exp\left(s\right) \exp\left(\vec{v}\right),
+```
+so the logarithm is just the sum of the logarithms of the scalar and vector parts.
+
 """
 function Base.log(q::Quaternion{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return Quaternion(log(-q[1]), 0, 0, π)
-        end
-        return Quaternion(log(q[1]), 0, 0, 0)
+    cosv = q[1]
+    sinv = absvec(q)
+    a² = abs2(q)
+    if iszero(a²)
+        return Quaternion{T}(-Inf, false, false, false)
+    elseif cosv ≥ 0
+        v = atan(sinv, cosv)
+        f = invsinc(v) / √a²
+        return quaternion(log(a²)/2, f * vec(q)...)
+    elseif iszero(sinv)
+        return Quaternion{T}(log(a²)/2, false, false, π)
+    else
+        v′ = atan(sinv, -cosv)
+        f = -invsinc(v′) * (v′-π) / v′ / √a²
+        return quaternion(log(a²)/2, f * vec(q)...)
     end
-    absolutevec = sqrt(absolute2vec)
-    f = atan(absolutevec, q[1]) / absolutevec  # acos((w^2-absolutevec^2) / (w^2+absolutevec^2)) / 2absolutevec
-    Quaternion(log(abs2(q))/2, f*q[2], f*q[3], f*q[4])
 end
 function Base.log(q::Rotor{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return QuatVec{float(T)}(0, 0, 0, π)
-        end
-        return QuatVec{float(T)}(0, 0, 0, 0)
+    cosv = q[1]
+    sinv = absvec(q)
+    if cosv ≥ 0
+        v = atan(sinv, cosv)
+        f = invsinc(v)
+        return quatvec(f * vec(q))
+    elseif iszero(sinv)
+        return QuatVec{T}(false, false, false, π)
+    else
+        v′ = atan(sinv, -cosv)
+        f = -invsinc(v′) * (v′-π) / v′
+        return quatvec(f * vec(q))
     end
-    absolutevec = sqrt(absolute2vec)
-    f = atan(absolutevec, q[1]) / absolutevec  # acos(q[1]) / absolutevec
-    QuatVec(0, f*q[2], f*q[3], f*q[4])
 end
 
 """
@@ -135,31 +189,19 @@ Exponential of a quaternion
 # Examples
 ```jldoctest
 julia> exp(imx*π/4)  # Rotation through π/2 (note the extra 1/2) about the x axis
-Rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
+rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        return Quaternion(exp(q[1]), 0, 0, 0)
-    end
-    absolutevec = sqrt(absolute2vec)
+    a = absvec(q)
     e = exp(q[1])
-    s, c = sincos(absolutevec)
-    esinc = e * s / absolutevec
-    Quaternion(e*c, esinc*q[2], esinc*q[3], esinc*q[4])
+    esinc = e * _sincu(a)
+    Quaternion{typeof(esinc)}(e*cos(a), esinc*q[2], esinc*q[3], esinc*q[4])
 end
-function Base.exp(q::QuatVec{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        return Rotor{float(T)}(1, 0, 0, 0)
-    end
-    absolutevec = sqrt(absolute2vec)
-    s, c = sincos(absolutevec)
-    sinc = s / absolutevec
-    Rotor(c, sinc*q[2], sinc*q[3], sinc*q[4])
+function Base.exp(v⃗::QuatVec{T}) where {T}
+    a = absvec(v⃗)
+    sinc = _sincu(a)
+    Rotor{typeof(sinc)}(cos(a), sinc*v⃗[2], sinc*v⃗[3], sinc*v⃗[4])
 end
 
 @doc raw"""
@@ -173,64 +215,69 @@ The general formula whenever the denominator is nonzero is
 \sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
 ```
 
-This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the
-expression above by itself.
+This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the expression above
+by itself.
 
-When the denominator is zero, this function has discontinuous (and fairly
-arbitrary) behavior, just as with the quaternion [`log`](@ref) function.  In
-this case, either all components are zero — in which case the result is simply
-the zero quaternion — or the "vector" components of the quaternion are
-precisely zero and the scalar component is negative.  If the latter is true,
-the denominator above will be a pure-imaginary number.  Because the quaternions
-come with infinitely many elements that square to -1, it is not clear *which*
-imaginary should be used, so we arbitrarily choose to set the result
-proportional to the `z` quaternion.  The choice of the `z` direction is
-arbitrary; the "vector" component of the returned quaternion could be in any
-direction.
+Note that whenever the vector part is zero and the scalar part is negative, the solution is
+not unique (and the denominator above is zero), because it necessarily involves the
+square-root of -1, of which there are infinitely many in the space of quaternions.  In this
+case, we arbitrarily choose the vector part of the result to be in the `z` direction.  A
+reasonable alternative would be to throw an error; instead it is left to the user to check
+for that condition.
 
 # Examples
 ```jldoctest
-julia> q = Quaternion(1.2, 3.4, 5.6, 7.8);
+julia> q = quaternion(1.2, 3.4, 5.6, 7.8);
 
 julia> sqrtq = √q;
 
 julia> sqrtq^2 ≈ q
 true
 
-julia> √Quaternion(4)
+julia> √quaternion(4.0)
 2.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤
 
-julia> √Quaternion(-4)
+julia> √quaternion(-4.0)
 0.0 + 0.0𝐢 + 0.0𝐣 + 2.0𝐤
 ```
+
+# Notes
+
+This function uses an algorithm for finding the square root that is very accurate (typically
+achieving the correct result to within machine precision) for *most* values.  However, naive
+application of the formula above can lead to catastrophic cancellation when the scalar part
+is negative and significantly larger in magnitude to the vector part.  Therefore, when `q[1]
+ < 0`, we transform the problem into the case where `q[1] > 0` as
+```math
+\sqrt{q} = \bar{\sqrt{-\bar{q}}}\, \sqrt{-1},
+```
+where the bar denotes quaternionic conjugation, and we interpret ``\sqrt{-1}`` to be a unit
+imaginary that commutes with ``q``.  The obvious candidate is the normalized vector part of
+``q`` if the vector part is nonzero; otherwise, as noted above, we arbitrarily choose it to
+be the unit vector in `z` direction.  The calculation of ``\sqrt{-\bar{q}}`` can use the
+naive approach, and the result is still accurate to within machine precision.
+
 """
-function Base.sqrt(q::Quaternion{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return Quaternion(0, 0, 0, sqrt(-q[1]))
+function Base.sqrt(q::T) where {T<:AbstractQuaternion}
+    if q[1] ≥ 0
+        if all(iszero, vec(q))
+            T(√(q[1]), false, false, false)
+        else
+            c₁ = abs(q) + q[1]
+            c₂ = √inv(2c₁)
+            T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
         end
-        return Quaternion(sqrt(q[1]), 0, 0, 0)
-    end
-    absolute2 = absolute2vec + q[1]^2
-    c1 = sqrt(absolute2) + q[1]
-    c2 = sqrt(inv(2*c1))
-    Quaternion(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
-end
-function Base.sqrt(q::Rotor{T}) where {T}
-    q = float(q)
-    absolute2vec = abs2vec(q)
-    if iszero(absolute2vec)
-        if q[1] < 0
-            return Rotor{float(T)}(0, 0, 0, 1)
+    else # q[1] < 0
+        if all(iszero, vec(q))
+            T(false, false, false, √(-q[1]))
+        else
+            c₁ = abs(q) - q[1]
+            c₂ = √inv(2c₁)
+            T(c₁*c₂, -q[2]*c₂, -q[3]*c₂, -q[4]*c₂) * T(normalize(vec(q))...)
         end
-        return Rotor{float(T)}(1, 0, 0, 0)
     end
-    c1 = 1 + q[1]
-    c2 = sqrt(inv(2*c1))
-    Rotor(c1*c2, q[2]*c2, q[3]*c2, q[4]*c2)
 end
+
 
 """
     angle(q)

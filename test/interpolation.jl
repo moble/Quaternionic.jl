@@ -55,10 +55,10 @@
         ϵ = 20eps()
         comp = [0, 1, -1]
         Rs = [
-            [Rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
+            [rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
             randn(RotorF64, 20)...
         ]
-        directions = [Rotor(1), Rotor(imx), Rotor(imy), Rotor(imz), Rotor(-imx), Rotor(-imy), Rotor(-imz)]
+        directions = [rotor(1), rotor(imx), rotor(imy), rotor(imz), rotor(-imx), rotor(-imy), rotor(-imz)]
 
         # Check extremes
         for Q1 in directions
@@ -80,8 +80,8 @@
         for Q2 in directions[2:end]
             for t in LinRange(0.0, 1.0, 100)
                 @test distance(
-                    slerp(Rotor(1), Q2, t),
-                    Rotor(cos(π * t / 2) + sin(π * t / 2) * Q2)
+                    slerp(rotor(1), Q2, t),
+                    rotor(cos(π * t / 2) + sin(π * t / 2) * Q2)
                 ) < ϵ
             end
         end
@@ -91,7 +91,7 @@
             for Q2 in directions[1:end]
                 for t in LinRange(0.0, 1.0, 100)
                     @test distance(
-                        R * slerp(Rotor(1), Q2, t),
+                        R * slerp(rotor(1), Q2, t),
                         slerp(R, R*Q2, t)
                     ) < ϵ
                 end
@@ -111,10 +111,10 @@
         ϵ = 20eps()
         comp = [0, 1, -1]
         Rs = [
-            [Rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
+            [rotor(w, x, y, z) for w in comp for x in comp for y in comp for z in comp][2:end]...;
             randn(RotorF64, 20)...
         ]
-        directions = [Rotor(1), Rotor(imx), Rotor(imy), Rotor(imz), Rotor(-imx), Rotor(-imy), Rotor(-imz)]
+        directions = [rotor(1), rotor(imx), rotor(imy), rotor(imz), rotor(-imx), rotor(-imy), rotor(-imz)]
 
         ω = 0.1
         tin = collect(LinRange(-10, 10, 201))
@@ -124,11 +124,11 @@
         Ravg = [exp(ω*ti*imz/2) for ti in tout]
         @test maximum(distance.(Rout, Ravg)) < 2eps()
         random_signs = [1; rand([-1, 1], length(Rin)-1)...]  # First one must be 1
-        Rin_flipped = [Rotor(r*R) for (r, R) in zip(random_signs, Rin)]
-        @test Rout == squad(Rin_flipped, tin, tout, validate=true, unflip=true)
+        Rin_flipped = [rotor(r*R) for (r, R) in zip(random_signs, Rin)]
+        @test Rout ≈ squad(Rin_flipped, tin, tout, validate=true, unflip=true) atol=eps() rtol=eps()
         Rout = squad(Rin, tin, tin, validate=true)
         @test maximum(distance.(Rout, Rin)) < 2eps()
-        @test distance(Rotor(1), squad(Rin, tin, 0, validate=true)) == 0
+        @test distance(rotor(1), squad(Rin, tin, 0, validate=true)) == 0
         @test distance(Rin[1], squad(Rin, tin, tin[1], validate=true)) == 0
         @test distance(Rin[end], squad(Rin, tin, tin[end], validate=true)) == 0
         @test squad(Rin, tin, Vector{eltype(tin)}()) == Vector{eltype(Rin)}()
@@ -146,12 +146,12 @@
 
         # squad should be the same as slerp for linear interpolation
         for R in directions
-            R_in = [slerp(Rotor(1), R, t) for t in t_in]
+            R_in = [slerp(rotor(1), R, t) for t in t_in]
             R_out_squad = squad(R_in, t_in, t_out)
-            R_out_slerp = [slerp(Rotor(1), R, t) for t in t_out]
+            R_out_slerp = [slerp(rotor(1), R, t) for t in t_out]
             @test R_out_squad ≈ R_out_slerp atol=ϵ
             R_out_squad = squad(R_in, t_in, t_out2)
-            R_out_slerp = [slerp(Rotor(1), R, t) for t in t_out2]
+            R_out_slerp = [slerp(rotor(1), R, t) for t in t_out2]
             @test R_out_squad ≈ R_out_slerp atol=ϵ
         end
     end
@@ -161,7 +161,7 @@
         tin = collect(range(0, 1, length=1000))
         for tout in [tin, tin[498]]
             Rsquad, ω⃗squad, Ṙsquad = squad(
-                Rotor.(R.(tin)), tin, tout,
+                rotor.(R.(tin)), tin, tout,
                 compute_angular_velocity=true, compute_derivative=true
             )
             ω⃗eval = ω⃗.(tout)
@@ -169,13 +169,13 @@
             @test ω⃗squad ≈ ω⃗eval rtol=1e-6
             @test Ṙsquad ≈ Ṙeval rtol=1e-6
             Rsquad2, ω⃗squad2 = squad(
-                Rotor.(R.(tin)), tin, tout,
+                rotor.(R.(tin)), tin, tout,
                 compute_angular_velocity=true
             )
             @test Rsquad == Rsquad2
             @test ω⃗squad == ω⃗squad2
             Rsquad3, Ṙsquad3 = squad(
-                Rotor.(R.(tin)), tin, tout,
+                rotor.(R.(tin)), tin, tout,
                 compute_derivative=true
             )
             @test Rsquad == Rsquad3

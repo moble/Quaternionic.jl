@@ -10,9 +10,9 @@
         # all calls in this block will be precompiled, regardless of whether they belong to
         # your package or not (on Julia 1.8 and higher)
         r(v)
-        for a ∈ [s, v, r, q]
+        for a ∈ (s, v, r, q)
             conj(a)
-            for b ∈ [s, v, r, q]
+            for b ∈ (s, v, r, q)
                 a * b
                 a / b
                 a + b

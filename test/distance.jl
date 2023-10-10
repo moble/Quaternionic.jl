@@ -1,7 +1,7 @@
 @testset verbose=true "Distance" begin
     @testset "Int" begin
         scalars = Int[0, 1, -1]
-        quaternions = [Quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
+        quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
         d(q₁, q₂) = distance2(q₁, q₂)
         for q₁ in quaternions
             for q₂ in quaternions
@@ -17,7 +17,7 @@
                 # Symmetry:
                 @test d₁₂ == d₂₁
                 # Invariance:
-                for q₃ in [Quaternion(1), 1imx, 1imy, 1imz]
+                for q₃ in [quaternion(1), 1imx, 1imy, 1imz]
                     @test d₁₂ == d(q₃*q₁, q₃*q₂)
                     @test d₁₂ == d(q₁*q₃, q₂*q₃)
                 end
@@ -33,24 +33,24 @@
         scalars = [zero(T), one(T), -one(T)]
         quaternions = [a + b*imn for a in scalars for b in scalars for imn in [imx, imy, imz]]
         quaternions = [quaternions...; randn(Quaternion{T}, 23)...]
-        # quaternions = [Quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
+        # quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
         # quaternions = [quaternions...; randn(Quaternion{T}, 19)...]
-        @testset "rotor=$rotor" verbose=true for rotor in [true, false]
+        @testset "rotor=$rot" verbose=true for rot in [true, false]
             @testset "sqrt=$return_sqrt" verbose=true for return_sqrt in [true, false]
                 d(q₁, q₂) = return_sqrt ? distance(q₁, q₂) : distance2(q₁, q₂)
                 for (i, q₁) in enumerate(quaternions)
-                    if rotor
+                    if rot
                         if iszero(q₁)
                             continue
                         end
-                        q₁ = Rotor(q₁)
+                        q₁ = rotor(q₁)
                     end
                     for q₂ in quaternions[i+1:end]
-                        if rotor
+                        if rot
                             if iszero(q₂)
                                 continue
                             end
-                            q₂ = Rotor(q₂)
+                            q₂ = rotor(q₂)
                         end
                         absq₁, absq₂ = abs(q₁), abs(q₂)
                         rtol = 10eps(T)
@@ -68,8 +68,8 @@
                             if iszero(q₃)
                                 continue
                             end
-                            if rotor
-                                q₃ = Rotor(q₃)
+                            if rot
+                                q₃ = rotor(q₃)
                             else
                                 q₃ = q₃ / abs(q₃)
                             end
@@ -78,7 +78,7 @@
                         end
                         @test d₁₁ ≈ zero(T) rtol=rtol atol=atol
                         @test d₂₂ ≈ zero(T) rtol=rtol atol=atol
-                        if rotor
+                        if rot
                             scalar_multiples = (≈(q₁, q₂, rtol=rtol, atol=atol) || ≈(q₁, -q₂, rtol=rtol, atol=atol))
                             @test scalar_multiples ⊻ (d₁₂ > atol)
                         else

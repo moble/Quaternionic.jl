@@ -34,6 +34,9 @@ julia> randn(QuaternionF16, 2, 2)
 Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{T}}) where {T<:AbstractFloat} =
     QT(randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2, randn(rng, T)/2)
 
+Base.randn(rng::AbstractRNG, QT::Type{<:Rotor{T}}) where {T<:AbstractFloat} =
+    rotor(randn(rng, T), randn(rng, T), randn(rng, T), randn(rng, T))
+
 Base.@irrational SQRT_ONE_THIRD 0.5773502691896257645 sqrt(inv(big(3.0)))
 
 Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
@@ -45,6 +48,8 @@ Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
     )
 
 if Base.VERSION < v"1.9.0-alpha1"
+    # COV_EXCL_START
+
     # The fallback method of `randn` for float types only defining `rand` was first added
     # in Julia v1.9.0-alpha1:
     # https://github.com/JuliaLang/julia/commit/244ada361432462012835c93d3bac031e8046793
@@ -56,7 +61,7 @@ if Base.VERSION < v"1.9.0-alpha1"
         s2 = sinpi(2*c[2])
         l3 = √(-log(c[3])/2)
         s4, c4 = sincospi(2*c[4])
-        QuatVec(0, l1*s2, l3*c4, l3*s4)
+        quatvec(0, l1*s2, l3*c4, l3*s4)
     end
 
     function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})
@@ -69,4 +74,5 @@ if Base.VERSION < v"1.9.0-alpha1"
         QT(l1*c2, l1*s2, l3*c4, l3*s4)
     end
 
+    # COV_EXCL_STOP
 end

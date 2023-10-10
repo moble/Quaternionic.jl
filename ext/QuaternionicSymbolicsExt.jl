@@ -1,45 +1,48 @@
 module QuaternionicSymbolicsExt
 
 using StaticArrays: SVector
+using Latexify: latexify
 import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
-    QuatVecF64, RotorF64, QuaternionF64, wrapper, components
+    quaternion, rotor, quatvec,
+    QuatVecF64, RotorF64, QuaternionF64,
+    wrapper, components, _pm_ascii, _pm_latex
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 
 
 ### Functions that used to appear in quaternion.jl
-Quaternion(w::Symbolics.Num) = Quaternion(SVector{4}(w, false, false, false))
-Rotor(w::Symbolics.Num) = Rotor(SVector{4}(one(w), false, false, false))
-QuatVec(w::Symbolics.Num) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
+quaternion(w::Symbolics.Num) = quaternion(SVector{4}(w, false, false, false))
+rotor(w::Symbolics.Num) = rotor(SVector{4}(one(w), false, false, false))
+quatvec(w::Symbolics.Num) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
-        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = Quaternion
-        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = Quaternion
+        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Symbolics.Num}) where {OP} = quaternion
+        wrapper(::Type{<:Symbolics.Num}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = quaternion
     end
 end
 let NT = Symbolics.Num
-    for QT ∈ (AbstractQuaternion, QuatVec)
+    for QT ∈ (QuatVec,)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
-                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = $QT
-                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = $QT
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = quatvec
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = quatvec
             end
         end
     end
     for QT ∈ (Rotor,)
         for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
             @eval begin
-                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = Quaternion
-                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = Quaternion
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = quaternion
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = quaternion
             end
         end
     end
 end
 let T = Symbolics.Num
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
-        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = Quaternion
+        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = quaternion
         if T !== Quaternion
-            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = Quaternion
+            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = quaternion
         end
     end
 end
@@ -96,12 +99,121 @@ function Base.:(==)(q1::Symbolics.Num, q2::AbstractQuaternion{Symbolics.Num})
         iszero(Symbolics.simplify(q2[4]; expand=true))
     )
 end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q2[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::AbstractQuaternion)
+    (
+        iszero(q2[1]) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q2::AbstractQuaternion, q1::QuatVec{Symbolics.Num})
+    (
+        iszero(q2[1]) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::AbstractQuaternion{Symbolics.Num}, q2::QuatVec)
+    (
+        iszero(Symbolics.simplify(q1[1]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::QuatVec)
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q2::QuatVec, q1::QuatVec{Symbolics.Num})
+    (
+        iszero(Symbolics.simplify(q1[2]-q2[2]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[3]-q2[3]; expand=true)) &&
+        iszero(Symbolics.simplify(q1[4]-q2[4]; expand=true))
+    )
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::Number)
+    false
+end
+function Base.:(==)(q1::Number, q2::QuatVec{Symbolics.Num})
+    false
+end
+function Base.:(==)(q1::QuatVec{Symbolics.Num}, q2::Symbolics.Num)
+    false
+end
+function Base.:(==)(q1::Symbolics.Num, q2::QuatVec{Symbolics.Num})
+    false
+end
+function _pm_ascii(x::Symbolics.Num)
+    # Utility function to print a component of a quaternion
+    s = "$x"
+    if s[1] ∉ "+-"
+        s = "+" * s
+    end
+    if occursin(r"[+^/-]", s[2:end])
+        if s[1] == '+'
+            s = " + " * "(" * s[2:end] * ")"
+        else
+            s = " + " * "(" * s * ")"
+        end
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+function _pm_latex(x::Num)
+    # Utility function to print a component of a quaternion in LaTeX
+    s = latexify(x, env=:raw, bracket=true)
+    if s[1] ∉ "+-"
+        s = "+" * s
+    end
+    if occursin(r"[+^/-]", s[2:end])
+        if s[1] == '+'
+            s = " + " * "\\left(" * s[2:end] * "\\right)"
+        else
+            s = " + " * "\\left(" * s * "\\right)"
+        end
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+
 # Broadcast-like operations from Symbolics
 # (d::Symbolics.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-# (d::Symbolics.Operator)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::Rotor) = Quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-(d::Symbolics.Differential)(q::QuatVec) = QuatVec(d(q[2]), d(q[3]), d(q[4]))
+# (d::Symbolics.Operator)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::Quaternion) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::Rotor) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
+(d::Symbolics.Differential)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
 
 
 ### Functions that used to appear in algebra.jl
@@ -139,9 +251,9 @@ end
     r = randn(RotorF64)
     q = randn(QuaternionF64)
     𝓈 = w
-    𝓋 = QuatVec(x, y, z)
-    𝓇 = Rotor(a, b, c, d)
-    𝓆 = Quaternion(w, x, y, z)
+    𝓋 = quatvec(x, y, z)
+    𝓇 = rotor(a, b, c, d)
+    𝓆 = quaternion(w, x, y, z)
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to

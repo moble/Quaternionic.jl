@@ -1,3 +1,9 @@
+# We'll need this awkward way of getting the `components` field when we set `getproperty`
+components(q::AbstractQuaternion) = getfield(q, :components)
+
+normalize(v::AbstractVector) = v ./ hypot(v...)
+
+
 """
     Quaternion{T<:Number} <: Number
 
@@ -9,205 +15,238 @@ Quaternionic number type with elements of type `T`.
 
 The functions
 
-    Quaternion(w, x, y, z)
-    Quaternion(x, y, z)
-    Quaternion(w)
-    Quaternion{T}(w, x, y, z)
+    quaternion(w, x, y, z)
+    quaternion(x, y, z)
+    quaternion(w)
 
-create a new quaternion with the given components.  The argument `w` is the
-scalar component, and `x`, `y`, and `z` are the corresponding "vector"
-components.  If any of these arguments is missing, it will be set to zero.  The
-type of the returned quaternion will be inferred from the input arguments, or
-can be specified, by passing the type parameter `T` as above.
+create a new quaternion with the given components.  The argument `w` is the scalar
+component, and `x`, `y`, and `z` are the corresponding "vector" components.  If any of these
+arguments is missing, it will be set to zero.  The type of the returned quaternion will be
+inferred from the input arguments, or can be specified, by passing the type parameter `T` as
+above.
 
-Note that the constants [`imx`](@ref), [`imy`](@ref), and [`imz`](@ref) can
-also be used like the complex `im` to create new `Quaternion` object.
+Note that the constants [`imx`](@ref), [`imy`](@ref), and [`imz`](@ref) can also be used
+like the complex `im` to create new `Quaternion` object.
 
 # Examples
 
 ```jldoctest
-julia> Quaternion(1, 2, 3, 4)
+julia> quaternion(1, 2, 3, 4)
 1 + 2𝐢 + 3𝐣 + 4𝐤
 julia> Quaternion{Float64}(1, 2, 3, 4)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
-julia> Quaternion(1.0, 2.0, 3.0, 4.0)
+julia> quaternion(1.0, 2.0, 3.0, 4.0)
 1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤
-julia> Quaternion(2, 3, 4)
+julia> quaternion(2, 3, 4)
 0 + 2𝐢 + 3𝐣 + 4𝐤
-julia> Quaternion(1)
+julia> quaternion(1)
 1 + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
 struct Quaternion{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     Quaternion{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Quaternion{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
+    Quaternion{T}(a::AbstractVector) where {T<:Number} = new{T}(SVector{4,T}(a))
+    Quaternion{T}(a::AbstractQuaternion) where {T<:Number} = new{T}(SVector{4,T}(components(a)))
+    Quaternion{T}(w,x,y,z) where {T<:Number} = new{T}(SVector{4,T}(w,x,y,z))
+    Quaternion{T}(x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
+    Quaternion{T}(w::Number) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
 end
+
+quaternion(a::SVector{4,T}) where {T<:Number} = Quaternion{T}(a)
+#quaternion(a::AbstractVector) = Quaternion{T}(SVector{4,T}(a))  # See below
+quaternion(a::AbstractQuaternion) = Quaternion{eltype(a)}(components(a))
+quaternion(w,x,y,z) = (v=SVector{4}(w,x,y,z); Quaternion{eltype(v)}(v))
+quaternion(x,y,z) = (v=SVector{4}(false,x,y,z); Quaternion{eltype(v)}(v))
+quaternion(w::T) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
+
+Quaternion(w::SVector{4,T}) where {T} = quaternion(w)
+Quaternion(w::AbstractVector) = quaternion(w)
+Quaternion(w::AbstractQuaternion) = quaternion(w)
+Quaternion(w,x,y,z) = quaternion(w,x,y,z)
+Quaternion(x,y,z) = quaternion(x,y,z)
+Quaternion(w::T) where {T<:Number} = quaternion(w)
+
 
 @doc raw"""
     Rotor{T<:Number} <: Number
 
-Quaternion of unit magnitude with elements of type `T`.  These objects can be
-significantly faster *and* more accurate in certain operations representing
-rotations.
+Quaternion of unit magnitude with elements of type `T`.  These objects can be significantly
+faster *and* more accurate in certain operations representing rotations.
 
-A rotor is typically considered to be an element of the group
-``\mathrm{Spin}(3) ≃ \mathrm{SU}(2)``, which can be thought of as the subgroup
-of quaternions with norm 1.  They are particularly useful as representations of
-rotations because a rotor ``R`` acts on a vector ``\vec{v}`` by "conjugation" as
+A rotor is typically considered to be an element of the group ``\mathrm{Spin}(3) ≃
+\mathrm{SU}(2)``, which can be thought of as the subgroup of quaternions with norm 1.  They
+are particularly useful as representations of rotations because a rotor ``R`` acts on a
+vector ``\vec{v}`` by "conjugation" as
 
 ```math
 \vec{v}' = R\, \vec{v}\, R^{-1}.
 ```
 
-This preserves the inner product between any two vectors conjugated in this
-way, and so is a rotation.  Note that, because there are two factors of ``R``
-here, the sign of ``R`` does not affect the result.  Therefore,
-``\mathrm{Spin}(3)`` forms a *double* cover of the rotation group
-``\mathrm{SO}(3)``.  For this reason, it will occasionally be useful to
-disregard or arbitrarily change the sign of a `Rotor` (as in [`distance`](@ref)
-functions) — though this is not generally the default, and may cause problems
-if the input rotors change sign when the corresponding rotations are not so
-different (cf. [`unflip`](@ref)).
+(which can be represented in code as `R * v / R` or, more efficiently, as `R(v)`).  This
+operation preserves the inner product between any two vectors conjugated in this way, and so
+is a rotation.  Note that, because there are two factors of ``R`` here, the sign of ``R``
+does not affect the result.  Therefore, ``\mathrm{Spin}(3)`` forms a *double* cover of the
+rotation group ``\mathrm{SO}(3)``.  For this reason, it will occasionally be useful to
+disregard or arbitrarily change the sign of a `Rotor` (as in [`distance`](@ref) functions) —
+though this is not generally the default, and may cause problems if the input rotors change
+sign when the corresponding rotations are not so different (cf. [`unflip`](@ref)).
 
-`RotorF16`, `RotorF32` and `RotorF64` are aliases for `Rotor{Float16}`,
-`Rotor{Float32}` and `Rotor{Float64}` respectively.  See also
-[`Quaternion`](@ref) and [`QuatVec`](@ref).
+`RotorF16`, `RotorF32` and `RotorF64` are aliases for `Rotor{Float16}`, `Rotor{Float32}` and
+`Rotor{Float64}` respectively.  See also [`Quaternion`](@ref) and [`QuatVec`](@ref).
 
 The functions
 
-    Rotor(w, x, y, z)
-    Rotor(x, y, z)
-    Rotor(w)
-    Rotor{T}(w, x, y, z)
+    rotor(w, x, y, z)
+    rotor(w)
 
-create a new rotor with the given components (where the components are as
-described in [`Quaternion`](@ref)), automatically normalizing them on input.
-If you would like to bypass this normalization step, you can call
+create a new rotor with the given components (where the components are as described in
+[`Quaternion`](@ref)), automatically normalizing them on input.  Note that this
+normalization step is the key difference between the `Rotor` and `rotor` functions; if you
+would like to bypass normalization, you can call
+
+    Rotor{T}(w, x, y, z)
+    Rotor{T}(w)
+
+in the same way as `rotor`, and `w, x, y, z` will be converted to type `T`.  Alternatively,
+you can call
 
     Rotor{T}(v)
 
-where `v<:AbstractArray`, and can be converted to an `SVector{4, T}`.
+where `v<:AbstractArray` can be converted to an `SVector{4, T}`.  If you want to handle the
+normalization step, you can use [`normalize`](@ref).
 
-However, once a `Rotor` is created, its norm will always be assumed to be
-precisely 1.  So if its true norm is significantly different, you will like see
-weird results — including vectors with very different lengths after "rotation"
-by a non-unit `Rotor`.
+However, once a `Rotor` is created, its norm will often be *assumed* to be precisely 1.  So
+if its true norm is significantly different, you will likely see weird results — including
+vectors with very different lengths after "rotation" by a non-unit `Rotor`.
 
-Note that simply creating a `Quaternion` that happens to have norm 1 does not
-make it a `Rotor`.  However, you can pass such a `Quaternion` to the `Rotor`
-function and get the desired result.
+Note that simply creating a `Quaternion` that happens to have norm 1 does not make it a
+`Rotor`.  However, you can pass such a `Quaternion` to the `rotor` function and get the
+desired result.
 
 # Examples
 
 ```jldoctest
-julia> Rotor(1, 2, 3, 4)
-Rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
-julia> Rotor(Quaternion(1, 2, 3, 4))
-Rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
+julia> rotor(1, 2, 3, 4)
+rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
+julia> rotor(quaternion(1, 2, 3, 4))
+rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
 julia> Rotor{Float16}(1, 2, 3, 4)
-Rotor(0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤)
-julia> Rotor(2, 3, 4)
-Rotor(0.0 + 0.3713906763541037𝐢 + 0.5570860145311556𝐣 + 0.7427813527082074𝐤)
-julia> Rotor(1)
-Rotor(1 + 0𝐢 + 0𝐣 + 0𝐤)
+rotor(1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤)
+julia> normalize(Rotor{Float16}(1, 2, 3, 4))
+rotor(0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤)
+julia> rotor(1.0)
+rotor(1.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 struct Rotor{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     Rotor{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    Rotor{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
+    Rotor{T}(a::AbstractVector) where {T<:Number} = new{T}(SVector{4,T}(a))
+    Rotor{T}(a::AbstractQuaternion) where {T<:Number} = new{T}(SVector{4,T}(components(a)))
+    Rotor{T}(w,x,y,z) where {T<:Number} = new{T}(SVector{4,T}(w,x,y,z))
+    Rotor{T}(x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
+    Rotor{T}(w::Number) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
 end
+
+function rotor(a::SVector{4,T}) where {T<:Number}
+    â = normalize(a)
+    Rotor{eltype(â)}(â)
+end
+#rotor(a::AbstractVector) = Rotor{T}(SVector{4,T}(a))  # See below
+rotor(a::AbstractQuaternion) = rotor(components(a))
+function rotor(w, x, y, z)
+    v = normalize(SVector{4}(w, x, y, z))
+    Rotor{eltype(v)}(v)
+end
+rotor(x,y,z) = rotor(false, x,y,z)
+rotor(w::T) where {T<:Number} = Rotor{T}(SVector{4,T}(copysign(one(w), w), false, false, false))
+
+Rotor(w::SVector{4,T}) where {T} = rotor(w)
+Rotor(w::AbstractVector) = rotor(w)
+Rotor(w::AbstractQuaternion) = rotor(w)
+Rotor(w,x,y,z) = rotor(w,x,y,z)
+Rotor(x,y,z) = rotor(x,y,z)
+Rotor(w::T) where {T<:Number} = rotor(w)
 
 """
     QuatVec{T<:Number} <: Number
 
-Pure-vector quaternion with elements of type `T`.  These objects can be
-significantly faster *and* more accurate in certain operations than general
-`Quaternion`s.
+Pure-vector quaternion with elements of type `T`.  These objects can be significantly faster
+*and* more accurate in certain operations than general `Quaternion`s.
 
 `QuatVecF16`, `QuatVecF32` and `QuatVecF64` are aliases for `QuatVec{Float16}`,
-`QuatVec{Float32}` and `QuatVec{Float64}` respectively.  See also
-[`Quaternion`](@ref) and [`Rotor`](@ref).
+`QuatVec{Float32}` and `QuatVec{Float64}` respectively.  See also [`Quaternion`](@ref) and
+[`Rotor`](@ref).
 
 The functions
 
-    QuatVec(w, x, y, z)
-    QuatVec(x, y, z)
-    QuatVec(w)
-    QuatVec{T}(w, x, y, z)
+    quatvec(w, x, y, z)
+    quatvec(x, y, z)
+    quatvec(w)
 
-create a new rotor with the given components (where the components are as
-described in [`Quaternion`](@ref)), except that the scalar argument `w` is
-always set to 0.
+create a new `QuatVec` with the given components (where the components are as described in
+[`Quaternion`](@ref)), except that the scalar argument `w` is always set to 0.
 
 # Examples
 
 ```jldoctest
-julia> QuatVec(1, 2, 3, 4)
+julia> quatvec(1, 2, 3, 4)
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(Quaternion(1, 2, 3, 4))
+julia> quatvec(quaternion(1, 2, 3, 4))
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(2, 3, 4)
+julia> quatvec(2, 3, 4)
  + 2𝐢 + 3𝐣 + 4𝐤
-julia> QuatVec(1)
+julia> quatvec(1)
  + 0𝐢 + 0𝐣 + 0𝐤
 ```
 """
 struct QuatVec{T<:Number} <: AbstractQuaternion{T}
     components::SVector{4,T}
     QuatVec{T}(a::SVector{4,T}) where {T<:Number} = new{T}(a)
-    QuatVec{T}(a::A) where {T<:Number,A<:AbstractVector} = new{T}(SVector{4,T}(a))
+    QuatVec{T}(a::AbstractVector) where {T<:Number} = new{T}(SVector{4,T}(a))
+    QuatVec{T}(a::AbstractQuaternion) where {T<:Number} = new{T}(SVector{4,T}(components(a)))
+    QuatVec{T}(w,x,y,z) where {T<:Number} = new{T}(SVector{4,T}(w,x,y,z))
+    QuatVec{T}(x,y,z) where {T<:Number} = new{T}(SVector{4,T}(false,x,y,z))
+    QuatVec{T}(w::Number) where {T<:Number} = new{T}(SVector{4,T}(w, false, false, false))
 end
 
-# We'll need this awkward way of getting the `components` field when we set `getproperty`
-components(q::AbstractQuaternion) = getfield(q, :components)
+function quatvec(v::SVector{4,T}) where {T<:Number}
+    v′ = SVector{4,T}(false, v[2], v[3], v[4])
+    QuatVec{T}(v′)
+end
+#quatvec(a::AbstractVector) = QuatVec{T}(SVector{4,T}(a))  # See below
+quatvec(a::AbstractQuaternion) = quatvec(components(a))
+function quatvec(w, x, y, z)
+    v = SVector{4}(false, x, y, z)
+    QuatVec{eltype(v)}(v)
+end
+quatvec(x,y,z) = quatvec(false,x,y,z)
+quatvec(w::T) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
 
-# Untyped constructor from SVector
-# (::Type{QT})(v::SVector{4, T}) where {T<:Number, QT<:AbstractQuaternion} = QT{eltype(v)}(v)
-Quaternion(v::SVector{4,T}) where {T<:Number} = Quaternion{eltype(v)}(v)
-Rotor(v::SVector{4,T}) where {T<:Number} = Rotor{eltype(v)}(v)
-QuatVec(v::SVector{4,T}) where {T<:Number} = QuatVec{eltype(v)}(v)
+QuatVec(w::SVector{4,T}) where {T} = quatvec(w)
+QuatVec(w::AbstractVector) = quatvec(w)
+QuatVec(w::AbstractQuaternion) = quatvec(w)
+QuatVec(w,x,y,z) = quatvec(w,x,y,z)
+QuatVec(x,y,z) = quatvec(x,y,z)
+QuatVec(w::T) where {T<:Number} = quatvec(w)
 
 # Constructor from AbstractVector
-(::Type{QT})(v::AbstractVector{T}) where {QT<:AbstractQuaternion, T} = QT{T}(v...)
-
-# Constructor from all 4 components
-(::Type{QT})(w, x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(w, x, y, z); QT{eltype(v)}(v))
-(::Type{QT})(w, x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(w, x, y, z))
-Rotor(w, x, y, z) = (n = √(w^2 + x^2 + y^2 + z^2); Rotor(SVector{4}(w / n, x / n, y / n, z / n)))
-Rotor{T}(w, x, y, z) where {T<:Number} = (n = √T(w^2 + x^2 + y^2 + z^2); Rotor{T}(SVector{4,T}(w / n, x / n, y / n, z / n)))
-QuatVec(w, x, y, z) = QuatVec(SVector{4}(oftype(w, false), x, y, z))
-QuatVec{T}(w, x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(oftype(w, false), x, y, z))
-
-# Constructor from vector components
-(::Type{QT})(x, y, z) where {QT<:AbstractQuaternion} = (v = SVector{4}(false, x, y, z); QT{eltype(v)}(v))
-(::Type{QT})(x, y, z) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(SVector{4,T}(false, x, y, z))
-Rotor(x, y, z) = (n = √(x^2 + y^2 + z^2); Rotor(SVector{4}(false, x / n, y / n, z / n)))
-Rotor{T}(x, y, z) where {T<:Number} = (n = √T(x^2 + y^2 + z^2); Rotor{T}(SVector{4,T}(false, x / n, y / n, z / n)))
-QuatVec(x, y, z) = QuatVec(SVector{4}(false, x, y, z))
-QuatVec{T}(x, y, z) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, x, y, z))
-
-# Constructor from scalar component
-# (::Type{QT})(w::Number) where {QT<:AbstractQuaternion} = (v=SVector{4}(w, false, false, false); QT{eltype(v)}(v))
-# (::Type{QT})(w::Number) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(w, false, false, false))
-Quaternion(w::Number) = Quaternion(SVector{4}(w, false, false, false))
-Quaternion{T}(w::Number) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
-Rotor(w::Number) = Rotor(SVector{4}(one(w), false, false, false))
-Rotor{T}(w::Number) where {T<:Number} = Rotor{T}(SVector{4,T}(one(T), false, false, false))
-QuatVec(w::Number) = QuatVec(SVector{4,typeof(w)}(false, false, false, false))
-QuatVec{T}(w::Number) where {T<:Number} = QuatVec{T}(SVector{4,T}(false, false, false, false))
-
-# Copy constructor
-# (::Type{QT})(q::AbstractQuaternion) where {QT<:AbstractQuaternion} = QT{eltype(components(q))}(components(q))
-# (::Type{QT})(q::AbstractQuaternion{S}) where {T<:Number, S<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
-# (::Type{QT})(q::AbstractQuaternion{T}) where {T<:Number, QT<:AbstractQuaternion{T}} = QT(SVector{4, T}(components(q)))
-Quaternion(q::AbstractQuaternion{T}) where {T<:Number} = Quaternion(components(q)...)
-Quaternion{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Quaternion{T}(components(q)...)
-Rotor(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Rotor(components(q)...)
-Rotor{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = Rotor{T}(components(q)...)
-QuatVec(q::AbstractQuaternion{T}) where {T<:Number} = QuatVec(components(q)...)
-QuatVec{T}(q::AbstractQuaternion{S}) where {T<:Number,S<:Number} = QuatVec{T}(components(q)...)
+for q ∈ (:quaternion, :rotor, :quatvec)
+    @eval begin
+        function $q(v::AbstractVector)
+            if length(v) == 4
+                $q(v[begin], v[begin+1], v[begin+2], v[begin+3])
+            elseif length(v) == 3
+                $q(v[begin], v[begin+1], v[begin+2])
+            elseif length(v) == 1
+                $q(v[begin])
+            else
+                throw(DimensionMismatch("Quaternion must have 1, 3, or 4 inputs"))
+            end
+        end
+    end
+end
 
 # Type constructors
 (::Type{QT})(::Type{T}) where {T<:Number,QT<:AbstractQuaternion} = QT{T}
@@ -227,9 +266,17 @@ const QuatVecF16 = QuatVec{Float16}
 # Handy constants like `im`
 """
     imx
+    𝐢
 
 The quaternionic unit associated with rotation about the `x` axis.  Can also be entered as
 Unicode bold `𝐢` (which can be input as `\\bfi<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imx` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imy`](@ref) and [`imz`](@ref).
 
 # Examples
 ```jldoctest
@@ -237,16 +284,28 @@ julia> imx * imx
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imx
  + 1.2𝐢 + 0.0𝐣 + 0.0𝐤
+julia> 1.2 + 3.4imx
+1.2 + 3.4𝐢 + 0.0𝐣 + 0.0𝐤
+julia> 1.2 + 3.4𝐢
+1.2 + 3.4𝐢 + 0.0𝐣 + 0.0𝐤
 ```
 """
-const imx = QuatVec(false, true, false, false)
+const imx = QuatVec{Bool}(false, true, false, false)
 const 𝐢 = imx
 
 """
     imy
+    𝐣
 
 The quaternionic unit associated with rotation about the `y` axis.  Can also be entered as
 Unicode bold `𝐣` (which can be input as `\\bfj<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imy` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imx`](@ref) and [`imz`](@ref).
 
 # Examples
 ```jldoctest
@@ -254,16 +313,28 @@ julia> imy * imy
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imy
  + 0.0𝐢 + 1.2𝐣 + 0.0𝐤
+julia> 1.2 + 3.4imy
+1.2 + 0.0𝐢 + 3.4𝐣 + 0.0𝐤
+julia> 1.2 + 3.4𝐣
+1.2 + 0.0𝐢 + 3.4𝐣 + 0.0𝐤
 ```
 """
-const imy = QuatVec(false, false, true, false)
+const imy = QuatVec{Bool}(false, false, true, false)
 const 𝐣 = imy
 
 """
     imz
+    𝐤
 
 The quaternionic unit associated with rotation about the `z` axis.  Can also be entered as
 Unicode bold `𝐤` (which can be input as `\\bfk<tab>`).
+
+Note that — just as `im` is a `Complex{Bool}` — `imz` is a `QuatVec{Bool}`, and as soon as
+you multiply by a scalar of any other number type (e.g., a `Float64`) it will be promoted to
+a `QuatVec` of that number type, and once you *add* a scalar it will be promoted to a
+`Quaternion`.
+
+See also [`imx`](@ref) and [`imy`](@ref).
 
 # Examples
 ```jldoctest
@@ -271,21 +342,23 @@ julia> imz * imz
 -1 + 0𝐢 + 0𝐣 + 0𝐤
 julia> 1.2imz
  + 0.0𝐢 + 0.0𝐣 + 1.2𝐤
+julia> 1.2 + 3.4imz
+1.2 + 0.0𝐢 + 0.0𝐣 + 3.4𝐤
+julia> 1.2 + 3.4𝐤
+1.2 + 0.0𝐢 + 0.0𝐣 + 3.4𝐤
 ```
 """
-const imz = QuatVec(false, false, false, true)
+const imz = QuatVec{Bool}(false, false, false, true)
 const 𝐤 = imz
 
 # Essential constructors
 Base.zero(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(false, false, false, false)
-Base.zero(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
-Base.zero(::Type{Rotor}) = throw(DomainError("Rotor", "Zero is not a possible rotor."))
-Base.zero(::Type{Rotor{T}}) where {T} = throw(DomainError("Rotor", "Zero is not a possible rotor."))
+Base.zero(::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.zero(QT)
+Base.zero(::Type{Rotor{T}}) where {T} = zero(Quaternion{T})
 
 Base.one(::Type{QT}) where {T<:Number,QT<:AbstractQuaternion{T}} = QT(true, false, false, false)
-Base.one(q::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
-Base.one(::Type{QuatVec}) = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
-Base.one(::Type{QuatVec{T}}) where {T} = throw(DomainError("QuatVec", "One is not a possible 3-vector."))
+Base.one(::QT) where {T<:Number,QT<:AbstractQuaternion{T}} = Base.one(QT)
+Base.one(::Type{QuatVec{T}}) where {T} = one(Quaternion{T})
 
 # Getting pieces of quaternions
 @inline function Base.getindex(q::AbstractQuaternion, i::Integer)
@@ -322,8 +395,8 @@ Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
 # Type games
 wrapper(::T) where {T} = wrapper(T)
 wrapper(T::UnionAll) = T
-wrapper(T::Type{Q}) where {S<:Number,Q<:AbstractQuaternion{S}} = T.name.wrapper
-wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)
+wrapper(T::Type{Q}) where {S<:Number,Q<:AbstractQuaternion{S}} = wrapper(T.name.wrapper)
+wrapper(::Type{T}, ::Type{T}) where {T<:AbstractQuaternion} = wrapper(T)  # COV_EXCL_LINE
 
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     for QT2 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
@@ -364,11 +437,11 @@ wrapper(::Type{<:QuatVec}, ::Val{*}, ::Type{<:QuatVec}) = Quaternion
 wrapper(::Type{<:QuatVec}, ::Val{/}, ::Type{<:QuatVec}) = Quaternion
 
 let NT = Number
-    for QT ∈ (AbstractQuaternion, QuatVec)
+    for QT ∈ (QuatVec,)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
-                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = $QT
-                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = $QT
+                wrapper(::Type{<:$QT}, ::$OP, ::Type{<:$NT}) = QuatVec
+                wrapper(::Type{<:$NT}, ::$OP, ::Type{<:$QT}) = QuatVec
             end
         end
     end

@@ -5,7 +5,31 @@
         QuaternionF64(0.0, 1.0, 0.0, 0.0)
     ]
 
-    @testset "$Q{T}" for Q in [Quaternion, Rotor, QuatVec]
+    @testset "wrappers(::T)" begin
+        for T in FloatTypes
+            @test typeof(randn(Rotor{T}) + randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) - randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) * randn(Rotor{T})) === Rotor{T}
+            @test typeof(randn(Rotor{T}) / randn(Rotor{T})) === Rotor{T}
+
+            @test typeof(randn(Rotor{T}) * randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) * randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) / randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) / randn(Rotor{T})) === Quaternion{T}
+
+            @test typeof(randn(Rotor{T}) + randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) + randn(Rotor{T})) === Quaternion{T}
+            @test typeof(randn(Rotor{T}) - randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) - randn(Rotor{T})) === Quaternion{T}
+
+            @test typeof(randn(QuatVec{T}) + randn(QuatVec{T})) === QuatVec{T}
+            @test typeof(randn(QuatVec{T}) - randn(QuatVec{T})) === QuatVec{T}
+            @test typeof(randn(QuatVec{T}) * randn(QuatVec{T})) === Quaternion{T}
+            @test typeof(randn(QuatVec{T}) / randn(QuatVec{T})) === Quaternion{T}
+        end
+    end
+
+    @testset "$Q{T}" for (Q,q) in ((Quaternion, quaternion), (Rotor,rotor), (QuatVec,quatvec))
         for T in Types
             @test Q(T) === Q{T}
             @test Q(Q{T}) === Q{T}
@@ -70,6 +94,12 @@
                 @test typeof(rand(T) / Q{T}(1, 2, 3, 4)) === Q{T}
             end
             @test float(Q{T}(1, 2, 3, 4)) == Q{T}(1, 2, 3, 4)
+
+            @test typeof(Rotor(Q{T}(1, 2, 3, 4))) === Rotor{T}
+            @test typeof(QuatVec(Q{T}(1, 2, 3, 4))) === QuatVec{T}
+
+            @test_throws DimensionMismatch q(T[1,2])
+            @test_throws DimensionMismatch Q(T[1,2])
         end
 
         for T in IntTypes
@@ -81,7 +111,7 @@
                 v = zeros(T, 4)
                 v[i] = one(T)
                 v = SVector(v...)
-                @test float(Q{T}(v)) == Q(float(T).(v))
+                @test float(q(v)) == q(float(T).(v))
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
                 v = Vector(v)
                 @test float(Q{T}(v)) == Q{T}(float(T).(v))
@@ -89,13 +119,34 @@
         end
 
         for T in SymbolicTypes
-            q = Q{T}(1, 2, 3, 4)
-            if Q !== Rotor
-                @test typeof(a * q) === Q{T}
-                @test typeof(a / q) === Q{T}
-                @test typeof(q * a) === Q{T}
-                @test typeof(q / a) === Q{T}
+            let q = Q{T}(1, 2, 3, 4)
+                if Q !== Rotor
+                    @test typeof(a * q) === Q{T}
+                    @test typeof(a / q) === Q{T}
+                    @test typeof(q * a) === Q{T}
+                    @test typeof(q / a) === Q{T}
+                end
             end
+
+            @test typeof(Rotor{T}(a,b,c,d) + Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) - Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) * Rotor{T}(w,x,y,z)) === Rotor{T}
+            @test typeof(Rotor{T}(a,b,c,d) / Rotor{T}(w,x,y,z)) === Rotor{T}
+
+            @test typeof(Rotor{T}(a,b,c,d) * QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) * Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) / QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) / Rotor{T}(w,x,y,z)) === Quaternion{T}
+
+            @test typeof(Rotor{T}(a,b,c,d) + QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) + Rotor{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(Rotor{T}(a,b,c,d) - QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) - Rotor{T}(w,x,y,z)) === Quaternion{T}
+
+            @test typeof(QuatVec{T}(a,b,c,d) + QuatVec{T}(w,x,y,z)) === QuatVec{T}
+            @test typeof(QuatVec{T}(a,b,c,d) - QuatVec{T}(w,x,y,z)) === QuatVec{T}
+            @test typeof(QuatVec{T}(a,b,c,d) * QuatVec{T}(w,x,y,z)) === Quaternion{T}
+            @test typeof(QuatVec{T}(a,b,c,d) / QuatVec{T}(w,x,y,z)) === Quaternion{T}
         end
     end
 

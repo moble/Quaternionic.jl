@@ -1,4 +1,4 @@
-# Essential elements of making quaternions into an a algebra
+# Essential elements of making quaternions into an algebra
 
 """
     conj(q)
@@ -8,7 +8,7 @@ component.
 
 # Examples
 ```jldoctest
-julia> conj(Quaternion(1,2,3,4))
+julia> conj(quaternion(1,2,3,4))
 1 - 2𝐢 - 3𝐣 - 4𝐤
 ```
 """
@@ -93,7 +93,7 @@ Return the cross product of two pure-vector quaternions.  Equal to ½ of the
 commutator product `a*b-b*a`.
 """
 @inline function ×(a::QuatVec, b::QuatVec)
-    QuatVec(
+    quatvec(
         a[3] * b[4] - a[4] * b[3],
         a[4] * b[2] - a[2] * b[4],
         a[2] * b[3] - a[3] * b[2]
@@ -123,18 +123,18 @@ end
 Return a copy of this quaternion, normalized.
 
 Note that this returns the same type as the input quaternion.  If you want to
-convert to a `Rotor`, just call `Rotor(q)`, which includes a normalization
+convert to a `Rotor`, just call `rotor(q)`, which includes a normalization
 step.
 """
 @inline function normalize(q::AbstractQuaternion)
     return q / abs(q)
 end
 @inline function normalize(q::Rotor)
-    return Rotor(q)  # already normalizes
+    return rotor(q)  # already normalizes
 end
 
 function (R::Rotor)(v::QuatVec)
-    QuatVec(SA[
+    quatvec(SA[
         false,
         ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
             + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
@@ -145,7 +145,7 @@ function (R::Rotor)(v::QuatVec)
     ])
 end
 function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
-    QT(SA[
+    wrapper(QT)(
         abs2(R) * v[1],
         ((R[1]^2 + R[2]^2 - R[3]^2 - R[4]^2)*v[2]
             + (R[1]*R[3] + R[2]*R[4])*2v[4] + (R[2]*R[3] - R[1]*R[4])*2v[3]),
@@ -153,5 +153,5 @@ function (R::Quaternion)(v::QT) where {QT<:AbstractQuaternion}
             + (R[2]*R[3] + R[1]*R[4])*2v[2] + (R[3]*R[4] - R[1]*R[2])*2v[4]),
         ((R[1]^2 + R[4]^2 - R[2]^2 - R[3]^2)*v[4]
             + (R[1]*R[2] + R[3]*R[4])*2v[3] + (R[2]*R[4] - R[1]*R[3])*2v[2])
-    ])
+    )
 end
