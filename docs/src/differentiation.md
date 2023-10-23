@@ -1,26 +1,25 @@
 # Differentiating by quaternionic arguments
 
-!!! note "TL;DR:"
-    As with complex arguments, differentiation with respect to quaternionic
-    arguments treats the components of the quaternionic argument as independent
-    real arguments.  These rules are implemented for this package in
-    `ChainRulesCore`, which means that they should work seamlessly with [any
-    package that relies on
-    `ChainRulesCore`](https://juliadiff.org/ChainRulesCore.jl/stable/#ChainRules-roll-out-status),
-    such as [`Zygote`](https://github.com/FluxML/Zygote.jl).  Derivatives can
-    also be calculated automatically using
-    [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/)
+As with complex arguments, differentiation with respect to quaternionic
+arguments treats the components of the quaternionic argument as independent real
+arguments.  These rules are implemented for this package in `ChainRulesCore`,
+which means that they should work seamlessly with [any package that relies on
+`ChainRulesCore`](https://juliadiff.org/ChainRulesCore.jl/stable/#ChainRules-roll-out-status),
+such as [`Zygote`](https://github.com/FluxML/Zygote.jl).  Derivatives can also
+be calculated automatically using
+[`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/)
 
-    As with complex differentiation, there are numerous notions of
-    quaternionic differentiation — including generalizations of the
-    holomorphic and Wirtinger derivatives, as well as left- and
-    right-multiplicative derivatives.  The goal here is to provide the basic
-    differentiation rules upon which these derivatives can be implemented, but
-    not to implement those derivatives themselves. It is recommended that you
-    carefully check how the definitions of `frule` and `rrule` translate into
-    your specific notion of quaternionic derivatives, since getting this wrong
-    will quietly give you wrong results.
+As with complex differentiation, there are numerous notions of quaternionic
+differentiation — including generalizations of the holomorphic and Wirtinger
+derivatives, as well as left- and right-multiplicative derivatives.  The goal
+here is to provide the basic differentiation rules upon which these derivatives
+can be implemented, but not to implement those derivatives themselves. It is
+recommended that you carefully check how the definitions of `frule` and `rrule`
+translate into your specific notion of quaternionic derivatives, since getting
+this wrong will quietly give you wrong results.
 
+
+## Simple generalization of complex differentiation
 
 The [`ChainRulesCore`
 docs](https://juliadiff.org/ChainRulesCore.jl/stable/maths/complex.html) have
@@ -70,7 +69,10 @@ about differentation with respect to complex arguments:
 > ```
 
 We can extend that naturally for differentiation with respect to quaternionic
-arguments:
+arguments.  We start by working with `Quaternion`-valued functions of a single
+`Quaternion` argument, and then explain how `QuatVec` and `Rotor` relate to
+these rules.  Now, the statement for quaternionic differentiation analogous to
+the above is:
 
 `Quaternionic` follows the convention that `frule` applied to a function
 ```math
@@ -166,6 +168,33 @@ and `rrule` corresponds to
 \Delta s \\ \Delta t \\ \Delta u \\ \Delta v
 \end{pmatrix}.
 ```
+
+## Applications to `QuatVec` and `Rotor`
+
+To understand how this works for `QuatVec` and `Rotor` inputs or outputs, we
+just consider that these are submanifolds of the `Quaternion` manifold.  The
+only subtlety is that — while the tangent space to `Quaternion` and `QuatVec`
+are naturally identified with `Quaternion` and `QuatVec` themselves — the
+tangent space of the `Rotor` submanifold is naturally identified with
+`Quaternion`.
+
+Thus, for a `QuatVec` input, ``w`` must always be 0, which means that the
+tangent must always have ``\Delta w = 0``, and we always treat the output
+functions ``(s,t,u,v)`` as independent of ``w`` so that ``\partial s / \partial
+w`` and so on are always 0.  Similarly, for `QuatVec` outputs, ``s`` must always
+be 0, so that the tangent must always have ``\Delta s = 0``, and ``\partial s /
+\partial w`` and so on are always 0.  With these considerations in mind, it's
+not hard to simplify the expressions above for `QuatVec` inputs and outputs.
+
+On the other hand, because the tangent space to the `Rotor` submanifold is
+naturally identified with `Quaternion`, while there is a natural constraint on
+the norms of the input and output arguments, there are no structural constraints
+on the tangent vectors (just that they must be orthogonal to the arguments
+themselves).  Thus, the expressions above for `Quaternion` inputs and outputs
+will look formally identical for `Rotor` inputs or outputs.
+
+
+## Older functions
 
 In this vein, we also have some very explicit functions for computing "primals"
 (values) and derivatives of functions of `log` and `exp`.  These are older, and
