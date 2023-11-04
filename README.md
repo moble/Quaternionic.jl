@@ -1,13 +1,15 @@
 # Quaternionic
 
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/Q/Quaternionic.svg
+[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/Q/Quaternionic.html
+
 <a href="https://zenodo.org/badge/latestdoi/375490468"><img align="right" hspace="0" alt="Latest DOI" src="https://zenodo.org/badge/375490468.svg"></a>
 <a href="https://moble.github.io/Quaternionic.jl/stable/"><img align="right" hspace="0" alt="Stable docs" src="https://img.shields.io/badge/docs-stable-blue.svg"></a>
 [![Documentation
 Status](https://github.com/moble/Quaternionic.jl/workflows/docs/badge.svg)](https://moble.github.io/Quaternionic.jl/dev)
 [![Test Status](https://github.com/moble/Quaternionic.jl/workflows/tests/badge.svg)](https://github.com/moble/Quaternionic.jl/actions)
 [![Test Coverage](https://codecov.io/gh/moble/Quaternionic.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/moble/Quaternionic.jl)
-[![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/Q/Quaternionic.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/report.html)
-
+[![PkgEval][pkgeval-img]][pkgeval-url]
 
 *Quaternions for Julia*
 
