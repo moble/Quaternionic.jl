@@ -19,12 +19,39 @@ around the code you don't want to measure:
 
 """
 
+# This is hopefully a temporary clause, for checking the GC behavior on Julia pre-1.10 nightlies,
+# which are failing for unknown reasons, but in ways that resemble behavior other people have found
+# and traced back to the new GC.  This block's code is copied from AbstractAlgebra.jl (under the
+# Simplified "2-clause" BSD License): https://github.com/Nemocas/AbstractAlgebra.jl/pull/1432/files
+if VERSION >= v"1.8.0"
+  GC.enable_logging(true)
+
+  # print gc settings
+  jlmax = @ccall jl_gc_get_max_memory()::UInt64
+  totalmem = @ccall uv_get_total_memory()::UInt64
+  constrmem = @ccall uv_get_constrained_memory()::UInt64
+  println("Memory:   max: ", Base.format_bytes(jlmax))
+  println("        total: ", Base.format_bytes(totalmem))
+  println("       constr: ", Base.format_bytes(constrmem))
+
+#= FIXME/TODO: in the future we may wish to experiment with limiting the GC heap here
+  if VERSION >= v"1.10.0-"
+    # adjust heap size hint
+    memenv = parse(Int, get(ENV, "OSCARCI_MAX_MEM_GB", "5")) * 2^30
+    println("Setting heap size hint to ", Base.format_bytes(memenv))
+    @ccall jl_gc_set_max_memory(memenv::UInt64)::Cvoid
+  end
+=#
+end
+
+
+
 using Quaternionic
 using Test
 using Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra,
     ChainRulesTestUtils, Zygote, ChainRulesTestUtils
 
-    import LinearAlgebra
+import LinearAlgebra
 
 using ChainRulesCore
 ChainRulesCore.debug_mode() = true

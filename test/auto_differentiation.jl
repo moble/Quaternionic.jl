@@ -356,12 +356,4 @@
         # @show Zygote.jacobian(g, T(0), T(0), T(0))
     end
 
-    # @testset verbose=true "log" begin
-    #     ∂log∂q(q) = [
-    #         ForwardDiff.derivative(ϵ->log(q+ϵ), 0),
-    #         ForwardDiff.derivative(ϵ->log(q+ϵ*imx), 0),
-    #         ForwardDiff.derivative(ϵ->log(q+ϵ*imy), 0),
-    #         ForwardDiff.derivative(ϵ->log(q+ϵ*imz), 0)
-    #     ]
-    # end
 end
