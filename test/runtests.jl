@@ -22,10 +22,8 @@ around the code you don't want to measure:
 using Quaternionic
 using Test
 using Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra,
-    ChainRulesTestUtils, Zygote, ChainRulesTestUtils
-
-    import LinearAlgebra
-
+    ChainRulesTestUtils, Zygote, ChainRulesTestUtils, Aqua
+import LinearAlgebra
 using ChainRulesCore
 ChainRulesCore.debug_mode() = true
 
@@ -66,6 +64,7 @@ function addtests(fname)
 end
 
 @testset verbose=true "All tests" begin
+    addtests("aqua.jl")
     addtests("quaternion.jl")
     addtests("basis.jl")
     addtests("base.jl")
