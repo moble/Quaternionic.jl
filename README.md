@@ -46,9 +46,5 @@ choices that conflict with my needs.
 
 I have plenty of experience programming quaternions (including [this popular python
 package](https://github.com/moble/quaternion), and [this newer and fancier
-package](https://github.com/moble/quaternionic)), though not much experience with Julia, so
-this seems like a good first project.  In particular, I am interested in understanding how
-a general geometric algebra would be coded, so I will be experimenting with subtypes and
-static arrays, even though I can imagine that hard-coding the four components could be
-better in some ways.  Once I'm done experimenting, I may just rewrite that part, though
-hopefully in a way that will be invisible to users.
+package](https://github.com/moble/quaternionic)), so transferring that experience to
+Julia feels like the right thing to do.
