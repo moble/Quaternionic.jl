@@ -91,7 +91,7 @@ julia> randn(QuaternionF64)
 -0.17986445341174084 + 0.5436042462142929𝐢 - 0.20979480846942436𝐣 + 0.3594549687329696𝐤
 
 julia> randn(RotorF32)
-rotor(0.188424 - 0.30743065𝐢 + 0.92128325𝐣 + 0.14567044𝐤)
+rotor(0.18842402 - 0.30743068𝐢 + 0.92128336𝐣 + 0.14567046𝐤)
 ```
 Each component of the quaternion is chosen from a normal distribution with mean
 0 and standard deviation 1, which means that the resulting quaternion will have
@@ -212,22 +212,17 @@ In particular, `Q(v)` (the right-hand side) is about twice as efficient as
 performing the conjugation and two multiplications explicitly (the left-hand
 side).
 
-## Contents
-
-```@contents
-Depth = 4
-```
-
 
 ## References
 
-Several of the algorithms implemented here are — as far as I know — original to
-this package, including [`exp`](@ref), [`log`](@ref), and [`sqrt`](@ref).  But
-they took inspiration from a number of sources, including Neil Dantam's notes on
-["Quaternion
-Computation"](http://www.neil.dantam.name/note/dantam-quaternion.pdf) and
-[Kahan's work on
-triangles](https://people.eecs.berkeley.edu/~wkahan/Triangle.pdf).  More
-advanced functions of time were developed in [this
-paper](https://arxiv.org/abs/1110.2965) and [this
-one](https://arxiv.org/abs/1604.08139).
+Several of the algorithms implemented here are — as far as I know —
+original to this package, including [`exp`](@ref), [`log`](@ref), and
+[`sqrt`](@ref).  But important contributions came from a number of
+sources, including the notes by [dantam2014](@citet) and
+[kahan2014](@citet).  More advanced functions of time were developed
+in [BoyleOwenPfeiffer2011](@citet) and [Boyle2017](@citet).
+
+### Bibliography
+
+```@bibliography
+```
