@@ -32,7 +32,11 @@ makedocs(;
         "Differentiating by quaternions" => "differentiation.md",
         "All functions" => "functions.md"
     ],
-    # doctest = false
+    # doctest = false,
+    doctestfilters = [
+        # Drop any digit after the 12th digit after a decimal, throughout the docs
+        r"(?<=\d\.\d{12})\d+",
+    ],
 )
 
 deploydocs(;
