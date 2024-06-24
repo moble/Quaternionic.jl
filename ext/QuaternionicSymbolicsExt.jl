@@ -10,6 +10,8 @@ using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 
 
+normalize(v::AbstractVector{Symbolics.Num}) = v ./ √sum(x->x^2, v)
+
 ### Functions that used to appear in quaternion.jl
 quaternion(w::Symbolics.Num) = quaternion(SVector{4}(w, false, false, false))
 rotor(w::Symbolics.Num) = rotor(SVector{4}(one(w), false, false, false))
@@ -257,7 +259,7 @@ end
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to
-        # your package or not (on Julia 1.8 and higher)
+        # this package or not (on Julia 1.8 and higher)
         r(v)
         Symbolics.simplify.(𝓇(𝓋))
         for a ∈ [s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆]

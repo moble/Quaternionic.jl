@@ -1,9 +1,9 @@
 @testset verbose=true "Base" begin
     @testset "Numbers $T" for T in Types
-        # Note that, because `Num` from Symbolics is a weird type, we have to
-        # be a little more explicit below than we normally would be.  Also,
-        # because of signed zeros in the float types, we have to take the
-        # absolute value of the difference before comparing to zero.
+        # Note that, because `Symbolics.Num` is a weird type, we have to be a little more
+        # explicit below than we normally would be.  Also, because of signed zeros in the
+        # float types, we have to take the absolute value of the difference before comparing
+        # to zero.
 
         # Define basis elements
         u = Quaternion{T}(1)
@@ -42,7 +42,7 @@
         if !(T<:Integer)
             @test rotor(T(1), 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
             @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
-            if !(T<:Num)
+            if !(T<:Symbolics.Num)
                 @test rotor(T[1, 2, 3, 4]...) ≈ rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
                 @test rotor(T[0, 2, 3, 4]...) ≈ rotor(T(2), T(3), T(4)) rtol=0 atol=2eps(T)
                 @test rotor(T[1, 0, 0, 0]...) ≈ rotor(T(1)) rtol=0 atol=2eps(T)
@@ -81,24 +81,24 @@
         end
 
         for v ∈ [𝐢, 𝐣, 𝐤]
-            @test Num(1)*v != one(T)
-            @test !isequal(Num(1)*v, one(T))
-            @test Quaternion(Num(one(T))) == one(T)
-            @test Quaternion(Num(7one(T))) == 7one(T)
-            @test one(T) == Quaternion(Num(one(T)))
-            @test 7one(T) == Quaternion(Num(7one(T)))
+            @test Symbolics.Num(1)*v != one(T)
+            @test !isequal(Symbolics.Num(1)*v, one(T))
+            @test Quaternion(Symbolics.Num(one(T))) == one(T)
+            @test Quaternion(Symbolics.Num(7one(T))) == 7one(T)
+            @test one(T) == Quaternion(Symbolics.Num(one(T)))
+            @test 7one(T) == Quaternion(Symbolics.Num(7one(T)))
 
-            @test QuatVec(Num[1,2,3,4]) != one(T)
-            @test QuatVec(Num[7,2,3,4]) != 7one(T)
-            @test one(T) != QuatVec(Num[1,2,3,4])
-            @test 7one(T) != QuatVec(Num[7,2,3,4])
+            @test QuatVec(Symbolics.Num[1,2,3,4]) != one(T)
+            @test QuatVec(Symbolics.Num[7,2,3,4]) != 7one(T)
+            @test one(T) != QuatVec(Symbolics.Num[1,2,3,4])
+            @test 7one(T) != QuatVec(Symbolics.Num[7,2,3,4])
 
-            @test QuatVec(Num[1,2,3,4]) == QuatVec{T}(0,2,3,4)
-            @test QuatVec{T}(0,2,3,4) == QuatVec(Num[1,2,3,4])
-            @test QuatVec(Num[1,2,3,4]) == Quaternion{T}(0,2,3,4)
-            @test Quaternion{T}(0,2,3,4) == QuatVec(Num[1,2,3,4])
-            @test QuatVec(Num[1,2,3,4]) != Quaternion{T}(1,2,3,4)
-            @test Quaternion{T}(1,2,3,4) != QuatVec(Num[1,2,3,4])
+            @test QuatVec(Symbolics.Num[1,2,3,4]) == QuatVec{T}(0,2,3,4)
+            @test QuatVec{T}(0,2,3,4) == QuatVec(Symbolics.Num[1,2,3,4])
+            @test QuatVec(Symbolics.Num[1,2,3,4]) == Quaternion{T}(0,2,3,4)
+            @test Quaternion{T}(0,2,3,4) == QuatVec(Symbolics.Num[1,2,3,4])
+            @test QuatVec(Symbolics.Num[1,2,3,4]) != Quaternion{T}(1,2,3,4)
+            @test Quaternion{T}(1,2,3,4) != QuatVec(Symbolics.Num[1,2,3,4])
         end
 
         # Test indexing
@@ -145,7 +145,7 @@
         # Check isapprox
         @test u ≈ one(T)
         @test one(T) ≈ u
-        if T !== Num  # Num(1) ≉ Num(2) doesn't work
+        if T !== Symbolics.Num  # Symbolics.Num(1) ≉ Symbolics.Num(2) doesn't work
             @test i ≉ one(T)
             @test one(T) ≉ i
             @test j ≉ one(T)
@@ -184,7 +184,7 @@
         @test !isreal(k)
 
         # Check "isinteger"
-        if T != Num
+        if T != Symbolics.Num
             @test isinteger(u)
             @test !isinteger(1.2u)
         end
@@ -243,7 +243,7 @@
             end
         end
 
-        if T != Num
+        if T != Symbolics.Num
             # Check "in"
             @test u ∈ 0:2
             @test u ∉ 2:4
@@ -347,8 +347,8 @@
     end
 
     @testset "Differential" begin
-        @variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
-        ∂ₜ = Differential(t)
+        Symbolics.@variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
+        ∂ₜ = Symbolics.Differential(t)
         Q = quaternion(Q...)
         R = rotor(R...)
         V = quatvec(V...)
