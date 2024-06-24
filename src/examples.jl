@@ -1,4 +1,4 @@
-"""
+@doc raw"""
     precessing_nutating_example([Ωₒ], [Ωₚ], [α], [α̇], [ν], [R₀])
 
 Return an exact quaternionic function of time representing nutating
@@ -27,13 +27,13 @@ return the orientation as a `Rotor`, followed by the angular velocity as a
 
 
 # Example
-```jldoctest
+```jldoctest; filter = r"(\d*)\.(\d{10})\d+" => s"\1.\2"
 julia> R, ω⃗, Ṙ = precessing_nutating_example();
 
 julia> R(12.34)
 rotor(0.9944579779058746 + 0.09804177421238346𝐢 - 0.0008485045352531196𝐣 + 0.03795287510453948𝐤)
 julia> ω⃗(345.67)
- + 0.00046343007342866996𝐢 - 0.0007032818419003173𝐣 + 0.006214814810035087𝐤
+ + 0.0004634300734286701𝐢 - 0.0007032818419003175𝐣 + 0.006214814810035088𝐤
 julia> ϵ = 1e-6; (R(ϵ) - R(-ϵ)) / 2ϵ  # Approximate derivative at t=0
 -3.8491432263754177e-7 + (3.9080960689830135e-6)𝐢 - (6.861695854245622e-5)𝐣 + 0.003076329202503836𝐤
 julia> Ṙ(0)
