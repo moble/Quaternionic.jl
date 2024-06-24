@@ -34,8 +34,8 @@ makedocs(;
     ],
     # doctest = false,
     doctestfilters = [
-        # Drop any digit after the 10th digit after a decimal, throughout the docs
-        r"(?<=\d\.\d{10})\d+",
+        # Drop any digit after the 12th digit after a decimal, throughout the docs
+        r"(?<=\d\.\d{12})\d+",
         # Ignore any warning involving Symbolics or SymbolicUtils
         r"WARNING: .* Symbolic.*",
     ],
