@@ -21,18 +21,19 @@ around the code you don't want to measure:
 
 using Quaternionic
 using Test
-using Random, Symbolics, StaticArrays, ForwardDiff, GenericLinearAlgebra,
+using Random, StaticArrays, ForwardDiff, GenericLinearAlgebra,
     ChainRulesTestUtils, Zygote, ChainRulesTestUtils, Aqua
+import Symbolics, FastDifferentiation
 import LinearAlgebra
 using ChainRulesCore
 ChainRulesCore.debug_mode() = true
 
-@variables w x y z a b c d e  # Symbolic variables
+Symbolics.@variables w x y z a b c d e  # Symbolic variables
 
 # NOTE: `FloatTypes` and `IntTypes` must be in descending order of width
 FloatTypes = [BigFloat, Float64, Float32, Float16]
 IntTypes = [BigInt, Int128, Int64, Int32, Int16, Int8]
-SymbolicTypes = [Num]
+SymbolicTypes = [Symbolics.Num]
 Types = [FloatTypes...; IntTypes...; SymbolicTypes...]
 PrimitiveTypes = [T for T in Types if isbitstype(T)]
 
@@ -41,8 +42,8 @@ QTypes = [Quaternion, Rotor, QuatVec]
 # Handy assignments for now
 Base.eps(::Quaternion{T}) where {T} = eps(T)
 Base.eps(T::Type{<:Integer}) = zero(T)
-Base.eps(n::Num) = zero(n)
-Base.:≈(a::Num, b::Num; kwargs...) = iszero(Symbolics.simplify(a-b; expand=true))
+Base.eps(n::Symbolics.Num) = zero(n)
+Base.:≈(a::Symbolics.Num, b::Symbolics.Num; kwargs...) = iszero(Symbolics.simplify(a-b; expand=true))
 
 enabled_tests = lowercase.(ARGS)
 

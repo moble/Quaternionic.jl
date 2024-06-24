@@ -98,13 +98,13 @@ end
         chars = Iterators.Stateful(Iterators.cycle("abcdefghijkl"))
         function next_scalar!(chars)
             x = Symbol(popfirst!(chars))
-            xvar = @variables $x
+            xvar = Symbolics.@variables $x
             xvar[1]
         end
         function next_quaternion!(chars)
             x = Symbol(popfirst!(chars))
             # May have to work around <https://github.com/JuliaSymbolics/Symbolics.jl/issues/379>:
-            xvar = @variables $x[1:4]
+            xvar = Symbolics.@variables $x[1:4]
             quaternion(xvar[1]...)
         end
 
