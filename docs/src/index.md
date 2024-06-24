@@ -51,7 +51,7 @@ The various `Float` and `Int` types work well, as do `BigFloat`, and the [`Num`
 type from
 `Symbolics.jl`](https://symbolics.juliasymbolics.org/v0.1/manual/variables/#A-note-about-functions-restricted-to-Numbers-1).
 In particular, we can use symbolic expressions as components:
-```jldoctest symbolics
+```jldoctest symbolics; setup = :(using Quaternionic, Symbolics)
 julia> using Quaternionic, Symbolics
 
 julia> @variables a b c d e;
