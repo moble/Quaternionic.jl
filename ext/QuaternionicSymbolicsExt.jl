@@ -2,7 +2,8 @@ module QuaternionicSymbolicsExt
 
 using StaticArrays: SVector
 using Latexify: latexify
-import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
+import Quaternionic: normalize, absvec,
+    AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
     wrapper, components, _pm_ascii, _pm_latex
@@ -11,6 +12,10 @@ isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 
 
 normalize(v::AbstractVector{Symbolics.Num}) = v ./ √sum(x->x^2, v)
+Base.abs(q::AbstractQuaternion{Symbolics.Num}) = √sum(x->x^2, components(q))
+Base.abs(q::QuatVec{Symbolics.Num}) = √sum(x->x^2, vec(q))
+absvec(q::AbstractQuaternion{Symbolics.Num}) = √sum(x->x^2, vec(q))
+
 
 ### Functions that used to appear in quaternion.jl
 quaternion(w::Symbolics.Num) = quaternion(SVector{4}(w, false, false, false))

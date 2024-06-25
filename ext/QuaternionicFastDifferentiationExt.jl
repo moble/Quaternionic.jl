@@ -2,7 +2,8 @@ module QuaternionicFastDifferentiationExt
 
 using StaticArrays: SVector
 using Latexify: latexify
-import Quaternionic: AbstractQuaternion, Quaternion, Rotor, QuatVec,
+import Quaternionic: normalize, absvec,
+    AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
     wrapper, components, _pm_ascii, _pm_latex
@@ -34,6 +35,9 @@ Base.isinf(x::FastDifferentiation.Node) = !isnan(x) & !isfinite(x)
 
 
 normalize(v::AbstractVector{FastDifferentiation.Node}) = v ./ √sum(x->x^2, v)
+Base.abs(q::AbstractQuaternion{FastDifferentiation.Node}) = √sum(x->x^2, components(q))
+Base.abs(q::QuatVec{FastDifferentiation.Node}) = √sum(x->x^2, vec(q))
+absvec(q::AbstractQuaternion{FastDifferentiation.Node}) = √sum(x->x^2, vec(q))
 
 
 ### Functions that used to appear in quaternion.jl
