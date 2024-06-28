@@ -1,5 +1,5 @@
 """
-    randn([rng=GLOBAL_RNG], T=Quaternion{Float64}, [dims...])
+    randn([rng=default_rng()], T=Quaternion{Float64}, [dims...])
 
 Generate a normally distributed random quaternion of type `T` with mean 0 and standard
 deviation of norm 1.  Optionally generate an *array* of such quaternions.  This module
