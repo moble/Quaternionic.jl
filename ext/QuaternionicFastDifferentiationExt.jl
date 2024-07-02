@@ -11,29 +11,6 @@ using PrecompileTools
 isdefined(Base, :get_extension) ? (using FastDifferentiation) : (using ..FastDifferentiation)
 
 
-### TYPE PIRACY!!!
-# The following Base functions should be added to FastDifferentiation itself; meanwhile
-# we'll define them here.
-
-# This is a workaround that should be fixed in FastDifferentiation.jl; Elaine will probably
-# make a PR to fix this.  The problem is that FD only defines
-# `Base.promote_rule(::Type{<:Real}, ::Type{Node})`.  But julia/src/bool.jl defines
-# `promote_rule(::Type{Bool}, ::Type{T}) where T<:Number` and `Node <: Number`, so there is
-# an ambiguity.
-Base.promote_rule(::Type{Bool}, ::Type{FastDifferentiation.Node}) = FastDifferentiation.Node
-
-# These are essentially copied from Symbolics.jl:
-# https://github.com/JuliaSymbolics/Symbolics.jl/blob/e4c328103ece494eaaab2a265524a64bfbe43dbd/src/num.jl#L31-L34
-Base.eps(::Type{FastDifferentiation.Node}) = FastDifferentiation.Node(0)
-Base.typemin(::Type{FastDifferentiation.Node}) = FastDifferentiation.Node(-Inf)
-Base.typemax(::Type{FastDifferentiation.Node}) = FastDifferentiation.Node(Inf)
-Base.float(x::FastDifferentiation.Node) = x
-
-# This one is needed because julia/base/float.jl only defines `isinf` for `Real`, but `Node
-# <: Number`.  (See https://github.com/brianguenter/FastDifferentiation.jl/issues/73)
-Base.isinf(x::FastDifferentiation.Node) = !isnan(x) & !isfinite(x)
-
-
 normalize(v::AbstractVector{FastDifferentiation.Node}) = v ./ √sum(x->x^2, v)
 Base.abs(q::AbstractQuaternion{FastDifferentiation.Node}) = √sum(x->x^2, components(q))
 Base.abs(q::QuatVec{FastDifferentiation.Node}) = √sum(x->x^2, vec(q))
