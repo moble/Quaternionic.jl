@@ -27,7 +27,7 @@ QuaternionicSymbolicsExt = "Symbolics"
 
 [compat]
 ChainRulesCore = "1"
-FastDifferentiation = "0.3.15"
+FastDifferentiation = "0.3.15, 0.4"
 ForwardDiff = "0.10"
 GenericLinearAlgebra = "0.3.11"
 LaTeXStrings = "1"
