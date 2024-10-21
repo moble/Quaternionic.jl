@@ -3,14 +3,18 @@ module QuaternionicLatexifyExt
 import Quaternionic: AbstractQuaternion, QuatVec
 isdefined(Base, :get_extension) ? (using Latexify) : (using ..Latexify)
 
-function _pm_latex_latexify(x)
+function _pm_latex(x::Number)
     # Utility function to print a component of a quaternion in LaTeX
     s = Latexify.latexify(x, env=:raw, bracket=true)
     if s[1] ∉ "+-"
         s = "+" * s
     end
     if occursin(r"[+^/-]", s[2:end])
-        s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
+        if s[1] == '+'
+            s = " + " * "\\left(" * s[2:end] * "\\right)"
+        else
+            s = " + " * "\\left(" * s * "\\right)"
+        end
     else
         s = " " * s[1] * " " * s[2:end]
     end
