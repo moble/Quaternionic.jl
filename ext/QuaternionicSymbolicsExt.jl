@@ -5,9 +5,10 @@ import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
-    wrapper, components, _pm_ascii, _pm_latex
+    wrapper, components, _pm_ascii
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
+import Symbolics: Latexify
 
 
 normalize(v::AbstractVector{Symbolics.Num}) = v ./ √sum(x->x^2, v)
@@ -189,23 +190,6 @@ function _pm_ascii(x::Symbolics.Num)
             s = " + " * "(" * s[2:end] * ")"
         else
             s = " + " * "(" * s * ")"
-        end
-    else
-        s = " " * s[1] * " " * s[2:end]
-    end
-    s
-end
-function _pm_latex(x::Symbolics.Num)
-    # Utility function to print a component of a quaternion in LaTeX
-    s = Symbolics.Latexify.latexify(x, env=:raw, bracket=true)
-    if s[1] ∉ "+-"
-        s = "+" * s
-    end
-    if occursin(r"[+^/-]", s[2:end])
-        if s[1] == '+'
-            s = " + " * "\\left(" * s[2:end] * "\\right)"
-        else
-            s = " + " * "\\left(" * s * "\\right)"
         end
     else
         s = " " * s[1] * " " * s[2:end]
