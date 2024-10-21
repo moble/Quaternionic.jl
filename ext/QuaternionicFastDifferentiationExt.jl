@@ -1,7 +1,6 @@
 module QuaternionicFastDifferentiationExt
 
 using StaticArrays: SVector
-using Latexify: latexify
 import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
@@ -55,42 +54,6 @@ let T = FastDifferentiation.Node
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:FastDifferentiation.Node} =
     wrapper(Q){promote_type(eltype(Q), S)}
-
-
-# function _pm_ascii(x::FastDifferentiation.Node)
-#     # Utility function to print a component of a quaternion
-#     s = "$x"
-#     if s[1] ∉ "+-"
-#         s = "+" * s
-#     end
-#     if occursin(r"[+^/-]", s[2:end])
-#         if s[1] == '+'
-#             s = " + " * "(" * s[2:end] * ")"
-#         else
-#             s = " + " * "(" * s * ")"
-#         end
-#     else
-#         s = " " * s[1] * " " * s[2:end]
-#     end
-#     s
-# end
-# function _pm_latex(x::Num)
-#     # Utility function to print a component of a quaternion in LaTeX
-#     s = latexify(x, env=:raw, bracket=true)
-#     if s[1] ∉ "+-"
-#         s = "+" * s
-#     end
-#     if occursin(r"[+^/-]", s[2:end])
-#         if s[1] == '+'
-#             s = " + " * "\\left(" * s[2:end] * "\\right)"
-#         else
-#             s = " + " * "\\left(" * s * "\\right)"
-#         end
-#     else
-#         s = " " * s[1] * " " * s[2:end]
-#     end
-#     s
-# end
 
 
 # # Broadcast-like operations from FastDifferentiation
