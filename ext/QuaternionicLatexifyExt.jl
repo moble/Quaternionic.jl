@@ -24,9 +24,9 @@ end
 function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
     s = Latexify.LaTeXStrings.latexstring(
         q isa QuatVec ? "" : Latexify.latexify(q[1], env=:raw, bracket=true),
-        _pm_latex_latexify(q[2]), "\\,\\mathbf{i}",
-        _pm_latex_latexify(q[3]), "\\,\\mathbf{j}",
-        _pm_latex_latexify(q[4]), "\\,\\mathbf{k}"
+        _pm_latex(q[2]), "\\,\\mathbf{i}",
+        _pm_latex(q[3]), "\\,\\mathbf{j}",
+        _pm_latex(q[4]), "\\,\\mathbf{k}"
     )
     print(io, s)
 end
