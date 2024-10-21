@@ -1,7 +1,6 @@
 module QuaternionicSymbolicsExt
 
 using StaticArrays: SVector
-using Latexify: latexify
 import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
@@ -196,9 +195,9 @@ function _pm_ascii(x::Symbolics.Num)
     end
     s
 end
-function _pm_latex(x::Num)
+function _pm_latex(x::Symbolics.Num)
     # Utility function to print a component of a quaternion in LaTeX
-    s = latexify(x, env=:raw, bracket=true)
+    s = Symbolics.Latexify.latexify(x, env=:raw, bracket=true)
     if s[1] ∉ "+-"
         s = "+" * s
     end

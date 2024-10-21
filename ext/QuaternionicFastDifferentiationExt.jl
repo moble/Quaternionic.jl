@@ -5,7 +5,7 @@ import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
-    wrapper, components, _pm_ascii, _pm_latex
+    wrapper, components
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using FastDifferentiation) : (using ..FastDifferentiation)
 
