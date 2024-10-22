@@ -1,5 +1,6 @@
 module QuaternionicChainRulesCoreExt
 
+using Pkg
 using Quaternionic
 import Quaternionic: _sincu, _cossu
 using StaticArrays
@@ -12,10 +13,8 @@ isdefined(Base, :get_extension) ?
 # It's likely that StaticArrays will have its own ChainRulesCore extension someday, so we
 # need to check if there is already a ProjectTo defined for SArray.  If so, we'll use that.
 # If not, we'll define one here.
-@info [repr(method) for method in methods(ProjectTo) if occursin("SArray", repr(method.sig))]
-@show any(method->occursin("SArray", repr(method.sig)), methods(ProjectTo))
-if !any(method->occursin("SArray", repr(method.sig)), methods(ProjectTo))
-    @info "Defining ProjectTo for SArray"
+staticarrays_info = Pkg.dependencies()[Base.UUID("90137ffa-7385-5640-81b9-e52037218182")]
+if staticarrays_info.version < v"1.8.1"
     # These are ripped from https://github.com/JuliaArrays/StaticArrays.jl/pull/1068
     function (project::ProjectTo{<:Tangent{<:Tuple}})(dx::SArray)
         dy = reshape(dx, axes(project.elements))  # allows for dx::OffsetArray
@@ -23,15 +22,22 @@ if !any(method->occursin("SArray", repr(method.sig)), methods(ProjectTo))
         return ChainRulesCore.project_type(project)(dz...)
     end
     function ProjectTo(x::SArray{S,T}) where {S, T}
-        return ProjectTo{SArray}(; element=ChainRulesCore._eltype_projectto(T), axes=S)
+        return ProjectTo{SArray}(;
+            element=ChainRulesCore._eltype_projectto(T),
+            axes=axes(x), size=StaticArrays.Size(x)
+        )
     end
-    function (project::ProjectTo{SArray})(dx::AbstractArray{S,M}) where {S,M}
-        return SArray{project.axes}(dx)
-    end
-    function rrule(::Type{T}, x::Tuple) where {T<:SArray}
+    @inline _sarray_from_array(::Size{T}, dx::AbstractArray) where {T} = SArray{Tuple{T...}}(dx)
+    (project::ProjectTo{SArray})(dx::AbstractArray) = _sarray_from_array(project.size, dx)
+    function rrule(::Type{T}, x::Tuple) where {T <: SArray}
         project_x = ProjectTo(x)
-        Array_pullback(ȳ) = (NoTangent(), project_x(ȳ))
-        return T(x), Array_pullback
+        ∇Array(∂y) = (NoTangent(), project_x(∂y))
+        return T(x), ∇Array
+    end
+    function rrule(::Type{T}, xs::Number...) where {T <: SVector}
+        project_x = ProjectTo(xs)
+        ∇Array(∂y) = (NoTangent(), project_x(∂y)...)
+        return T(xs...), ∇Array
     end
 end
 
