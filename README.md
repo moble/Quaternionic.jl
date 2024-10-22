@@ -5,9 +5,7 @@
 
 <a href="https://zenodo.org/badge/latestdoi/375490468"><img align="right" hspace="0" alt="Latest DOI" src="https://zenodo.org/badge/375490468.svg"></a>
 <a href="https://moble.github.io/Quaternionic.jl/stable/"><img align="right" hspace="0" alt="Stable docs" src="https://img.shields.io/badge/docs-stable-blue.svg"></a>
-[![Documentation
-Status](https://github.com/moble/Quaternionic.jl/workflows/docs/badge.svg)](https://moble.github.io/Quaternionic.jl/dev)
-[![Test Status](https://github.com/moble/Quaternionic.jl/workflows/tests/badge.svg)](https://github.com/moble/Quaternionic.jl/actions)
+[![CI](https://github.com/moble/Quaternionic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/moble/Quaternionic.jl/actions/workflows/CI.yml)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Test Coverage](https://codecov.io/gh/moble/Quaternionic.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/moble/Quaternionic.jl)
 [![PkgEval][pkgeval-img]][pkgeval-url]
