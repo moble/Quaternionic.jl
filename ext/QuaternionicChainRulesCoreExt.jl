@@ -7,32 +7,6 @@ isdefined(Base, :get_extension) ?
     (using ChainRulesCore; import ChainRulesCore: rrule, rrule_via_ad, RuleConfig, ProjectTo) :
     (using ..ChainRulesCore; import ...ChainRulesCore: rrule, rrule_via_ad, RuleConfig, ProjectTo)
 
-
-## StaticArrays
-# It's likely that StaticArrays will have its own ChainRulesCore extension someday, so we
-# need to check if there is already a ProjectTo defined for SArray.  If so, we'll use that.
-# If not, we'll define one here.
-if !any(method->occursin("SArray", repr(method.sig)), methods(ProjectTo))
-    # These are ripped from https://github.com/JuliaArrays/StaticArrays.jl/pull/1068
-    function (project::ProjectTo{<:Tangent{<:Tuple}})(dx::SArray)
-        dy = reshape(dx, axes(project.elements))  # allows for dx::OffsetArray
-        dz = ntuple(i -> project.elements[i](dy[i]), length(project.elements))
-        return ChainRulesCore.project_type(project)(dz...)
-    end
-    function ProjectTo(x::SArray{S,T}) where {S, T}
-        return ProjectTo{SArray}(; element=ChainRulesCore._eltype_projectto(T), axes=S)
-    end
-    function (project::ProjectTo{SArray})(dx::AbstractArray{S,M}) where {S,M}
-        return SArray{project.axes}(dx)
-    end
-    function rrule(::Type{T}, x::Tuple) where {T<:SArray}
-        project_x = ProjectTo(x)
-        Array_pullback(ȳ) = (NoTangent(), project_x(ȳ))
-        return T(x), Array_pullback
-    end
-end
-
-
 function rrule(::Type{QT}, arg::AbstractVector) where {QT<:AbstractQuaternion}
     AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
     return QT(arg), AbstractQuaternion_pullback
