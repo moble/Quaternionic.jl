@@ -3,6 +3,7 @@ module Quaternionic
 using StaticArrays, LinearAlgebra, PrecompileTools
 import LaTeXStrings
 import Random: AbstractRNG, default_rng, randn!
+using TestItems: @testitem
 
 export AbstractQuaternion
 export Quaternion, quaternion,
