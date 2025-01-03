@@ -197,7 +197,7 @@ function Base.exp(q::Quaternion{T}) where {T}
     e = exp(q[1])
     if iszero(a)
         # Take this a little seriously, to obtain accurate ForwardDiff derivative
-        Rotor{typeof(e)}(e*(1 - a/2 + a^2/24), e*v⃗[2], e*v⃗[3], e*v⃗[4])
+        Rotor{typeof(e)}(e*(1 - a/2 + a^2/24), e*q[2], e*q[3], e*q[4])
     else
         esinc = e * _sincu(√a)
         Quaternion{typeof(esinc)}(e*cos(√a), esinc*q[2], esinc*q[3], esinc*q[4])
