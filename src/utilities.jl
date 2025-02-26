@@ -7,6 +7,15 @@ else
     # Un-normalized sinc function
     # sincu(x::Number) = _sincu(float(x))
     _sincu(x::Number) = iszero(x) ? one(x) : isinf(x) ? zero(x) : sin(x)/x
+    # _sincu(x::Number) = ifelse(
+    #     iszero(x),
+    #     one(x),
+    #     ifelse(
+    #         isinf(x),
+    #         zero(x),
+    #         sin(x) / x
+    #     )
+    # )
     @inline _sincu(x::Union{Float64,ComplexF64}) =
         abs(x) < 0.0031 ? evalpoly(x^2, (1.0, -0.16666666666666666, 0.008333333333333333)) :
         isinf(x) ? zero(x) : sin(x)/x

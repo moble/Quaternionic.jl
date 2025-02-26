@@ -195,9 +195,12 @@ rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 function Base.exp(q::Quaternion{T}) where {T}
     a = abs2vec(q)
     e = exp(q[1])
+    # let ecos, esinc = ifelse(iszero(a), e*(1 - a*(1 - a/12)/2, e), (e*cos(√a), e*_sincu(√a)))
+    #     Rotor{typeof(ecos)}(ecos, esinc*v⃗[2], esinc*v⃗[3], esinc*v⃗[4])
+    # end
     if iszero(a)
         # Take this a little seriously, to obtain accurate ForwardDiff derivative
-        Quaternion{typeof(e)}(e*(1 - a/2 + a^2/24), e*q[2], e*q[3], e*q[4])
+        Quaternion{typeof(e)}(e*(1 - a*(1 - a/12)/2), e*q[2], e*q[3], e*q[4])
     else
         esinc = e * _sincu(√a)
         Quaternion{typeof(esinc)}(e*cos(√a), esinc*q[2], esinc*q[3], esinc*q[4])
@@ -205,13 +208,13 @@ function Base.exp(q::Quaternion{T}) where {T}
 end
 function Base.exp(v⃗::QuatVec{T}) where {T}
     a = abs2vec(v⃗)
-    if iszero(a)
+    c, s = if iszero(a)
         # Take this a little seriously, to obtain accurate ForwardDiff derivative
-        Rotor{typeof(a)}(1 - a/2 + a^2/24, v⃗[2], v⃗[3], v⃗[4])
+        1 - a*(1 - a/12)/2, one(a)
     else
-        sinc = _sincu(√a)
-        Rotor{typeof(sinc)}(cos(√a), sinc*v⃗[2], sinc*v⃗[3], sinc*v⃗[4])
+        cos(√a), _sincu(√a)
     end
+    Rotor{typeof(c)}(c, s*v⃗[2], s*v⃗[3], s*v⃗[4])
 end
 
 @doc raw"""
