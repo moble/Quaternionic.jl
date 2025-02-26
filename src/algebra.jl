@@ -12,9 +12,18 @@ julia> conj(quaternion(1,2,3,4))
 1 - 2𝐢 - 3𝐣 - 4𝐤
 ```
 """
-Base.conj(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q[1], -q[2], -q[3], -q[4])
+Base.conj(q::Q) where {Q<:AbstractQuaternion} = Q(q[1], -q[2], -q[3], -q[4])
+Base.conj(q::Q) where {Q<:AbstractQuaternion{Bool}} = wrapper(Q)(q[1], -q[2], -q[3], -q[4])
 
-Base.:-(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(-components(q))
+Base.:-(q::Q) where {Q<:AbstractQuaternion} = Q(-components(q))
+Base.:-(q::Q) where {Q<:AbstractQuaternion{Bool}} = wrapper(Q)(-Int.(components(q)))
+
+# Note that, in the two definitions above, the `wrapper` function is used to
+# ensure that the result is of the same type as the input quaternion, but with a different
+# basetype.  This is necessary because `-true` is not a `Bool`, it's the `Int` -1.  This is
+# the only type I can think of where `-` changes the type of the input, so that's the only
+# special case we need.  (I'm assuming `Unsigned` types are not used here.)
+
 
 
 for TA ∈ (AbstractQuaternion, Rotor, QuatVec)

@@ -78,6 +78,7 @@ end
     addtests("interpolation.jl")
     addtests("gradients.jl")
     addtests("auto_differentiation.jl")
+    addtests("issues.jl")
     addtests("doctests.jl")
 end
 

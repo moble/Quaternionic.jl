@@ -5,7 +5,7 @@ import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
-    wrapper, components, _pm_ascii
+    wrapper, components, basetype, _pm_ascii
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 import Symbolics: Latexify
@@ -54,7 +54,7 @@ let T = Symbolics.Num
     end
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Symbolics.Num} =
-    wrapper(Q){promote_type(eltype(Q), S)}
+    wrapper(Q){promote_type(basetype(Q), S)}
 
 
 ### Functions that used to appear in base.jl

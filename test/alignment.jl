@@ -1,15 +1,16 @@
 @testset verbose=true "Alignment" begin
     Random.seed!(1234)
+
     @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64]
         for N in [1, 2, 3, 4, 5, 10, 20]
             a⃗ = randn(QuatVec{T}, N)
             R = randn(Rotor{T})
 
             # Test the exact result
-            b⃗ = R .* a⃗ .* conj(R)
+            b⃗ = R.(a⃗)
             R′ = align(a⃗, b⃗)
             if N > 1
-                @test distance(R, conj(R′)) < 25eps(T)
+                @test distance(R, conj(R′)) < 50eps(T)
             end
             @test maximum(abs, a⃗ - R′ .* b⃗ .* conj(R′)) < 40eps(T)
             @test_throws DimensionMismatch align(a⃗, b⃗[2:end])

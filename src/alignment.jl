@@ -132,10 +132,10 @@ Now, since we want ``R`` to be a rotor, we simply define it to be the normalized
 sum.
 
 """
-function align(A, B, w)
+function align(A::AbstractArray{<:Rotor}, B::AbstractArray{<:Rotor}, w::AbstractArray{<:Real})
     rotor(sum(w[i] * A[i] * conj(B[i]) for i in eachindex(A, B, w)))
 end
 
-function align(A, B)
+function align(A::AbstractArray{<:Rotor}, B::AbstractArray{<:Rotor})
     rotor(sum(A[i] * conj(B[i]) for i in eachindex(A, B)))
 end

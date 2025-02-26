@@ -233,7 +233,7 @@
 
         # Check "round"
         if T<:AbstractFloat
-            @test eltype(round(T(1.2) + 0imx)) === T
+            @test basetype(round(T(1.2) + 0imx)) === T
             @test round(T(1.2) + 0imx) == 1 + 0imx
             @test round(T(1.2)imx) == 0 + 1imx
             @test round(T(1.2)imy) == 0 + 1imy

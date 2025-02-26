@@ -5,7 +5,7 @@ import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
-    wrapper, components
+    wrapper, components, basetype
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using FastDifferentiation) : (using ..FastDifferentiation)
 
@@ -53,7 +53,7 @@ let T = FastDifferentiation.Node
     end
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:FastDifferentiation.Node} =
-    wrapper(Q){promote_type(eltype(Q), S)}
+    wrapper(Q){promote_type(basetype(Q), S)}
 
 
 # # Broadcast-like operations from FastDifferentiation

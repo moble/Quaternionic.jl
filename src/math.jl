@@ -330,7 +330,7 @@ function Base.:^(q::Rotor, s::Number)
         if q[1] < 0
             # log(q) ≈ π𝐤
             sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
-            return Rotor{eltype(q)}([cos_πs, 0, 0, sin_πs])
+            return Rotor{basetype(q)}([cos_πs, 0, 0, sin_πs])
         end
         # log(q) ≈ 0
         return one(q)
