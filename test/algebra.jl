@@ -118,4 +118,9 @@ end
             end
         end
     end
+
+    R = Rotor{Float16}(Float16.((-0.3062, 0.09735, -0.1614,  0.933))...)
+    @test conj(conj(R)) == R
+    @test -(-R) == R
+    @test conj(-R) == -conj(R)
 end

@@ -12,9 +12,9 @@ julia> conj(quaternion(1,2,3,4))
 1 - 2𝐢 - 3𝐣 - 4𝐤
 ```
 """
-Base.conj(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(q[1], -q[2], -q[3], -q[4])
+Base.conj(q::Q) where {Q<:AbstractQuaternion} = Q(q[1], -q[2], -q[3], -q[4])
 
-Base.:-(q::Q) where {Q<:AbstractQuaternion} = wrapper(Q)(-components(q))
+Base.:-(q::Q) where {Q<:AbstractQuaternion} = Q(-components(q))
 
 
 for TA ∈ (AbstractQuaternion, Rotor, QuatVec)
