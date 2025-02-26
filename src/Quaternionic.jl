@@ -10,7 +10,7 @@ export Quaternion, quaternion,
     imx, imy, imz, 𝐢, 𝐣, 𝐤
 export Rotor, rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, quatvec, QuatVecF64, QuatVecF32, QuatVecF16
-export components
+export components, basetype
 export (⋅), (×), (×̂), normalize
 export abs2vec, absvec
 export from_float_array, to_float_array,

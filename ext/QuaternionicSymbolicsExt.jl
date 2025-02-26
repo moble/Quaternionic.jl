@@ -54,7 +54,7 @@ let T = Symbolics.Num
     end
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Symbolics.Num} =
-    wrapper(Q){promote_type(eltype(Q), S)}
+    wrapper(Q){promote_type(basetype(Q), S)}
 
 
 ### Functions that used to appear in base.jl

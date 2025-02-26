@@ -53,7 +53,7 @@ let T = FastDifferentiation.Node
     end
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:FastDifferentiation.Node} =
-    wrapper(Q){promote_type(eltype(Q), S)}
+    wrapper(Q){promote_type(basetype(Q), S)}
 
 
 # # Broadcast-like operations from FastDifferentiation

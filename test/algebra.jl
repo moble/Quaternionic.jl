@@ -20,8 +20,8 @@ module FundamentalTests
     end
     test_vector_inverse(v::Quaternion) = @test v + (-v) == zero(v)
     function test_vector_scalar_identity(v::Quaternion)
-        @test one(eltype(v)) * v == v
-        @test v * one(eltype(v)) == v
+        @test one(basetype(v)) * v == v
+        @test v * one(basetype(v)) == v
     end
     function test_vector_scalar_multiplication(a, v::Quaternion)
         @test a * v == quaternion(a*v[1], a*v[2], a*v[3], a*v[4])
@@ -59,7 +59,7 @@ module FundamentalTests
     test_involution_norm_imag(x::Quaternion) = @test absvec(x * conj(x)) ≈ 0 atol=eps(abs(x))
 
     # Normed
-    test_norm_maps_to_field(q::Quaternion) = @test typeof(abs2(q)) == eltype(q)
+    test_norm_maps_to_field(q::Quaternion) = @test typeof(abs2(q)) == basetype(q)
     test_norm_nondegenerate(v::Quaternion) = @test iszero(v) ⊻ !iszero(abs2(v))
     test_norm_quadratic(v::Quaternion) = @test abs2(2*v) ≈ 4*abs2(v) rtol=eps(v)
     test_norm_quadratic(a, v::Quaternion) = @test abs2(a*v) ≈ a^2*abs2(v) rtol=eps(v)

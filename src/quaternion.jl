@@ -55,7 +55,7 @@ end
 
 quaternion(a::SVector{4,T}) where {T<:Number} = Quaternion{T}(a)
 #quaternion(a::AbstractVector) = Quaternion{T}(SVector{4,T}(a))  # See below
-quaternion(a::AbstractQuaternion) = Quaternion{eltype(a)}(components(a))
+quaternion(a::AbstractQuaternion) = Quaternion{basetype(a)}(components(a))
 quaternion(w,x,y,z) = (v=SVector{4}(w,x,y,z); Quaternion{eltype(v)}(v))
 quaternion(x,y,z) = (v=SVector{4}(false,x,y,z); Quaternion{eltype(v)}(v))
 quaternion(w::T) where {T<:Number} = Quaternion{T}(SVector{4,T}(w, false, false, false))
@@ -387,7 +387,7 @@ end
     end
 end
 Base.@propagate_inbounds Base.getindex(q::AbstractQuaternion, I) = [q[i] for i in I]
-Base.real(::Type{T}) where {T<:AbstractQuaternion} = eltype(T)
+Base.real(::Type{T}) where {T<:AbstractQuaternion} = basetype(T)
 Base.real(q::AbstractQuaternion{T}) where {T<:Number} = q[1]
 Base.imag(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
 Base.vec(q::AbstractQuaternion{T}) where {T<:Number} = @view components(q)[2:4]
@@ -464,21 +464,22 @@ for T ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor, Number)
 end
 
 
-Base.eltype(::Type{<:AbstractQuaternion{T}}) where {T} = T
-Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(eltype(Q))}
+basetype(::AbstractQuaternion{T}) where {T} = T
+basetype(::Type{<:AbstractQuaternion{T}}) where {T} = T
+Base.widen(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){widen(basetype(Q))}
 Base.float(::Type{Q}) where {Q<:AbstractQuaternion{<:AbstractFloat}} = Q
-Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(eltype(Q))}
+Base.float(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){float(basetype(Q))}
 Base.float(q::AbstractQuaternion{T}) where {T<:AbstractFloat} = q
 Base.float(q::AbstractQuaternion{T}) where {T} = wrapper(q){float(T)}(float(components(q)))
 
-Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(eltype(Q))}
+Base.big(::Type{Q}) where {Q<:AbstractQuaternion} = wrapper(Q){big(basetype(Q))}
 Base.big(q::AbstractQuaternion{T}) where {T<:Number} = wrapper(q){big(T)}(q)
 
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Number} =
-    wrapper(Q){promote_type(eltype(Q), S)}
+    wrapper(Q){promote_type(basetype(Q), S)}
 Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number,S<:Number} =
     Quaternion{promote_type(T, S)}
 Base.promote_rule(::Type{QuatVec{T}}, ::Type{S}) where {T<:Number,S<:AbstractQuaternion} =
-    wrapper(wrapper(QuatVec), wrapper(S)){promote_type(T, eltype(S))}
+    wrapper(wrapper(QuatVec), wrapper(S)){promote_type(T, basetype(S))}
 Base.promote_rule(::Type{Q1}, ::Type{Q2}) where {Q1<:AbstractQuaternion,Q2<:AbstractQuaternion} =
-    wrapper(wrapper(Q1), wrapper(Q2)){promote_type(eltype(Q1), eltype(Q2))}
+    wrapper(wrapper(Q1), wrapper(Q2)){promote_type(basetype(Q1), basetype(Q2))}
