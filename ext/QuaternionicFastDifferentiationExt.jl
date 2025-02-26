@@ -112,7 +112,7 @@ end
             conj(a)
             for b ∈ [s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆]
                 a * b
-                a / b
+                # a / b  # TODO: Uncomment when https://github.com/brianguenter/FastDifferentiation.jl/issues/98 is fixed
                 a + b
                 a - b
             end

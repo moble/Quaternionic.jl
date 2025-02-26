@@ -47,6 +47,8 @@ julia = "1.6"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Coverage = "a2441757-f6aa-5fb2-8edb-039e3f45d037"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 DifferentiationInterfaceTest = "a82114a7-5aa3-49a8-9643-716bb13727a3"
@@ -68,6 +70,8 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 [targets]
 test = [
     "Aqua",
+    "ChainRules",
+    "ChainRulesCore",
     "Coverage",
     "DifferentiationInterface",
     "DifferentiationInterfaceTest",
