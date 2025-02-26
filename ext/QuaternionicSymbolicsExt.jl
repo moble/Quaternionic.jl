@@ -5,7 +5,7 @@ import Quaternionic: normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
-    wrapper, components, _pm_ascii
+    wrapper, components, basetype, _pm_ascii
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
 import Symbolics: Latexify
