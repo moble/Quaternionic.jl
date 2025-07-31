@@ -12,6 +12,7 @@ println("Building docs starting at ", Dates.format(Dates.now(), "HH:MM:SS"), "."
 using Pkg
 cd((@__DIR__) * "/..")
 Pkg.activate("docs")
+Pkg.update()
 
 using LiveServer
 servedocs(launch_browser=true)
