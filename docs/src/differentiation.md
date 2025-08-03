@@ -219,10 +219,72 @@ So the `rrule` would just look like
 \Delta s \\ \Delta t \\ \Delta u \\ \Delta v
 \end{pmatrix}.
 ```
+Or we might have a function ``\mathbb{H} \to \mathbb{R}``:
+```math
+f(w, x, y, z) = s(w, x, y, z),
+```
+so the `rrule` would look like
+```math
+\tfrac{\partial s}{\partial w} \, \Delta s + \tfrac{\partial t}{\partial w} \, \Delta t + \tfrac{\partial u}{\partial w} \, \Delta u + \tfrac{\partial v}{\partial w} \, \Delta v
+=
+\begin{pmatrix}
+\tfrac{\partial s}{\partial w}
+&
+\tfrac{\partial t}{\partial w}
+&
+\tfrac{\partial u}{\partial w}
+&
+\tfrac{\partial v}{\partial w}
+\end{pmatrix}
+\begin{pmatrix}
+\Delta s \\ \Delta t \\ \Delta u \\ \Delta v
+\end{pmatrix}.
+```
+
+
 Similarly, we can extend this with multiple arguments —
 ``\mathbb{R}``, ``\mathbb{H}``, or other — by appending those
 arguments to ``s``, ``t``, ``u``, and ``v``, for example.  And
-equivalently for the outputs.
+equivalently for the outputs.  For example, a function
+``\mathbb{R} \times \mathbb{H} \to \mathbb{H}`` would look like
+```math
+f(\sigma, w, x, y, z) =
+s(\sigma, w, x, y, z)
++ 𝐢 t(\sigma, w, x, y, z)
++ 𝐣 u(\sigma, w, x, y, z)
++ 𝐤 v(\sigma, w, x, y, z).
+```
+The `rrule` in matrix form looks like
+```math
+\begin{pmatrix}
+\tfrac{\partial s}{\partial \sigma} & \tfrac{\partial t}{\partial \sigma} & \tfrac{\partial u}{\partial \sigma} & \tfrac{\partial v}{\partial \sigma} \\[3pt]
+\tfrac{\partial s}{\partial w}      & \tfrac{\partial t}{\partial w}      & \tfrac{\partial u}{\partial w}      & \tfrac{\partial v}{\partial w}      \\[3pt]
+\tfrac{\partial s}{\partial x}      & \tfrac{\partial t}{\partial x}      & \tfrac{\partial u}{\partial x}      & \tfrac{\partial v}{\partial x}      \\[3pt]
+\tfrac{\partial s}{\partial y}      & \tfrac{\partial t}{\partial y}      & \tfrac{\partial u}{\partial y}      & \tfrac{\partial v}{\partial y}      \\[3pt]
+\tfrac{\partial s}{\partial z}      & \tfrac{\partial t}{\partial z}      & \tfrac{\partial u}{\partial z}      & \tfrac{\partial v}{\partial z}
+\end{pmatrix}
+\begin{pmatrix}
+\Delta s \\ \Delta t \\ \Delta u \\ \Delta v
+\end{pmatrix}.
+```
+If this function is just scalar multiplication, we have ``s = \sigma\,
+w``, etc., so the above becomes
+```math
+\begin{pmatrix}
+w & x & y & z \\[3pt]
+\sigma & 0 & 0 & 0 \\[3pt]
+0 & \sigma & 0 & 0 \\[3pt]
+0 & 0 & \sigma & 0 \\[3pt]
+0 & 0 & 0 & \sigma
+\end{pmatrix}
+\begin{pmatrix}
+\Delta s \\ \Delta t \\ \Delta u \\ \Delta v
+\end{pmatrix} =
+\begin{pmatrix}
+w \Delta s + x \Delta t + y \Delta u + z \Delta v \\
+\sigma \Delta s \\ \sigma \Delta t \\ \sigma \Delta u \\ \sigma \Delta v
+\end{pmatrix}.
+```
 
 Essentially, we imagine a wrapper where the quaternions on input and
 output are expanded to arrays, the AD proceeds as usual, and then the
