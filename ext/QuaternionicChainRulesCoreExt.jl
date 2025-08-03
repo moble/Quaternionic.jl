@@ -320,6 +320,23 @@ end
 #    + 𝐣 * (∂s/∂y Δs + ∂t/∂y Δt + ∂u/∂y Δu + ∂v/∂y Δv)
 #    + 𝐤 * (∂s/∂z Δs + ∂t/∂z Δt + ∂u/∂z Δu + ∂v/∂z Δv)
 
+function rrule(::typeof(*), t::Real, q::AbstractQuaternion)
+    function mul_pullback(Δq)
+        ∂t = @thunk q ⋅ unthunk(Δq)
+        ∂q = @thunk t * unthunk(Δq)
+        return (NoTangent(), ∂t, ∂q)
+    end
+    return t * q, mul_pullback
+end
+function rrule(::typeof(*), q::AbstractQuaternion, t::Real)
+    function mul_pullback(Δq)
+        ∂t = @thunk q ⋅ unthunk(Δq)
+        ∂q = @thunk t * unthunk(Δq)
+        return (NoTangent(), ∂q, ∂t)
+    end
+    return t * q, mul_pullback
+end
+
 function rrule(::typeof(exp), q::Quaternion{T}) where T
     w, x, y, z = components(q)
     a = absvec(q)
