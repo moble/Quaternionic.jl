@@ -1,12 +1,13 @@
 # Differentiating by quaternionic arguments
 
-As with complex arguments, differentiation with respect to quaternionic
-arguments treats the components of the quaternionic argument as independent real
-arguments.  These rules are implemented for this package in `ChainRulesCore`,
-which means that they should work seamlessly with [any package that relies on
+As with complex arguments, differentiation with respect to
+quaternionic arguments treats the components of the quaternionic
+argument as independent real arguments.  These rules are implemented
+for this package in `ChainRulesCore`, which means that they should
+work seamlessly with [any package that relies on
 `ChainRulesCore`](https://juliadiff.org/ChainRulesCore.jl/stable/#ChainRules-roll-out-status),
-such as [`Zygote`](https://github.com/FluxML/Zygote.jl).  Derivatives can also
-be calculated automatically using
+such as [`Zygote`](https://github.com/FluxML/Zygote.jl).  Derivatives
+can also be calculated automatically using
 [`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/)
 
 As with complex differentiation, there are numerous notions of
@@ -19,6 +20,20 @@ recommended that you carefully check how the definitions of `frule`
 and `rrule` translate into your specific notion of quaternionic
 derivatives, since getting this wrong will quietly give you wrong
 results.
+
+!!! warn "Zygote is weird"
+    Note that Zygote's handling of input and output arguments is just
+    strange.  Specifically, everything goes badly if an input or
+    output is quaternionic.  For example, if we define ``f(t) = tq``
+    for some fixed quaternion ``q``, Zygote's derivative of this is
+    just the first component of the correct answer.
+    
+    Fortunately, this does not seem to be a problem when functions
+    involve quaternions *internally*, so for testing we can just
+    provide input or accept output in the form of arrays, but convert
+    them to quaternions inside the function to be tested, and switch
+    to checking the Jacobian as needed.  No other AD package seems to
+    have this problem.
 
 
 ## Simple generalization of complex differentiation
