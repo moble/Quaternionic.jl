@@ -17,7 +17,7 @@ jobs:
     #     && !contains(github.event.head_commit.message, '[skip benchmark]')
     #     && !contains(github.event.head_commit.message, '[skip benchmarks]')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: julia-actions/setup-julia@v2
         with:
           version: 'nightly'
