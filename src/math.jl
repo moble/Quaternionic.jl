@@ -228,8 +228,8 @@ The general formula whenever the denominator is nonzero is
 \sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
 ```
 
-This can be proven by expanding `q` as `q[1] + vec(q)` and multiplying the expression above
-by itself.
+This can be proven by squaring the numerator, using `q = q[1] + q⃗` and `|q|^2 = q[1]^2 -
+q⃗^2`.
 
 Note that whenever the vector part is zero and the scalar part is negative, the solution is
 not unique (and the denominator above is zero), because it necessarily involves the
@@ -259,8 +259,8 @@ julia> √quaternion(-4.0)
 This function uses an algorithm for finding the square root that is very accurate (typically
 achieving the correct result to within machine precision) for *most* values.  However, naive
 application of the formula above can lead to catastrophic cancellation when the scalar part
-is negative and significantly larger in magnitude to the vector part.  Therefore, when `q[1]
- < 0`, we transform the problem into the case where `q[1] > 0` as
+is negative and significantly larger in magnitude than the vector part.  Therefore, when
+ `q[1] < 0`, we transform the problem into the case where `q[1] > 0` as
 ```math
 \sqrt{q} = \bar{\sqrt{-\bar{q}}}\, \sqrt{-1},
 ```
