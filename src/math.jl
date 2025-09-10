@@ -20,7 +20,7 @@ Base.abs2(::Rotor{T}) where {T<:Number} = one(T)
 """
     abs(q)
 
-Square-root of the sum the squares of the components of the quaternion
+Square root of the sum the squares of the components of the quaternion
 
 This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
 
@@ -51,7 +51,7 @@ abs2vec(q::AbstractQuaternion{T}) where {T<:Real} = sum(x->x^2, vec(q))
 """
     absvec(q)
 
-Square-root of the sum of the squares of the "vector" components of the quaternion.
+Square root of the sum of the squares of the "vector" components of the quaternion.
 
 This function uses Julia's built-in `hypot` function to avoid overflow and underflow.
 
@@ -220,7 +220,7 @@ end
 @doc raw"""
     sqrt(q)
 
-Square-root of a quaternion.
+Square root of a quaternion.
 
 The general formula whenever the denominator is nonzero is
 
@@ -233,7 +233,7 @@ q⃗^2`.
 
 Note that whenever the vector part is zero and the scalar part is negative, the solution is
 not unique (and the denominator above is zero), because it necessarily involves the
-square-root of -1, of which there are infinitely many in the space of quaternions.  In this
+square root of -1, of which there are infinitely many in the space of quaternions.  In this
 case, we arbitrarily choose the vector part of the result to be in the `z` direction.  A
 reasonable alternative would be to throw an error; instead it is left to the user to check
 for that condition.
