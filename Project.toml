@@ -10,6 +10,7 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -28,7 +29,7 @@ QuaternionicSymbolicsExt = "Symbolics"
 
 [compat]
 ChainRulesCore = "1"
-FastDifferentiation = "0.3.15"
+FastDifferentiation = "0.3.15, 0.4"  # Wait for https://github.com/brianguenter/FastDifferentiation.jl/issues/98 to add 0.4 compat
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.3.11"
 LaTeXStrings = "1"
@@ -39,4 +40,48 @@ Random = "1"
 Requires = "1"
 StaticArrays = "1.8.1"
 Symbolics = "0.1, 1, 2, 3, 4, 5, 6"
+TestItemRunner = "1"
+TestItems = "1"
 julia = "1.6"
+
+
+[extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Coverage = "a2441757-f6aa-5fb2-8edb-039e3f45d037"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
+DifferentiationInterfaceTest = "a82114a7-5aa3-49a8-9643-716bb13727a3"
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
+FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+
+[targets]
+test = [
+    "Aqua",
+    "Coverage",
+    "DifferentiationInterface",
+    "DifferentiationInterfaceTest",
+    "DoubleFloats",
+    "Enzyme",
+    "FastDifferentiation",
+    "FiniteDifferences",
+    "ForwardDiff",
+    "LinearAlgebra",
+    "Mooncake",
+    "Random",
+    "ReverseDiff",
+    "StaticArrays",
+    "Test",
+    "TestItemRunner",
+    "Zygote",
+]
