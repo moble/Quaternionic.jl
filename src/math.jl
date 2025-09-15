@@ -273,20 +273,24 @@ naive approach, and the result is still accurate to within machine precision.
 """
 function Base.sqrt(q::T) where {T<:AbstractQuaternion}
     if q[1] ≥ 0
-        if all(iszero, vec(q))
-            T(√(q[1]), false, false, false)
+        c₁ = abs(q) + q[1]
+        if iszero(c₁)
+            # @info "Case 1" c₁
+            T(false, false, false, false)
         else
-            c₁ = abs(q) + q[1]
             c₂ = √inv(2c₁)
+            # @info "Case 2" (c₁, c₂)
             T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
         end
     else # q[1] < 0
-        if all(iszero, vec(q))
-            T(false, false, false, √(-q[1]))
+        c₁ = abs(q) - q[1]
+        c₂ = √inv(2c₁)
+        T(c₁*c₂, -q[2]*c₂, -q[3]*c₂, -q[4]*c₂) * if all(iszero, vec(q))
+            # @info "Case 3" (c₁, c₂)
+            T(𝐤)
         else
-            c₁ = abs(q) - q[1]
-            c₂ = √inv(2c₁)
-            T(c₁*c₂, -q[2]*c₂, -q[3]*c₂, -q[4]*c₂) * T(normalize(vec(q))...)
+            # @info "Case 4" (c₁, c₂)
+            T(normalize(vec(q))...)
         end
     end
 end
@@ -302,7 +306,7 @@ complex number in an important way.  Because quaternions act on vectors by
 conjugation — as in `q*v*conj(q)` — there are *two* copies of `q` involved in
 that expression; in some sense, a quaternion acts "twice".  Therefore, this
 angle may be twice what you expect from an analogy with complex numbers —
-dpending on how you interpret the correspondence between complex numbers and
+depending on how you interpret the correspondence between complex numbers and
 quaternions.  Also, while rotations in the complex plane have a natural choice
 of axis (the positive `z` direction), that is not the case for quaternions,
 which means that the sign of this angle is arbitrary, and we always choose it
