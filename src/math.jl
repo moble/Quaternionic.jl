@@ -220,23 +220,8 @@ end
 @doc raw"""
     sqrt(q)
 
-Square root of a quaternion.
-
-The general formula whenever the denominator is nonzero is
-
-```math
-\sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
-```
-
-This can be proven by squaring the numerator, using `q = q[1] + q⃗` and `|q|^2 = q[1]^2 -
-q⃗^2`.
-
-Note that whenever the vector part is zero and the scalar part is negative, the solution is
-not unique (and the denominator above is zero), because it necessarily involves the
-square root of -1, of which there are infinitely many in the space of quaternions.  In this
-case, we arbitrarily choose the vector part of the result to be in the `z` direction.  A
-reasonable alternative would be to throw an error; instead it is left to the user to check
-for that condition.
+Square root of a quaternion.  For `q` equal to a negative real number, we arbitrarily choose
+the result to be proportional to `𝐤` (though any unit vector would be correct).
 
 # Examples
 ```jldoctest
@@ -256,43 +241,47 @@ julia> √quaternion(-4.0)
 
 # Notes
 
-This function uses an algorithm for finding the square root that is very accurate (typically
-achieving the correct result to within machine precision) for *most* values.  However, naive
-application of the formula above can lead to catastrophic cancellation when the scalar part
-is negative and significantly larger in magnitude than the vector part.  Therefore, when
- `q[1] < 0`, we transform the problem into the case where `q[1] > 0` as
+The general formula whenever the denominator is nonzero is
+
 ```math
-\sqrt{q} = \bar{\sqrt{-\bar{q}}}\, \sqrt{-1},
+\sqrt{q} = \frac{|q| + q} {\sqrt{2|q| + 2q[1]}}
 ```
-where the bar denotes quaternionic conjugation, and we interpret ``\sqrt{-1}`` to be a unit
-imaginary that commutes with ``q``.  The obvious candidate is the normalized vector part of
-``q`` if the vector part is nonzero; otherwise, as noted above, we arbitrarily choose it to
-be the unit vector in `z` direction.  The calculation of ``\sqrt{-\bar{q}}`` can use the
-naive approach, and the result is still accurate to within machine precision.
+
+This can be proven by squaring the numerator, using `q = q[1] + q⃗` and `|q|^2 = q[1]^2 -
+q⃗^2`.  When the denominator is zero — or quite simply whenever `q[1] < 0` so that the
+denominator may be subject to cancellation — we can use the fact that
+
+```math
+|q| + q[1] = \frac{|q⃗|^2} {|q| − q[1]}
+```
+
+to evaluate the expression in a more stable form.
+
+Note that whenever the vector part is zero and the scalar part is negative, the solution is
+not unique (and the denominator above is zero), because it necessarily involves the square
+root of -1, of which there are infinitely many in the space of quaternions.  In this case,
+we arbitrarily choose the vector part of the result to be proportional to `𝐤`, as mentioned
+above.  A reasonable alternative would be to throw an error; instead it is left to the user
+to check for that condition if it would be a problem.
+
+Analytically, any derivative of this function will blow up as you approach the negative real
+axis, because the function is discontinuous there.  Therefore, you should not expect to be
+able to accurately compute derivatives of this function at points near the negative real
+axis (including `q=0`) using automatic differentiation.  Specifically *on* the negative real
+axis the derivative is not defined at all, but because of our fixed choice of result here,
+automatic differentiation will typically (and incorrectly) return the derivative as zero.
+Ultimately, the reason for this is geometrical, so it should be avoided by the user in any
+case.  Therefore, for the sake of efficiency and accuracy when the problem is geometrically
+well conditioned, we do not attempt to special-case the derivative at these points.
 
 """
 function Base.sqrt(q::T) where {T<:AbstractQuaternion}
-    if q[1] ≥ 0
-        c₁ = abs(q) + q[1]
-        if iszero(c₁)
-            # @info "Case 1" c₁
-            T(false, false, false, false)
-        else
-            c₂ = √inv(2c₁)
-            # @info "Case 2" (c₁, c₂)
-            T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
-        end
-    else # q[1] < 0
-        c₁ = abs(q) - q[1]
-        c₂ = √inv(2c₁)
-        T(c₁*c₂, -q[2]*c₂, -q[3]*c₂, -q[4]*c₂) * if all(iszero, vec(q))
-            # @info "Case 3" (c₁, c₂)
-            T(𝐤)
-        else
-            # @info "Case 4" (c₁, c₂)
-            T(normalize(vec(q))...)
-        end
+    if q[1] <= 0 && iszero(abs2vec(q))
+        return T(false, false, false, √(-q[1]))
     end
+    c₁ = ifelse(q[1] ≥ 0, (abs(q) + q[1]), (abs2vec(q) / (abs(q) - q[1])))
+    c₂ = √inv(2c₁)
+    return T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
 end
 
 
