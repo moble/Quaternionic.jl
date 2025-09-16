@@ -81,7 +81,7 @@ let S = Number
 end
 
 
-"""
+@doc raw"""
     p ⋅ q
 
 Evaluate the inner ("dot") product between two quaternions.  Equal to the
@@ -90,16 +90,20 @@ scalar part of `p * conj(q)`.
 Note that this function is not very commonly used, except as a quick way to
 determine whether the two quaternions are more anti-parallel than parallel, for
 functions like [`unflip`](@ref).
+
+This can be typed as `\cdot<tab>` in a Julia-aware editor.
 """
 @inline function LinearAlgebra.:⋅(p::AbstractQuaternion, q::AbstractQuaternion)
     p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]
 end
 
-"""
+@doc raw"""
     a × b
 
 Return the cross product of two pure-vector quaternions.  Equal to ½ of the
 commutator product `a*b-b*a`.
+
+This can be typed as `\times<tab>` in a Julia-aware editor.
 """
 @inline function ×(a::QuatVec, b::QuatVec)
     quatvec(
@@ -109,12 +113,14 @@ commutator product `a*b-b*a`.
     )
 end
 
-"""
+@doc raw"""
     a ×̂ b
 
-Return the *direction* of the cross product between `a` and `b`; the normalized
-vector along `a×b` — unless the magnitude is zero, in which case the zero
-vector is returned.
+Return the *direction* of the cross product between `a` and `b`; the normalized vector along
+[`a×b`](@ref Quaternionic.:×) — unless the magnitude is zero, in which case the zero vector
+is returned.
+
+This can be typed as `\times<tab>\hat<tab>` in a Julia-aware editor.
 """
 @inline function ×̂(a::QuatVec, b::QuatVec)
     axb = a × b

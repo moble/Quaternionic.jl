@@ -50,12 +50,12 @@ also implemented.  As noted in the [Examples](@ref), broadcasting to each
 component is also implemented via `broadcasted`.
 
 ```@autodocs
-Modules = [Quaternionic]
+Modules = [Quaternionic, Base]
 Pages   = ["base.jl"]
 ```
 
 
-## Algebra and mathematical functions
+## Algebraic and other mathematical functions
 
 Along with the basic binary operators, the essential mathematical functions
 like [`conj`](@ref), [`abs`](@ref), [`abs2`](@ref), [`exp`](@ref),

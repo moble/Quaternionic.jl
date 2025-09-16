@@ -101,8 +101,8 @@ an equal probability of being in any direction — the probability distribution 
 julia> normalize(randn(QuatVecF64))
  - 0.3018853063494534𝐢 + 0.4571280910615297𝐣 - 0.8365997670169042𝐤
 ```
-Note that we have called [`normalize`](@ref) to obtain a unit vector in an
-random direction.
+Note that we have called [`normalize`](@ref Quaternionic.normalize) to
+obtain a unit vector in a random direction.
 
 Components of the quaternion are stored as a four-element static array (even for
 `QuatVec`):
