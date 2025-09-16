@@ -5,6 +5,7 @@
 using Quaternionic
 using Documenter
 using DocumenterCitations
+using LinearAlgebra
 
 bib = CitationBibliography(
     joinpath(@__DIR__, "src", "references.bib");
