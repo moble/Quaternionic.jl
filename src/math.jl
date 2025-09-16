@@ -150,19 +150,22 @@ so the logarithm is just the sum of the logarithms of the scalar and vector part
 function Base.log(q::Quaternion{T}) where {T}
     cosv = q[1]
     sinv = absvec(q)
-    a² = abs2(q)
-    if iszero(a²)
+    a = abs(q)
+    if iszero(a)
         return Quaternion{T}(-Inf, false, false, false)
     elseif cosv ≥ 0
         v = atan(sinv, cosv)
-        f = invsinc(v) / √a²
-        return quaternion(log(a²)/2, f * vec(q)...)
-    elseif iszero(sinv)
-        return Quaternion{T}(log(a²)/2, false, false, π)
+        f = invsinc(v) / a
+        return log(a) + f * quatvec(q)
+    elseif iszero(sinv)  # i.e., q is a negative real number
+        # Note that we check this branch only after ruling out cosv≥0 because this could
+        # otherwise correspond to *positive* real numbers, which are treated correctly by
+        # the preceding branch, but only the preceding branch will behave correctly for AD.
+        return Quaternion{T}(log(a), false, false, π)
     else
         v′ = atan(sinv, -cosv)
-        f = -invsinc(v′) * (v′-π) / v′ / √a²
-        return quaternion(log(a²)/2, f * vec(q)...)
+        f = -invsinc(v′) * (v′-π) / v′ / a
+        return log(a) + f * quatvec(q)
     end
 end
 function Base.log(q::Rotor{T}) where {T}
@@ -171,13 +174,16 @@ function Base.log(q::Rotor{T}) where {T}
     if cosv ≥ 0
         v = atan(sinv, cosv)
         f = invsinc(v)
-        return quatvec(f * vec(q))
-    elseif iszero(sinv)
+        return f * quatvec(q)
+    elseif iszero(sinv)  # i.e., q is a negative real number
+        # Note that we check this branch only after ruling out cosv≥0 because this could
+        # otherwise correspond to *positive* real numbers, which are treated correctly by
+        # the preceding branch, but only the preceding branch will behave correctly for AD.
         return QuatVec{T}(false, false, false, π)
     else
         v′ = atan(sinv, -cosv)
         f = -invsinc(v′) * (v′-π) / v′
-        return quatvec(f * vec(q))
+        return f * quatvec(q)
     end
 end
 
@@ -193,26 +199,27 @@ rotor(0.7071067811865476 + 0.7071067811865475𝐢 + 0.0𝐣 + 0.0𝐤)
 ```
 """
 function Base.exp(q::Quaternion{T}) where {T}
-    a = abs2vec(q)
+    a² = abs2vec(q)
     e = exp(q[1])
-    # let ecos, esinc = ifelse(iszero(a), e*(1 - a*(1 - a/12)/2, e), (e*cos(√a), e*_sincu(√a)))
-    #     Rotor{typeof(ecos)}(ecos, esinc*v⃗[2], esinc*v⃗[3], esinc*v⃗[4])
-    # end
-    if iszero(a)
-        # Take this a little seriously, to obtain accurate ForwardDiff derivative
-        Quaternion{typeof(e)}(e*(1 - a*(1 - a/12)/2), e*q[2], e*q[3], e*q[4])
+    if iszero(a²)
+        # Take this a little seriously, to obtain accurate AD
+        ec = e*(1 - a²*(1 - a²/12)/2)
+        es = e*(1 - a²*(1 - a²/20)/6)
+        return Quaternion{typeof(ec)}(ec, es*q[2], es*q[3], es*q[4])
     else
-        esinc = e * _sincu(√a)
-        Quaternion{typeof(esinc)}(e*cos(√a), esinc*q[2], esinc*q[3], esinc*q[4])
+        a = absvec(q)
+        esinc = e * _sincu(a)
+        Quaternion{typeof(esinc)}(e*cos(a), esinc*q[2], esinc*q[3], esinc*q[4])
     end
 end
 function Base.exp(v⃗::QuatVec{T}) where {T}
-    a = abs2vec(v⃗)
-    c, s = if iszero(a)
-        # Take this a little seriously, to obtain accurate ForwardDiff derivative
-        1 - a*(1 - a/12)/2, one(a)
+    a² = abs2vec(v⃗)
+    c, s = if iszero(a²)
+        # Take this a little seriously, to obtain accurate AD
+        1 - a²*(1 - a²/12)/2, 1 - a²*(1 - a²/20)/6
     else
-        cos(√a), _sincu(√a)
+        a = absvec(v⃗)
+        cos(a), _sincu(a)
     end
     Rotor{typeof(c)}(c, s*v⃗[2], s*v⃗[3], s*v⃗[4])
 end
