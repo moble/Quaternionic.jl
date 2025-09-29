@@ -14,10 +14,12 @@ TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [weakdeps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [extensions]
@@ -29,12 +31,14 @@ QuaternionicSymbolicsExt = "Symbolics"
 
 [compat]
 ChainRulesCore = "1"
-FastDifferentiation = "0.3.15, 0.4"  # Wait for https://github.com/brianguenter/FastDifferentiation.jl/issues/98 to add 0.4 compat
+Enzyme = "0.13.82"
+FastDifferentiation = "0.3.15, 0.4"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.3.11"
 LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 LinearAlgebra = "1"
+Mooncake = "0.4.161"
 PrecompileTools = "1.1.1"
 Random = "1"
 Requires = "1"
