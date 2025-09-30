@@ -14,14 +14,18 @@
         AutoForwardDiff(),
         AutoMooncake(config=nothing),
         AutoReverseDiff(),
-        AutoZygote(),  # Fails with return type Vector{QuaternionF64}, where each element
-        #                  # is the correct quaternion derivative with the given component
-        #                  # cycled to the first component.
+        AutoZygote(),  # Fails with incorrect results when return type is Quaternionic
         AutoChainRules(Zygote.ZygoteRuleConfig()),  # Same as above
     ]
+    # backends = [
+    #     AutoEnzyme(),
+    #     AutoMooncake(config=nothing),
+    # ]
     v⃗ = randn(QuatVecF64)
     v = absvec(v⃗)
     v̂ = v⃗ / v
+
+    g(x, y, z) = Vector([x, y, z])
 
     f∇f = (
         (
@@ -41,7 +45,23 @@
             θ->Vector(components(v̂))
         ),
         (
-            θ->Vector(components(exp(θ[1] * v̂))),
+            θ->abs2vec(θ[1] * v⃗),
+            # θ->θ[1]^2 * abs2vec(v⃗),
+            θ->2 * θ[1] * abs2vec(v⃗),
+        ),
+        (
+            θ->absvec(θ[1] * v⃗),
+            # θ->θ[1] * absvec(v⃗),
+            θ->absvec(v⃗),
+        ),
+        (
+            θ->vec(θ[1] * v⃗)[1],
+            # θ->θ[1] * vec(v⃗)[1],
+            θ->vec(v⃗)[1]
+        ),
+        (
+            θ->Vector(components(exp(0 + θ[1] * v̂))),
+            #θ->Vector(components(cos(θ[1]) + sin(θ[1]) * v̂)),
             θ->Vector(components(-sin(θ[1]) + cos(θ[1]) * v̂))
         ),
         (
@@ -56,6 +76,11 @@
             θ->Vector(components(exp(v⃗ * θ[1]))),
             θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
         ),
+        # (
+        #     θ->Vector(components(exp(1.2θ[1] + 3.4v̂))),
+        #     #θ->Vector(components(exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)),
+        #     θ->Vector(components(1.2exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)))
+        # ),
     )
 
     x = Float64[
@@ -68,7 +93,8 @@
     scenarios = [
         Scenario{:derivative,:out}(f, θ; res1=∇f(θ))
         for θ in x
-        for (f, ∇f) in f∇f
+        for (i,(f, ∇f)) in enumerate(f∇f)
+        if i≠6 || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
     ]
     test_differentiation(
         backends,  # the backends you want to compare
