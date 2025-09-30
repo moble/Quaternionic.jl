@@ -18,7 +18,7 @@ specific to quaternion algebra.
   * [`Base.log`](@ref)
   * [`Base.sqrt`](@ref)
   * [`Base.:^`](@ref)
-  * [`LinearAlgebra.:⋅`](@ref)
+  * [`LinearAlgebra.:⋅`](@ref) (a.k.a. `LinearAlgebra.dot`)
 
 In addition, many other functions from `Base` that are not listed here
 have also been extended to work with quaternionic types, so that
