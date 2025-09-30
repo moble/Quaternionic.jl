@@ -1,4 +1,4 @@
-module QuaternionicChainRulesCoreExt
+module QuaternionicZygoteExt
 
 import Quaternionic
 isdefined(Base, :get_extension) ?
