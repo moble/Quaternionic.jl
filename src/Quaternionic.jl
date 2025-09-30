@@ -53,6 +53,7 @@ end
     # COV_EXCL_START
 
     function __init__()
+        @require ChainRules="082447d4-558c-5d27-93f4-14fc19e9eca2" include("../ext/QuaternionicChainRulesExt.jl")
         @require ChainRulesCore="d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include("../ext/QuaternionicChainRulesCoreExt.jl")
         @require FastDifferentiation="eb9bf01b-bf85-4b60-bf87-ee5de06c00be" include("../ext/QuaternionicFastDifferentiationExt.jl")
         @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
