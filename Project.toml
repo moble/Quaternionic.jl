@@ -13,6 +13,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [weakdeps]
+ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
@@ -23,6 +24,7 @@ Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [extensions]
+QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicChainRulesCoreExt = "ChainRulesCore"
 QuaternionicFastDifferentiationExt = "FastDifferentiation"
 QuaternionicForwardDiffExt = "ForwardDiff"
@@ -30,6 +32,7 @@ QuaternionicLatexifyExt = "Latexify"
 QuaternionicSymbolicsExt = "Symbolics"
 
 [compat]
+ChainRules = "1"
 ChainRulesCore = "1"
 Enzyme = "0.13.82"
 FastDifferentiation = "0.3.15, 0.4"
@@ -39,7 +42,7 @@ LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 LinearAlgebra = "1"
 Mooncake = "0.4.161"
-PrecompileTools = "1.1.1"
+PrecompileTools = "1.1"
 Random = "1"
 Requires = "1"
 StaticArrays = "1.8.1"
