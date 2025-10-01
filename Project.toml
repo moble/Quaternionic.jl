@@ -36,23 +36,37 @@ QuaternionicSymbolicsExt = "Symbolics"
 QuaternionicZygoteExt = ["Zygote", "ZygoteRules", "ChainRulesCore", "StaticArraysCore"]
 
 [compat]
+Aqua = "0.8"
 ChainRules = "1.72.6"
 ChainRulesCore = "1"
+ChainRulesTestUtils = "1.13.0"
+Coverage = "1.7.0"
+DifferentiationInterface = "0.7.8"
+DifferentiationInterfaceTest = "0.10.2"
+Documenter = "1.14.1"
+DoubleFloats = "1.4.3"
+EllipsisNotation = "1.8.0"
 Enzyme = "0.13.82"
 FastDifferentiation = "0.3.15, 0.4"
+FiniteDifferences = "0.12.33"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.3.11"
 LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 LinearAlgebra = "1"
 Mooncake = "0.4.161"
-PrecompileTools = "1"
+PrecompileTools = "1.2"
 Random = "1"
 Requires = "1"
+ReverseDiff = "1.16.1"
 StaticArrays = "1.8.1"
+StaticArraysCore = "1.4.3"
 Symbolics = "0.1, 1, 2, 3, 4, 5, 6"
+Test = "1.11.0"
 TestItemRunner = "1"
 TestItems = "1"
+Zygote = "0.7.10"
+ZygoteRules = "0.2.7"
 julia = "1.6"
 
 
@@ -64,7 +78,9 @@ ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
 Coverage = "a2441757-f6aa-5fb2-8edb-039e3f45d037"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 DifferentiationInterfaceTest = "a82114a7-5aa3-49a8-9643-716bb13727a3"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
@@ -90,7 +106,9 @@ test = [
     "Coverage",
     "DifferentiationInterface",
     "DifferentiationInterfaceTest",
+    "Documenter",
     "DoubleFloats",
+    "EllipsisNotation",
     "Enzyme",
     "FastDifferentiation",
     "FiniteDifferences",
