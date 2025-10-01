@@ -146,7 +146,13 @@
             for ε ∈ (4√eps(T), √eps(T)/4, 4eps(T), eps(T), eps(T)^T(7//3))
             for 𝐯 ∈ (𝐢, 𝐣, 𝐤)
         )
+            if ≉(sqrt(-1 + s*ε*𝐯), ε/2 + s*𝐯, rtol=ϵ, nans=true)
+                @info "sqrt test failure A" s ε 𝐯 sqrt(-1 + s*ε*𝐯) ε/2 + s*𝐯
+            end
             @test sqrt(-1 + s*ε*𝐯) ≈ ε/2 + s*𝐯 rtol=ϵ nans=true
+            if ≉(sqrt(-1 + s*ε*𝐯)^2, -1 + s*ε*𝐯, rtol=ϵ, nans=true)
+                @info "sqrt test failure B" s ε 𝐯 sqrt(-1 + s*ε*𝐯)^2 -1 + s*ε*𝐯
+            end
             @test sqrt(-1 + s*ε*𝐯)^2 ≈ -1 + s*ε*𝐯 rtol=ϵ nans=true
         end
 
