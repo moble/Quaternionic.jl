@@ -7,8 +7,61 @@ isdefined(Base, :get_extension) ?
     (using ChainRulesCore; import ChainRulesCore: rrule, rrule_via_ad, RuleConfig, ProjectTo) :
     (using ..ChainRulesCore; import ...ChainRulesCore: rrule, rrule_via_ad, RuleConfig, ProjectTo)
 
+
+function rrule(::typeof(components), q::AbstractQuaternion)
+    c = components(q)
+    Π = ProjectTo(q)
+    function components_pullback(Δ)
+        Δs, Δt, Δu, Δv = Tuple(unthunk(Δ))
+        Δq = typeof(q)(Δs, Δt, Δu, Δv)
+        return NoTangent(), Π(Δq)
+    end
+    return c, components_pullback
+end
+
+function rrule(::typeof(Base.getindex), q::AbstractQuaternion, i::Integer)
+    s = q[i]
+    function quaternion_getindex_pullback(Δs)
+        Δw = Δx = Δy = Δz = zero(s)
+        @inbounds if i == 1
+            Δw = unthunk(Δs)
+        elseif i == 2
+            Δx = unthunk(Δs)
+        elseif i == 3
+            Δy = unthunk(Δs)
+        elseif i == 4
+            Δz = unthunk(Δs)
+        else
+            throw(BoundsError(q, i))
+        end
+        return NoTangent(), typeof(q)(Δw, Δx, Δy, Δz), NoTangent()
+    end
+    return s, quaternion_getindex_pullback
+end
+
+
+##################
+## Constructors ##
+##################
+
+# Quaternion
 function rrule(::Type{QT}, arg::AbstractVector) where {QT<:AbstractQuaternion}
-    AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+    # AbstractQuaternion_pullback(Δquat) = (NoTangent(), components(unthunk(Δquat)))
+    # return QT(arg), AbstractQuaternion_pullback
+        # Return a same-shaped tangent for the vector argument
+    function AbstractQuaternion_pullback(Δquat)
+        Δw, Δx, Δy, Δz = components(unthunk(Δquat))
+        Δarg = similar(arg)
+        if length(Δarg) == 4
+            Δarg[1] = Δw; Δarg[2] = Δx; Δarg[3] = Δy; Δarg[4] = Δz
+        else
+            # Fall back: try to fill linearly
+            for (i, v) in enumerate((Δw, Δx, Δy, Δz))
+                i <= length(Δarg) && (Δarg[i] = v)
+            end
+        end
+        return NoTangent(), Δarg
+    end
     return QT(arg), AbstractQuaternion_pullback
 end
 function rrule(::Type{QT}, w::AbstractQuaternion) where {QT<:AbstractQuaternion}
@@ -20,7 +73,7 @@ function rrule(::Type{QT}, w, x, y, z) where {QT<:AbstractQuaternion}
     return QT(SVector{4}(w, x, y, z)), Quaternion_pullback
 end
 function rrule(::Type{QT}, x, y, z) where {QT<:AbstractQuaternion}
-   Quaternion_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
+    Quaternion_pullback(Δquat) = (NoTangent(), vec(unthunk(Δquat))...)
     return QT(SVector{4}(false, x, y, z)), Quaternion_pullback
 end
 function rrule(::Type{QT}, w::Number) where {QT<:AbstractQuaternion}
@@ -55,7 +108,7 @@ rrule(::Type{Quaternion}, w::AbstractVector) = rrule(quaternion, w)
 rrule(::Type{Quaternion}, w::AbstractQuaternion) = rrule(quaternion, w)
 rrule(::Type{Quaternion}, w::Number) = rrule(quaternion, w)
 
-
+# Rotor
 function rrule(::typeof(rotor), w, x, y, z)
     n = √(w^2 + x^2 + y^2 + z^2)
     function Rotor_pullback(ΔR)
@@ -175,7 +228,7 @@ rrule(::Type{Rotor}, w::AbstractVector) = rrule(rotor, w)
 rrule(::Type{Rotor}, w::AbstractQuaternion) = rrule(rotor, w)
 rrule(::Type{Rotor}, w::Number) = rrule(rotor, w)
 
-
+# QuatVec
 function rrule(::typeof(quatvec), w, x, y, z)
     function QuatVec_pullback(ΔV)
         (NoTangent(), ZeroTangent(), vec(unthunk(ΔV))...)
@@ -233,8 +286,14 @@ rrule(::Type{QuatVec}, w::AbstractQuaternion) = rrule(quatvec, w)
 rrule(::Type{QuatVec}, w::AbstractVector) = rrule(quatvec, w)
 rrule(::Type{QuatVec}, w::Number) = rrule(quatvec, w)
 
+
+
 # rrule(config::RuleConfig{>:HasReverseMode}, ::Type{Rotor}, args...) = rrule_via_ad(config, rotor, args...)
 # rrule(config::RuleConfig{>:HasReverseMode}, ::Type{QuatVec}, args...) = rrule_via_ad(config, quatvec, args...)
+
+
+
+
 
 
 ## Modified from `Complex` entries in ChainRulesCore.jl/src/projection.jl
@@ -252,25 +311,31 @@ function (::ProjectTo{QT})(dx::AbstractQuaternion{<:AbstractFloat}) where {T<:Ab
     return convert(QT, dx)
 end
 # COV_EXCL_START
-function (::ProjectTo{QT})(dx::AbstractFloat) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
-    #@info "ProjectTo{QT}(dx::AbstractFloat)"
-    return convert(QT, dx)
-end
+# function (::ProjectTo{QT})(dx::AbstractFloat) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
+#     return convert(QT, dx)
+# end
 function (::ProjectTo{QT})(dx::AbstractQuaternion{<:Integer}) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
     #@info "ProjectTo{QT}(dx::AbstractQuaternion{<:Integer})"
     return convert(QT, dx)
 end
-function (::ProjectTo{QT})(dx::Integer) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
-    #@info "ProjectTo{QT}(dx::Integer)"
-    return convert(QT, dx)
-end
-function (project::ProjectTo{QT})(dx::Real) where {QT<:AbstractQuaternion}
-    return project(QT(dx))
-end
+# function (::ProjectTo{QT})(dx::Integer) where {T<:AbstractFloat, QT<:AbstractQuaternion{T}}
+#     return convert(QT, dx)
+# end
+# function (project::ProjectTo{QT})(dx::Real) where {QT<:AbstractQuaternion}
+#     return project(QT(dx))
+# end
 # COV_EXCL_STOP
-function (project::ProjectTo{<:Number})(dx::Tangent{QT}) where {QT<:AbstractQuaternion}
-    project(QT(dx[:components]))
-end
+
+# function (project::ProjectTo{<:Number})(dx::Tangent{QT}) where {QT<:AbstractQuaternion}
+#     project(QT(dx[:components]))
+# end
+
+# # ProjectTo for Number must NOT manufacture a Quaternion from a Tangent{Quaternion}.
+# # Instead, take the appropriate scalar (here: the scalar component).
+# function (project::ProjectTo{T})(dx::Tangent{QT}) where {QT<:AbstractQuaternion, T<:Number}
+#     # dx[:components] is a 4-tuple (Δw, Δx, Δy, Δz); a Number primal wants a Number tangent.
+#     return project(dx[:components][1])
+# end
 
 
 ## Copied from `Complex` entries in ChainRulesCore.jl/src/tangent_types/abstract_zero.jl
@@ -320,6 +385,23 @@ end
 #    + 𝐣 * (∂s/∂y Δs + ∂t/∂y Δt + ∂u/∂y Δu + ∂v/∂y Δv)
 #    + 𝐤 * (∂s/∂z Δs + ∂t/∂z Δt + ∂u/∂z Δu + ∂v/∂z Δv)
 
+function rrule(::typeof(+), t::Real, q::AbstractQuaternion)
+    y = t + q
+    function add_pullback_tq(Δy)
+        Δw, Δx, Δu, Δv = components(unthunk(Δy))
+        return NoTangent(), Δw, typeof(q)(Δw, Δx, Δu, Δv)
+    end
+    return y, add_pullback_tq
+end
+function rrule(::typeof(+), q::AbstractQuaternion, t::Real)
+    y = q + t
+    function add_pullback_qt(Δy)
+        Δw, Δx, Δu, Δv = components(unthunk(Δy))
+        return NoTangent(), typeof(q)(Δw, Δx, Δu, Δv), Δw
+    end
+    return y, add_pullback_qt
+end
+
 function rrule(::typeof(*), t::Real, q::AbstractQuaternion)
     function mul_pullback(Δq)
         ∂t = @thunk q ⋅ unthunk(Δq)
@@ -334,7 +416,7 @@ function rrule(::typeof(*), q::AbstractQuaternion, t::Real)
         ∂q = @thunk t * unthunk(Δq)
         return (NoTangent(), ∂q, ∂t)
     end
-    return t * q, mul_pullback
+    return q * t, mul_pullback
 end
 
 function rrule(::typeof(exp), q::Quaternion{T}) where T
@@ -374,7 +456,7 @@ function rrule(::typeof(exp), q::Quaternion{T}) where T
         Δs, Δt, Δu, Δv = components(unthunk(ΔR))
         return (
             NoTangent(),
-            quaternion(
+            typeof(q)(
                 (∂s∂w * Δs + ∂t∂w * Δt + ∂u∂w * Δu + ∂v∂w * Δv),
                 (∂s∂x * Δs + ∂t∂x * Δt + ∂u∂x * Δu + ∂v∂x * Δv),
                 (∂s∂y * Δs + ∂t∂y * Δt + ∂u∂y * Δu + ∂v∂y * Δv),
@@ -418,7 +500,7 @@ function rrule(::typeof(exp), v⃗::QuatVec{T}) where T
         Δs, Δt, Δu, Δv = components(unthunk(ΔR))
         return (
             NoTangent(),
-            quatvec(
+            typeof(v⃗)(
                 (∂s∂x * Δs + ∂t∂x * Δt + ∂u∂x * Δu + ∂v∂x * Δv),
                 (∂s∂y * Δs + ∂t∂y * Δt + ∂u∂y * Δu + ∂v∂y * Δv),
                 (∂s∂z * Δs + ∂t∂z * Δt + ∂u∂z * Δu + ∂v∂z * Δv)

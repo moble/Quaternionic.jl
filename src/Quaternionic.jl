@@ -59,6 +59,7 @@ end
         @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
         @require Symbolics="0c5d862f-8b57-4792-8d23-62f2024744c7" include("../ext/QuaternionicSymbolicsExt.jl")
         @require Latexify="23fbe1c1-3f47-55db-b15f-69d7ec21a316" include("../ext/QuaternionicLatexifyExt.jl")
+        @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" include("../ext/QuaternionicZygoteExt.jl")
     end
 
     # COV_EXCL_STOP
