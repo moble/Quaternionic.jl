@@ -173,66 +173,36 @@ you can convert the `QuatVec` to a `Quaternion` first.
 
 """
 function Base.log(q::Quaternion{T}) where {T}
-    a = abs(q)
-    if iszero(a)  # q == 0
+    if iszerovalue(q)  # q == 0
         return Quaternion{T}(-Inf, false, false, false)
     end
+    a = abs(q)
     cosv = q[1]
-    sinv² = abs2vec(q)
     if cosv ≥ 0  # q[1] ≥ 0
-        f = if iszero(sinv²)
+        f = if iszerovalue(vec(q))
             # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
             # and similar problems for ReverseDiff and even ForwardDiff
+            sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
         else
-            v = atan(√sinv², cosv)
+            sinv = absvec(q)
+            v = atan(sinv, cosv)
             invsinc(v) / a
         end
         return log(a) + f * quatvec(q)
-    elseif iszero(sinv²)  # q is a negative real number
+    elseif iszerovalue(vec(q))  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return Quaternion{T}(log(a), false, false, π)
     else  # q[1] < 0 but q⃗ ≠ 0
-        v′ = atan(√sinv², -cosv)
+        sinv = absvec(q)
+        v′ = atan(sinv, -cosv)
         f = -invsinc(v′) * (v′-π) / v′ / a
         return log(a) + f * quatvec(q)
     end
 end
-
-# function Base.log(q::Quaternion{T}) where {T}
-#     if iszerovalue(q)  # q == 0
-#         return Quaternion{T}(-Inf, false, false, false)
-#     end
-#     a = abs(q)
-#     cosv = q[1]
-#     if cosv ≥ 0  # q[1] ≥ 0
-#         f = if iszerovalue(vec(q))
-#             # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
-#             # and similar problems for ReverseDiff and even ForwardDiff
-#             sinv² = abs2vec(q)
-#             x = sinv² / cosv^2
-#             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
-#         else
-#             sinv = absvec(q)
-#             v = atan(sinv, cosv)
-#             invsinc(v) / a
-#         end
-#         return log(a) + f * quatvec(q)
-#     elseif iszerovalue(vec(q))  # q is a negative real number
-#         # Note that we check this branch only after ruling out cosv≥0 because this could
-#         # otherwise correspond to *positive* real numbers, which are treated correctly by
-#         # the preceding branch, but only the preceding branch will behave correctly for AD.
-#         return Quaternion{T}(log(a), false, false, π)
-#     else  # q[1] < 0 but q⃗ ≠ 0
-#         sinv = absvec(q)
-#         v′ = atan(sinv, -cosv)
-#         f = -invsinc(v′) * (v′-π) / v′ / a
-#         return log(a) + f * quatvec(q)
-#     end
-# end
 function Base.log(q::Rotor{T}) where {T}
     cosv = q[1]
     if cosv ≥ 0  # q[1] ≥ 0
@@ -314,10 +284,10 @@ compute the result through fifth order in the magnitude of the vector part.  Thi
 produce correct derivatives up to fifth order.
 """
 function Base.exp(q::Quaternion{T}) where {T}
-    a² = abs2vec(q)
     e = exp(q[1])
-    if iszero(a²)
+    if iszerovalue(vec(q))
         # Take this a little seriously, to obtain accurate AD
+        a² = abs2vec(q)
         ec = e*(1 - a²*(1 - a²/12)/2)
         es = e*(1 - a²*(1 - a²/20)/6)
         return Quaternion{typeof(ec)}(ec, es*q[2], es*q[3], es*q[4])
@@ -328,9 +298,9 @@ function Base.exp(q::Quaternion{T}) where {T}
     end
 end
 function Base.exp(v⃗::QuatVec{T}) where {T}
-    a² = abs2vec(v⃗)
-    c, s = if iszero(a²)
+    c, s = if iszerovalue(vec(v⃗))
         # Take this a little seriously, to obtain accurate AD
+        a² = abs2vec(v⃗)
         1 - a²*(1 - a²/12)/2, 1 - a²*(1 - a²/20)/6
     else
         a = absvec(v⃗)
