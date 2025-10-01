@@ -17,10 +17,9 @@
         AutoZygote(),  # Fails with incorrect results when return type is Quaternionic
         AutoChainRules(Zygote.ZygoteRuleConfig()),  # Same as above
     ]
-    # backends = [
-    #     AutoEnzyme(),
-    #     AutoMooncake(config=nothing),
-    # ]
+
+    P = randn(QuaternionF64)
+    Q = randn(QuaternionF64)
     v⃗ = randn(QuatVecF64)
     v = absvec(v⃗)
     v̂ = v⃗ / v
@@ -76,10 +75,75 @@
             θ->Vector(components(exp(v⃗ * θ[1]))),
             θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
         ),
+        # # Zygote doesn't work with constant functions
         # (
-        #     θ->Vector(components(exp(1.2θ[1] + 3.4v̂))),
-        #     #θ->Vector(components(exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)),
-        #     θ->Vector(components(1.2exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)))
+        #     θ->Vector(components(Q)),
+        #     θ->Vector(components(0.0Q))
+        # ),
+        (
+            θ->Vector(components(1.2θ[1] + Q)),
+            θ->Vector(components(1.2 + 0.0Q))
+        ),
+        (
+            θ->Vector(components(θ[1]*P + Q)),
+            θ->Vector(components(P))
+        ),
+        (
+            θ->Vector(components(1.2θ[1] - Q)),
+            θ->Vector(components(1.2 - 0.0Q))
+        ),
+        (
+            θ->Vector(components(Q - 1.2θ[1])),
+            θ->Vector(components(0.0Q - 1.2))
+        ),
+        (
+            θ -> real(1.2θ[1] + Q),
+            θ -> real(1.2 + 0.0Q)
+        ),
+        (
+            θ->real(1.2θ[1] + Q),
+            θ->real(1.2 + 0.0Q)
+        ),
+        (
+            θ->(1.2θ[1] + Q)[1],
+            θ->(1.2 + 0.0Q)[1]
+        ),
+        (
+            θ->components(1.2θ[1] + Q)[2],
+            θ->components(1.2 + 0.0Q)[2]
+        ),
+        (
+            θ->(1.2θ[1] + Q)[3],
+            θ->(1.2 + 0.0Q)[3]
+        ),
+        (
+            θ->(1.2θ[1] + Q)[4],
+            θ->(1.2 + 0.0Q)[4]
+        ),
+        (
+            θ->Vector(components(1.2θ[1] + 3.4v̂)),
+            θ->Vector(components(1.2 + 0.0v̂))
+        ),
+        (
+            θ->Vector(components(exp(1.2θ[1] + 3.4v̂))),
+            #θ->Vector(components(exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)),
+            θ->Vector(components(1.2exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)))
+        ),
+        (
+            θ->Vector(components(exp(0.90θ[1]*v̂))),
+            # θ->Vector(components(0.90θ[1]*v̂)),
+            θ->0.90Vector(components(exp(0.90θ[1]*v̂)*v̂)),
+        ),
+        # (
+        #     θ->Vector(components(sqrt(exp(0.90θ[1]*v̂)))),
+        #     #θ->Vector(components(exp(0.45θ[1]*v̂))),
+        #     #θ->Vector(components(cos(0.45θ[1]) + sin(0.45θ[1]) * v̂))),
+        #     θ->0.45Vector(components(-sin(0.45θ[1]) + cos(0.45θ[1]) * v̂)),
+        # # ),
+        # (
+        #     θ->Vector(components(log(exp(0.90θ[1]*v̂)))),
+        #     # θ->Vector(components(0.90θ[1]*v̂)),
+        #     θ->0.90Vector(components(v̂)),
         # ),
     )
 

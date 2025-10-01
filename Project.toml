@@ -21,7 +21,10 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
+StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
 QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
@@ -30,9 +33,10 @@ QuaternionicFastDifferentiationExt = "FastDifferentiation"
 QuaternionicForwardDiffExt = "ForwardDiff"
 QuaternionicLatexifyExt = "Latexify"
 QuaternionicSymbolicsExt = "Symbolics"
+QuaternionicZygoteExt = ["Zygote", "ZygoteRules", "ChainRulesCore", "StaticArraysCore"]
 
 [compat]
-ChainRules = "1"
+ChainRules = "1.72.6"
 ChainRulesCore = "1"
 Enzyme = "0.13.82"
 FastDifferentiation = "0.3.15, 0.4"
@@ -69,9 +73,11 @@ Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 
 [targets]
@@ -92,7 +98,9 @@ test = [
     "Random",
     "ReverseDiff",
     "StaticArrays",
+    "StaticArraysCore",
     "Test",
     "TestItemRunner",
     "Zygote",
+    "ZygoteRules",
 ]
