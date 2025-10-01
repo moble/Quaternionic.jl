@@ -32,6 +32,28 @@ Base.isinf(q::AbstractQuaternion{T}) where {T<:Number} = isinf(q[1]) || isinf(q[
 Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 
+"""
+    iszerovalue(x)
+
+!!! warn "Private function!"
+
+    This function is considered private and may change or be removed without warning.
+
+This is essentially `Base.iszero`, but intended to be overridden for types like
+`ForwardDiff.Dual`, where the value may be zero, but if the tangent is not zero, then
+`Base.iszero` will return `false`.
+
+This is needed internally in math functions like `exp`, `log`, and `sqrt`, where we
+frequently need to switch the algorithm based on whether some components are zero.  In those
+isolated cases, a Taylor series should be provided that will be exactly zero for, e.g.,
+`Float64`, but will also work correctly for `ForwardDiff.Dual` and other ADs.
+
+"""
+iszerovalue(x) = iszero(x)
+iszerovalue(x::AbstractArray) = all(iszerovalue, x)
+iszerovalue(q::AbstractQuaternion) = iszerovalue(components(q))
+iszerovalue(q::QuatVec) = iszerovalue(vec(q))
+
 Base.round(q::QT, r::RoundingMode=RoundNearest; kwargs...) where {QT<:AbstractQuaternion} = QT(round.(components(q), r; kwargs...))
 
 Base.in(q::AbstractQuaternion, r::AbstractRange{<:Number}) = isreal(q) && real(q) in r
