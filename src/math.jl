@@ -173,40 +173,55 @@ you can convert the `QuatVec` to a `Quaternion` first.
 
 """
 function Base.log(q::Quaternion{T}) where {T}
-    cosv = q[1]
-    sinv = absvec(q)
     a = abs(q)
     if iszero(a)  # q == 0
         return Quaternion{T}(-Inf, false, false, false)
-    elseif cosv ≥ 0  # q[1] ≥ 0
-        v = atan(sinv, cosv)
-        f = invsinc(v) / a
+    end
+    cosv = q[1]
+    sinv² = abs2vec(q)
+    if cosv ≥ 0  # q[1] ≥ 0
+        f = if iszero(sinv²)
+            # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
+            # and similar problems for ReverseDiff and even ForwardDiff
+            x = sinv² / cosv^2
+            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+        else
+            v = atan(√sinv², cosv)
+            invsinc(v) / a
+        end
         return log(a) + f * quatvec(q)
-    elseif iszero(sinv)  # q is a negative real number
+    elseif iszero(sinv²)  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return Quaternion{T}(log(a), false, false, π)
     else  # q[1] < 0 but q⃗ ≠ 0
-        v′ = atan(sinv, -cosv)
+        v′ = atan(√sinv², -cosv)
         f = -invsinc(v′) * (v′-π) / v′ / a
         return log(a) + f * quatvec(q)
     end
 end
 function Base.log(q::Rotor{T}) where {T}
     cosv = q[1]
-    sinv = absvec(q)
+    sinv² = abs2vec(q)
     if cosv ≥ 0  # q[1] ≥ 0
-        v = atan(sinv, cosv)
-        f = invsinc(v)
+        f = if iszero(sinv²)
+            # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
+            # and similar problems for ReverseDiff and even ForwardDiff
+            x = sinv² / cosv^2
+            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+        else
+            v = atan(√sinv², cosv)
+            invsinc(v)
+        end
         return f * quatvec(q)
-    elseif iszero(sinv)  # q is a negative real number
+    elseif iszero(sinv²)  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return QuatVec{T}(false, false, false, π)
     else  # q[1] < 0 but q⃗ ≠ 0
-        v′ = atan(sinv, -cosv)
+        v′ = atan(√sinv², -cosv)
         f = -invsinc(v′) * (v′-π) / v′
         return f * quatvec(q)
     end
