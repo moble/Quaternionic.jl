@@ -176,18 +176,18 @@ function Base.log(q::Quaternion{T}) where {T}
     cosv = q[1]
     sinv = absvec(q)
     a = abs(q)
-    if iszero(a)
+    if iszero(a)  # q == 0
         return Quaternion{T}(-Inf, false, false, false)
-    elseif cosv ≥ 0
+    elseif cosv ≥ 0  # q[1] ≥ 0
         v = atan(sinv, cosv)
         f = invsinc(v) / a
         return log(a) + f * quatvec(q)
-    elseif iszero(sinv)  # i.e., q is a negative real number
+    elseif iszero(sinv)  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return Quaternion{T}(log(a), false, false, π)
-    else
+    else  # q[1] < 0 but q⃗ ≠ 0
         v′ = atan(sinv, -cosv)
         f = -invsinc(v′) * (v′-π) / v′ / a
         return log(a) + f * quatvec(q)
@@ -196,16 +196,16 @@ end
 function Base.log(q::Rotor{T}) where {T}
     cosv = q[1]
     sinv = absvec(q)
-    if cosv ≥ 0
+    if cosv ≥ 0  # q[1] ≥ 0
         v = atan(sinv, cosv)
         f = invsinc(v)
         return f * quatvec(q)
-    elseif iszero(sinv)  # i.e., q is a negative real number
+    elseif iszero(sinv)  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return QuatVec{T}(false, false, false, π)
-    else
+    else  # q[1] < 0 but q⃗ ≠ 0
         v′ = atan(sinv, -cosv)
         f = -invsinc(v′) * (v′-π) / v′
         return f * quatvec(q)
