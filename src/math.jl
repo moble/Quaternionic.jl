@@ -372,7 +372,13 @@ function Base.sqrt(q::T) where {T<:AbstractQuaternion}
     if q[1] <= 0 && iszero(abs2vec(q))
         return T(false, false, false, √(-q[1]))
     end
-    c₁ = ifelse(q[1] ≥ 0, (abs(q) + q[1]), (abs2vec(q) / (abs(q) - q[1])))
+    ## Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
+    # c₁ = ifelse(q[1] ≥ 0, (abs(q) + q[1]), (abs2vec(q) / (abs(q) - q[1])))
+    c₁ = if q[1] ≥ 0
+        (abs(q) + q[1])
+    else
+        (abs2vec(q) / (abs(q) - q[1]))
+    end
     c₂ = √inv(2c₁)
     return T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
 end

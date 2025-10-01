@@ -134,12 +134,12 @@
             # θ->Vector(components(0.90θ[1]*v̂)),
             θ->0.90Vector(components(exp(0.90θ[1]*v̂)*v̂)),
         ),
-        # (
-        #     θ->Vector(components(sqrt(exp(0.90θ[1]*v̂)))),
-        #     #θ->Vector(components(exp(0.45θ[1]*v̂))),
-        #     #θ->Vector(components(cos(0.45θ[1]) + sin(0.45θ[1]) * v̂))),
-        #     θ->0.45Vector(components(-sin(0.45θ[1]) + cos(0.45θ[1]) * v̂)),
-        # # ),
+        (
+            θ->Vector(components(sqrt(exp(0.90θ[1]*v̂)))),
+            #θ->Vector(components(exp(0.45θ[1]*v̂))),
+            #θ->Vector(components(cos(0.45θ[1]) + sin(0.45θ[1]) * v̂))),
+            θ->0.45Vector(components(-sin(0.45θ[1]) + cos(0.45θ[1]) * v̂)),
+        ),
         # (
         #     θ->Vector(components(log(exp(0.90θ[1]*v̂)))),
         #     # θ->Vector(components(0.90θ[1]*v̂)),
