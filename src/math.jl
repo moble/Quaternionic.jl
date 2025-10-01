@@ -235,25 +235,27 @@ end
 # end
 function Base.log(q::Rotor{T}) where {T}
     cosv = q[1]
-    sinv² = abs2vec(q)
     if cosv ≥ 0  # q[1] ≥ 0
-        f = if iszerovalue(sinv²)
+        f = if iszerovalue(vec(q))
             # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
             # and similar problems for ReverseDiff and even ForwardDiff
+            sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
         else
-            v = atan(√sinv², cosv)
+            sinv = absvec(q)
+            v = atan(sinv, cosv)
             invsinc(v)
         end
         return f * quatvec(q)
-    elseif iszerovalue(sinv²)  # q is a negative real number
+    elseif iszerovalue(vec(q))  # q is a negative real number
         # Note that we check this branch only after ruling out cosv≥0 because this could
         # otherwise correspond to *positive* real numbers, which are treated correctly by
         # the preceding branch, but only the preceding branch will behave correctly for AD.
         return QuatVec{T}(false, false, false, π)
     else  # q[1] < 0 but q⃗ ≠ 0
-        v′ = atan(√sinv², -cosv)
+        sinv = absvec(q)
+        v′ = atan(sinv, -cosv)
         f = -invsinc(v′) * (v′-π) / v′
         return f * quatvec(q)
     end
