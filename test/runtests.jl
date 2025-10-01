@@ -21,16 +21,13 @@ around the code you don't want to measure:
 
 using Quaternionic
 using Test
+using TestItemRunner
 using Random, StaticArrays, ForwardDiff, GenericLinearAlgebra,
     ChainRulesTestUtils, Zygote, ChainRulesTestUtils, Aqua
 import Symbolics, FastDifferentiation
 import LinearAlgebra
 using ChainRulesCore
 ChainRulesCore.debug_mode() = true
-
-using TestItemRunner
-
-@run_package_tests verbose = true
 
 
 Symbolics.@variables w x y z a b c d e  # Symbolic variables
@@ -70,6 +67,11 @@ function addtests(fname)
 end
 
 @testset verbose=true "All tests" begin
+
+    if isempty(enabled_tests) || "differentiation_interface" in enabled_tests
+        @run_package_tests verbose = true
+    end
+
     addtests("aqua.jl")
     addtests("quaternion.jl")
     addtests("basis.jl")
