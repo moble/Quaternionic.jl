@@ -188,12 +188,12 @@ function to_euler_phases(R::AbstractQuaternion{T}) where {T}
     b = R[2]^2 + R[3]^2
     sqrta = √a
     sqrtb = √b
-    if iszero(sqrta)
+    if iszerovalue(sqrta)
         zp = one(Complex{T})
     else
         zp = Complex{T}(R[1], R[4]) / sqrta  # exp[i(α+γ)/2]
     end
-    if iszero(sqrtb)
+    if iszerovalue(sqrtb)
         zm = one(Complex{T})
     else
         zm = Complex{T}(R[3], -R[2]) / sqrtb  # exp[i(α-γ)/2]
