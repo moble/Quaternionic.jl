@@ -46,7 +46,7 @@ LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 LinearAlgebra = "1"
 Mooncake = "0.4.161"
-PrecompileTools = "1.1"
+PrecompileTools = "1"
 Random = "1"
 Requires = "1"
 StaticArrays = "1.8.1"
@@ -60,6 +60,7 @@ julia = "1.6"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
 Coverage = "a2441757-f6aa-5fb2-8edb-039e3f45d037"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 DifferentiationInterfaceTest = "a82114a7-5aa3-49a8-9643-716bb13727a3"
@@ -85,6 +86,7 @@ test = [
     "Aqua",
     "ChainRules",
     "ChainRulesCore",
+    "ChainRulesTestUtils",
     "Coverage",
     "DifferentiationInterface",
     "DifferentiationInterfaceTest",
@@ -93,12 +95,14 @@ test = [
     "FastDifferentiation",
     "FiniteDifferences",
     "ForwardDiff",
+    "GenericLinearAlgebra",
     "LinearAlgebra",
     "Mooncake",
     "Random",
     "ReverseDiff",
     "StaticArrays",
     "StaticArraysCore",
+    "Symbolics",
     "Test",
     "TestItemRunner",
     "Zygote",
