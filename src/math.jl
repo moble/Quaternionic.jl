@@ -418,7 +418,7 @@ well conditioned, we do not attempt to special-case the derivative at these poin
 
 """
 function Base.sqrt(q::T) where {T<:AbstractQuaternion}
-    if q[1] <= 0 && iszero(abs2vec(q))
+    if q[1] <= 0 && iszerovalue(vec(q))
         return T(false, false, false, √(-q[1]))
     end
     ## Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
@@ -430,6 +430,10 @@ function Base.sqrt(q::T) where {T<:AbstractQuaternion}
     end
     c₂ = √inv(2c₁)
     return T(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
+end
+function Base.sqrt(q::AbstractQuaternion{Float16})
+    T = wrapper(typeof(q))
+    T{Float16}(sqrt(T{Float32}(q)))
 end
 
 
