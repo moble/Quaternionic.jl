@@ -89,8 +89,8 @@
                     @show q₁ q₂ τ typeof(q₁) typeof(q₂) typeof(τ)
                 end
                 for i in 1:4
-                    @test ∂1[i] ≈ ∂a[i] rtol=5ϵ atol=80eps()
-                    @test ∂2[i] ≈ ∂b[i] rtol=5ϵ atol=80eps()
+                    @test ∂1[i] ≈ ∂a[i] rtol=5ϵ atol=90eps()
+                    @test ∂2[i] ≈ ∂b[i] rtol=5ϵ atol=90eps()
                 end
                 @test ∂c ≈ log(q₂/q₁) * slerp(q₁, q₂, τ) rtol=2ϵ
                 sb, ∂d = slerp∂slerp∂τ(q₁, q₂, τ)

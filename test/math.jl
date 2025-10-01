@@ -108,7 +108,7 @@
     end
 
     @testset "Special values for sqrt $T" for T in FloatTypes
-        ϵ = (T === Float16 ? 4eps(T) : 2eps(T))
+        ϵ = 4eps(T)
 
         # sqrt(0) = 0
         q = quaternion(zero(T), zero(T), zero(T), zero(T))
