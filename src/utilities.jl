@@ -6,7 +6,7 @@ if isdefined(Main, :sincu)
 else
     # Un-normalized sinc function
     # sincu(x::Number) = _sincu(float(x))
-    _sincu(x::Number) = iszero(x) ? one(x) : isinf(x) ? zero(x) : sin(x)/x
+    _sincu(x::Number) = iszerovalue(x) ? 1 - x^2/6 * (1 - x^2/20) : isinf(x) ? zero(x) : sin(x)/x
     # _sincu(x::Number) = ifelse(
     #     iszero(x),
     #     one(x),
