@@ -35,18 +35,21 @@ Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q
 """
     iszerovalue(x)
 
-!!! warn "Private function!"
+!!! warning "Private function!"
 
-    This function is considered private and may change or be removed without warning.
+    This function is private and may change or be removed without warning.
 
 This is essentially `Base.iszero`, but intended to be overridden for types like
 `ForwardDiff.Dual`, where the value may be zero, but if the tangent is not zero, then
-`Base.iszero` will return `false`.
+`Base.iszero` will return `false`.  This function, on the other hand, ignores the tangent
+part, and will return `true` if and only if the value part is zero.
 
 This is needed internally in math functions like `exp`, `log`, and `sqrt`, where we
 frequently need to switch the algorithm based on whether some components are zero.  In those
 isolated cases, a Taylor series should be provided that will be exactly zero for, e.g.,
 `Float64`, but will also work correctly for `ForwardDiff.Dual` and other ADs.
+
+Like `Base.iszero`, this function is defined recursively for arrays and quaternions.
 
 """
 iszerovalue(x) = iszero(x)
