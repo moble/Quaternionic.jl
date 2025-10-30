@@ -1,32 +1,34 @@
 module QuaternionicFastDifferentiationExt
 
 using StaticArrays: SVector
-import Quaternionic: normalize, absvec,
+import Quaternionic: Quaternionic, normalize, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
     wrapper, components, basetype
 using PrecompileTools
-isdefined(Base, :get_extension) ? (using FastDifferentiation) : (using ..FastDifferentiation)
+isdefined(Base, :get_extension) ?
+    (using FastDifferentiation: FastDifferentiation, Node) :
+    (using ..FastDifferentiation: FastDifferentiation, Node)
 
 
-normalize(v::AbstractVector{FastDifferentiation.Node}) = v ./ √sum(x->x^2, v)
-Base.abs(q::AbstractQuaternion{FastDifferentiation.Node}) = √sum(x->x^2, components(q))
-Base.abs(q::QuatVec{FastDifferentiation.Node}) = √sum(x->x^2, vec(q))
-absvec(q::AbstractQuaternion{FastDifferentiation.Node}) = √sum(x->x^2, vec(q))
+normalize(v::AbstractVector{Node}) = v ./ √sum(x->x^2, v)
+Base.abs(q::AbstractQuaternion{Node}) = √sum(x->x^2, components(q))
+Base.abs(q::QuatVec{Node}) = √sum(x->x^2, vec(q))
+absvec(q::AbstractQuaternion{Node}) = √sum(x->x^2, vec(q))
 
 
 ### Functions that used to appear in quaternion.jl
-quaternion(w::FastDifferentiation.Node) = quaternion(SVector{4}(w, false, false, false))
-rotor(w::FastDifferentiation.Node) = rotor(SVector{4}(one(w), false, false, false))
-quatvec(w::FastDifferentiation.Node) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
+quaternion(w::Node) = quaternion(SVector{4}(w, false, false, false))
+rotor(w::Node) = rotor(SVector{4}(one(w), false, false, false))
+quatvec(w::Node) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
-        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:FastDifferentiation.Node}) where {OP} = quaternion
-        wrapper(::Type{<:FastDifferentiation.Node}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = quaternion
+        wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Node}) where {OP} = quaternion
+        wrapper(::Type{<:Node}, ::Val{OP}, ::Type{<:$QT1}) where {OP} = quaternion
     end
 end
-let NT = FastDifferentiation.Node
+let NT = Node
     for QT ∈ (QuatVec,)
         for OP ∈ (Val{*}, Val{/})
             @eval begin
@@ -44,7 +46,7 @@ let NT = FastDifferentiation.Node
         end
     end
 end
-let T = FastDifferentiation.Node
+let T = Node
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
         @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = quaternion
         if T !== Quaternion
@@ -52,7 +54,7 @@ let T = FastDifferentiation.Node
         end
     end
 end
-Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:FastDifferentiation.Node} =
+Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Node} =
     wrapper(Q){promote_type(basetype(Q), S)}
 
 
@@ -66,7 +68,7 @@ Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:FastDiff
 
 ### Functions that used to appear in algebra.jl
 for TA ∈ (AbstractQuaternion, Rotor, QuatVec)
-    let TB = FastDifferentiation.Node
+    let TB = Node
         @eval begin
             Base.:+(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(+), $TB)(q[1]+p, q[2], q[3], q[4])
             Base.:-(q::QT, p::$TB) where {QT<:$TA} = wrapper($TA, Val(-), $TB)(q[1]-p, q[2], q[3], q[4])
@@ -75,7 +77,7 @@ for TA ∈ (AbstractQuaternion, Rotor, QuatVec)
         end
     end
 end
-let S = FastDifferentiation.Node
+let S = Node
     @eval begin
         Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*components(p))
         Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*components(p))
@@ -84,6 +86,38 @@ let S = FastDifferentiation.Node
             f = s / abs2(p)
             wrapper($S, Val(/), Q)(p[1] * f, -p[2] * f, -p[3] * f, -p[4] * f)
         end
+    end
+end
+
+# Here, we disable FastDifferentiation support for functions that rely on conditionals;
+# otherwise, they will fail with errors like
+#
+#    TypeError: non-boolean (Node) used in boolean context
+#
+# This could be removed once FastDifferentiation supports conditionals, and these functions
+# are tested.
+for method ∈ (
+    :(Quaternionic.to_euler_phases(::AbstractQuaternion{Node})),
+    :(Quaternionic.from_euler_phases(::Complex{Node}, ::Complex{Node}, ::Complex{Node})),
+    :(Base.log(::Quaternion{Node})),
+    :(Base.log(::Rotor{Node})),
+    :(Base.exp(::Quaternion{Node})),
+    :(Base.exp(::QuatVec{Node})),
+    :(Base.sqrt(::Quaternion{Node})),
+    :(Base.sqrt(::QuatVec{Node})),
+    :(Base.sqrt(::Rotor{Node})),
+    :(Base.:^(::Rotor{Node}, ::Number)),
+    :(Base.:^(::Quaternion{Node}, ::Integer)),
+    :(Base.:^(::QuatVec{Node}, ::Integer)),
+    :(Base.:^(::Rotor{Node}, ::Integer)),
+)
+    func = first(split(string(method), '('))
+    @eval begin
+        $(method) = error(
+            """FastDifferentiation does not yet support conditionals involving FD variables,
+            which are needed to implement its derivative of `$(func)` involving quaternions.
+            """
+        )
     end
 end
 
