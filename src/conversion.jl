@@ -165,7 +165,7 @@ scales out), we can define the complex Euler phases from the Euler angles (α,
     zᵦ ≔ exp(i*β)
     zᵧ ≔ exp(i*γ)
 
-These are more useful geometric quantites than the angles themselves — being
+These are more useful geometric quantities than the angles themselves — being
 involved in computing spherical harmonics and Wigner's 𝔇 matrices — and can be
 computed from the components of the corresponding quaternion algebraically
 (without the use of transcendental functions).
@@ -173,6 +173,17 @@ computed from the components of the corresponding quaternion algebraically
 Note that `to_euler_phases!(z, q)` is supported for backwards compatibility,
 but because this function returns an `SVector`, there is probably no advantage
 to the in-place approach.
+
+!!! warning "Incorrect derivatives near singularities"
+
+    Note that the derivatives of these phases with respect to the quaternion
+    components are ill-defined at the Euler singularities (specifically, when
+    β=0 or β=π).  The problematic cases will just return 1 for the phase
+    factor, which will autodiff to zero.  Fortunately, this should not pollute
+    downstream results if they are grounded in geometric quantities.
+    Specifically, Wigner's 𝔇 matrices can be computed from these phases without
+    any issues, because the ``d`` factors should be zero anyway, and the product
+    rule will save us.
 
 # Returns
 - `z::SVector{Complex{T}}`: complex phases (zₐ, zᵦ, zᵧ) in that order.
