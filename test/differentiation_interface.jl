@@ -9,7 +9,7 @@
 
     backends = [
         AutoEnzyme(),
-        # AutoFastDifferentiation(),  # has to wait for v0.4 support
+        # AutoFastDifferentiation(),  # see below; has to wait for conditionals support
         AutoFiniteDifferences(fdm=FiniteDifferences.central_fdm(3,1)),
         AutoForwardDiff(),
         AutoMooncake(config=nothing),
@@ -26,7 +26,7 @@
 
     g(x, y, z) = Vector([x, y, z])
 
-    f∇f = (
+    f∇f_simple = (
         (
             θ->Vector(components(θ[1] * v⃗)),
             θ->Vector(components(v⃗))
@@ -57,23 +57,6 @@
             θ->vec(θ[1] * v⃗)[1],
             # θ->θ[1] * vec(v⃗)[1],
             θ->vec(v⃗)[1]
-        ),
-        (
-            θ->Vector(components(exp(0 + θ[1] * v̂))),
-            #θ->Vector(components(cos(θ[1]) + sin(θ[1]) * v̂)),
-            θ->Vector(components(-sin(θ[1]) + cos(θ[1]) * v̂))
-        ),
-        (
-            θ->Vector(components(exp(v̂ * θ[1]))),
-            θ->Vector(components(-sin(θ[1]) + cos(θ[1]) * v̂))
-        ),
-        (
-            θ->Vector(components(exp(θ[1] * v⃗))),
-            θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
-        ),
-        (
-            θ->Vector(components(exp(v⃗ * θ[1]))),
-            θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
         ),
         # # Zygote doesn't work with constant functions
         # (
@@ -124,6 +107,26 @@
             θ->Vector(components(1.2θ[1] + 3.4v̂)),
             θ->Vector(components(1.2 + 0.0v̂))
         ),
+    )
+
+    f∇f_conditionals = (
+        (
+            θ->Vector(components(exp(0 + θ[1] * v̂))),
+            #θ->Vector(components(cos(θ[1]) + sin(θ[1]) * v̂)),
+            θ->Vector(components(-sin(θ[1]) + cos(θ[1]) * v̂))
+        ),
+        (
+            θ->Vector(components(exp(v̂ * θ[1]))),
+            θ->Vector(components(-sin(θ[1]) + cos(θ[1]) * v̂))
+        ),
+        (
+            θ->Vector(components(exp(θ[1] * v⃗))),
+            θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
+        ),
+        (
+            θ->Vector(components(exp(v⃗ * θ[1]))),
+            θ->Vector(components(-sin(v * θ[1]) + cos(v * θ[1]) * v̂) .* v)
+        ),
         (
             θ->Vector(components(exp(1.2θ[1] + 3.4v̂))),
             #θ->Vector(components(exp(1.2θ[1])*(cos(3.4) + sin(3.4) * v̂)),
@@ -157,11 +160,25 @@
     scenarios = [
         Scenario{:derivative,:out}(f, θ; res1=∇f(θ))
         for θ in x
-        for (i,(f, ∇f)) in enumerate(f∇f)
+        for (i,(f, ∇f)) in enumerate(f∇f_conditionals)
         if i≠6 || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
     ]
     test_differentiation(
         backends,  # the backends you want to compare
+        scenarios,  # the scenarios you defined,
+        correctness=true,  # compares values against the reference
+        type_stability=:none,  # :prepared or :full checks type stability with JET.jl
+        detailed=true,  # prints a detailed test set
+        rtol=1e-8,
+    )
+    scenarios = [
+        Scenario{:derivative,:out}(f, θ; res1=∇f(θ))
+        for θ in x
+        for (i,(f, ∇f)) in enumerate(f∇f_simple)
+        if i≠6 || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
+    ]
+    test_differentiation(
+        [backends; AutoFastDifferentiation()],  # the backends you want to compare
         scenarios,  # the scenarios you defined,
         correctness=true,  # compares values against the reference
         type_stability=:none,  # :prepared or :full checks type stability with JET.jl

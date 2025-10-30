@@ -27,7 +27,6 @@ using Random, StaticArrays, ForwardDiff, GenericLinearAlgebra,
 import Symbolics, FastDifferentiation
 import LinearAlgebra
 using ChainRulesCore
-ChainRulesCore.debug_mode() = true
 
 
 Symbolics.@variables w x y z a b c d e  # Symbolic variables
