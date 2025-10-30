@@ -27,8 +27,8 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
-QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicChainRulesCoreExt = "ChainRulesCore"
+QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicFastDifferentiationExt = "FastDifferentiation"
 QuaternionicForwardDiffExt = "ForwardDiff"
 QuaternionicLatexifyExt = "Latexify"
@@ -65,10 +65,9 @@ Symbolics = "0.1, 1, 2, 3, 4, 5, 6"
 Test = "1.11.0"
 TestItemRunner = "1"
 TestItems = "1"
-Zygote = "0.6"
+Zygote = "0.6, 0.7"
 ZygoteRules = "0.2.5"
 julia = "1.6"
-
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -96,33 +95,5 @@ TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
-
 [targets]
-test = [
-    "Aqua",
-    "ChainRules",
-    "ChainRulesCore",
-    "ChainRulesTestUtils",
-    "Coverage",
-    "DifferentiationInterface",
-    "DifferentiationInterfaceTest",
-    "Documenter",
-    "DoubleFloats",
-    "EllipsisNotation",
-    "Enzyme",
-    "FastDifferentiation",
-    "FiniteDifferences",
-    "ForwardDiff",
-    "GenericLinearAlgebra",
-    "LinearAlgebra",
-    "Mooncake",
-    "Random",
-    "ReverseDiff",
-    "StaticArrays",
-    "StaticArraysCore",
-    "Symbolics",
-    "Test",
-    "TestItemRunner",
-    "Zygote",
-    "ZygoteRules",
-]
+test = ["Aqua", "ChainRules", "ChainRulesCore", "ChainRulesTestUtils", "Coverage", "DifferentiationInterface", "DifferentiationInterfaceTest", "Documenter", "DoubleFloats", "EllipsisNotation", "Enzyme", "FastDifferentiation", "FiniteDifferences", "ForwardDiff", "GenericLinearAlgebra", "LinearAlgebra", "Mooncake", "Random", "ReverseDiff", "StaticArrays", "StaticArraysCore", "Symbolics", "Test", "TestItemRunner", "Zygote", "ZygoteRules"]
