@@ -68,6 +68,7 @@ end
 @testset verbose=true "All tests" begin
 
     if isempty(enabled_tests) || "differentiation_interface" in enabled_tests
+        println("Running differentiation_interface.jl")
         @run_package_tests verbose = true
     end
 
