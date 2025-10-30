@@ -27,8 +27,8 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
-QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicChainRulesCoreExt = "ChainRulesCore"
+QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicFastDifferentiationExt = "FastDifferentiation"
 QuaternionicForwardDiffExt = "ForwardDiff"
 QuaternionicLatexifyExt = "Latexify"
@@ -41,13 +41,13 @@ ChainRules = "1.72.6"
 ChainRulesCore = "1"
 ChainRulesTestUtils = "1.13.0"
 Coverage = "1.7.0"
-DifferentiationInterface = "0.7.8"
-DifferentiationInterfaceTest = "0.10.2"
+DifferentiationInterface = "0.6.2, 0.7.0"
+DifferentiationInterfaceTest = "0.7.0, 0.8.0, 0.9.0, 0.10.0"
 Documenter = "1.14.1"
 DoubleFloats = "1.4.3"
 EllipsisNotation = "1.8.0"
 Enzyme = "0.13.82"
-FastDifferentiation = "0.3.15, 0.4"
+FastDifferentiation = "0.3.15"
 FiniteDifferences = "0.12.33"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.3.11"
@@ -65,10 +65,9 @@ Symbolics = "0.1, 1, 2, 3, 4, 5, 6"
 Test = "1.11.0"
 TestItemRunner = "1"
 TestItems = "1"
-Zygote = "0.7.10"
-ZygoteRules = "0.2.7"
+Zygote = "0.6, 0.7"
+ZygoteRules = "0.2.5"
 julia = "1.6"
-
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -96,33 +95,5 @@ TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
-
 [targets]
-test = [
-    "Aqua",
-    "ChainRules",
-    "ChainRulesCore",
-    "ChainRulesTestUtils",
-    "Coverage",
-    "DifferentiationInterface",
-    "DifferentiationInterfaceTest",
-    "Documenter",
-    "DoubleFloats",
-    "EllipsisNotation",
-    "Enzyme",
-    "FastDifferentiation",
-    "FiniteDifferences",
-    "ForwardDiff",
-    "GenericLinearAlgebra",
-    "LinearAlgebra",
-    "Mooncake",
-    "Random",
-    "ReverseDiff",
-    "StaticArrays",
-    "StaticArraysCore",
-    "Symbolics",
-    "Test",
-    "TestItemRunner",
-    "Zygote",
-    "ZygoteRules",
-]
+test = ["Aqua", "ChainRules", "ChainRulesCore", "ChainRulesTestUtils", "Coverage", "DifferentiationInterface", "DifferentiationInterfaceTest", "Documenter", "DoubleFloats", "EllipsisNotation", "Enzyme", "FastDifferentiation", "FiniteDifferences", "ForwardDiff", "GenericLinearAlgebra", "LinearAlgebra", "Mooncake", "Random", "ReverseDiff", "StaticArrays", "StaticArraysCore", "Symbolics", "Test", "TestItemRunner", "Zygote", "ZygoteRules"]
