@@ -62,42 +62,57 @@ end
 to_float_array(q::AbstractQuaternion) = collect(float(q).components)
 
 
-"""
+@doc raw"""
     to_euler_angles(R)
 
 Open Pandora's Box.
 
-If somebody is trying to make you use Euler angles, tell them no, and walk
-away, and go and tell your mum.
+If somebody is trying to make you use Euler angles, tell them no, and walk away, and go and
+tell your mum.
 
-You don't want to use Euler angles.  They are awful.  Stay away.  It's one
-thing to convert from Euler angles to quaternions; at least you're moving in
-the right direction.  But to go the other way?!  It's just not right.
+You don't want to use Euler angles.  They are awful.  Stay away.  It's one thing to convert
+from Euler angles to quaternions; at least you're moving in the right direction.  But to go
+the other way?!  It's just not right.
 
 Assumes the Euler angles correspond to the quaternion `R` via
 
     R = exp(α𝐤/2) * exp(β𝐣/2) * exp(γ𝐤/2)
 
-where 𝐣 and 𝐤 rotate about the fixed ``y`` and ``z`` axes, respectively, so
-this reprents an initial rotation (in the positive sense) through an angle
-``γ`` about the axis ``z``, followed by a rotation through ``β`` about the axis
-``y``, and a final rotation through ``α`` about the axis ``z``.  This is
-equivalent to performing an initial rotation through ``α`` about the axis
-``z``, followed by a rotation through ``β`` about the *rotated* axis ``y'``,
-followed by a rotation through ``γ`` about the *twice-rotated* axis ``z''``.
+where 𝐣 and 𝐤 rotate about the fixed ``y`` and ``z`` axes, respectively, so this
+represents an initial rotation (in the positive sense) through an angle ``γ`` about the axis
+``z``, followed by a rotation through ``β`` about the axis ``y``, and a final rotation
+through ``α`` about the axis ``z``.  This is equivalent to performing an initial rotation
+through ``α`` about the axis ``z``, followed by a rotation through ``β`` about the *rotated*
+axis ``y'``, followed by a rotation through ``γ`` about the *twice-rotated* axis ``z''``.
 The angles are naturally assumed to be in radians.
 
-NOTE: Before opening an issue reporting something "wrong" with this function,
-be sure to read all of [this
-page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
+The outputs from this function are in these ranges:
+
+  - α ∈ (-2π, 2π]
+  - β ∈ [0, π]
+  - γ ∈ (-2π, 2π]
+
+This is redundant, and inconsistent with more standard conventions for Euler angles on
+``\mathrm{Spin}(3)``:
+
+  - α ∈ [0, 2π)
+  - β ∈ [0, π]
+  - γ ∈ [0, 4π)
+
+But since these angles will usually be fed into periodic functions, it usually won't matter.
+If you really need angles in those ranges, you can always post-process the output of this
+function.
+
+NOTE: Before opening an issue reporting something "wrong" with this function, be sure to
+read all of [this page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 *especially* the very last section about opening issues or pull requests.
 
 # Returns
-- `αβγ::Vector{T}`
+- `αβγ::StaticVector{T}`
 
 # Raises
-- `AllHell` if you try to actually use Euler angles, when you could have been
-  using quaternions like a sensible person.
+- `AllHell` if you try to actually use Euler angles, when you could have been using
+  quaternions like a sensible person.
 
 # See Also
 - [`from_euler_angles`](@ref): Create quaternion from Euler angles
@@ -106,7 +121,7 @@ page](https://github.com/moble/quaternion/wiki/Euler-angles-are-horrible),
 """
 function to_euler_angles(q::AbstractQuaternion)
     q = float(q)
-    a0 = 2acos(√((q[1]^2+q[4]^2)/abs2(q)))
+    a0 = 2atan(hypot(q[2], q[3]), hypot(q[1], q[4]))
     a1 = atan(q[4], q[1])
     a2 = atan(-q[2], q[3])
     @SVector [a1+a2, a0, a1-a2]
