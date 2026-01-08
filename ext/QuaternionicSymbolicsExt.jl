@@ -8,7 +8,6 @@ import Quaternionic: normalize, absvec,
     wrapper, components, basetype, _pm_ascii
 using PrecompileTools
 isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
-import Symbolics: Latexify
 
 
 normalize(v::AbstractVector{Symbolics.Num}) = v ./ √sum(x->x^2, v)
@@ -55,6 +54,8 @@ let T = Symbolics.Num
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Symbolics.Num} =
     wrapper(Q){promote_type(basetype(Q), S)}
+Base.promote_rule(::Type{Q}, ::Type{Symbolics.Num}) where {Q<:AbstractQuaternion} =
+    wrapper(Q){promote_type(basetype(Q), Symbolics.Num)}
 
 
 ### Functions that used to appear in base.jl
