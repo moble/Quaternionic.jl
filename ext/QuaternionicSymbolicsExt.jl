@@ -220,9 +220,16 @@ for TA ∈ (AbstractQuaternion, Rotor, QuatVec)
 end
 let S = Symbolics.Num
     @eval begin
-        Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(*), $S)(s*components(p))
-        Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion} = wrapper($S, Val(*), Q)(s*components(p))
-        Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion} = wrapper(Q, Val(/), $S)(components(p)/s)
+        # These need to be explicit to avoid method ambiguities between SVector and Num
+        function Base.:*(p::Q, s::$S) where {Q<:AbstractQuaternion}
+            wrapper(Q, Val(*), $S)(s*p[1], s*p[2], s*p[3], s*p[4])
+        end
+        function Base.:*(s::$S, p::Q) where {Q<:AbstractQuaternion}
+            wrapper($S, Val(*), Q)(s*p[1], s*p[2], s*p[3], s*p[4])
+        end
+        function Base.:/(p::Q, s::$S) where {Q<:AbstractQuaternion}
+            wrapper(Q, Val(/), $S)(p[1] / s, p[2] / s, p[3] / s, p[4] / s)
+        end
         function Base.:/(s::$S, p::Q) where {Q<:AbstractQuaternion}
             f = s / abs2(p)
             wrapper($S, Val(/), Q)(p[1] * f, -p[2] * f, -p[3] * f, -p[4] * f)
