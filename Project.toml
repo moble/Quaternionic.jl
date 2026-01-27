@@ -1,7 +1,7 @@
 name = "Quaternionic"
 uuid = "0756cd96-85bf-4b6f-a009-b5012ea7a443"
-authors = ["Michael Boyle <michael.oliver.boyle@gmail.com>"]
 version = "3.1.1"
+authors = ["Michael Boyle <michael.oliver.boyle@gmail.com>"]
 
 [deps]
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
@@ -27,8 +27,8 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
 [extensions]
-QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicChainRulesCoreExt = "ChainRulesCore"
+QuaternionicChainRulesExt = ["ChainRules", "ChainRulesCore"]
 QuaternionicFastDifferentiationExt = "FastDifferentiation"
 QuaternionicForwardDiffExt = "ForwardDiff"
 QuaternionicLatexifyExt = "Latexify"
@@ -54,7 +54,7 @@ GenericLinearAlgebra = "0.3.11"
 LaTeXStrings = "1"
 Latexify = "0.15, 0.16"
 LinearAlgebra = "1"
-Mooncake = "0.4.161"
+Mooncake = "0.4.161, 0.5"
 PrecompileTools = "1.2"
 Random = "1"
 Requires = "1"
@@ -68,7 +68,6 @@ TestItems = "1"
 Zygote = "0.7.10"
 ZygoteRules = "0.2.7"
 julia = "1.6"
-
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -96,33 +95,5 @@ TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
-
 [targets]
-test = [
-    "Aqua",
-    "ChainRules",
-    "ChainRulesCore",
-    "ChainRulesTestUtils",
-    "Coverage",
-    "DifferentiationInterface",
-    "DifferentiationInterfaceTest",
-    "Documenter",
-    "DoubleFloats",
-    "EllipsisNotation",
-    "Enzyme",
-    "FastDifferentiation",
-    "FiniteDifferences",
-    "ForwardDiff",
-    "GenericLinearAlgebra",
-    "LinearAlgebra",
-    "Mooncake",
-    "Random",
-    "ReverseDiff",
-    "StaticArrays",
-    "StaticArraysCore",
-    "Symbolics",
-    "Test",
-    "TestItemRunner",
-    "Zygote",
-    "ZygoteRules",
-]
+test = ["Aqua", "ChainRules", "ChainRulesCore", "ChainRulesTestUtils", "Coverage", "DifferentiationInterface", "DifferentiationInterfaceTest", "Documenter", "DoubleFloats", "EllipsisNotation", "Enzyme", "FastDifferentiation", "FiniteDifferences", "ForwardDiff", "GenericLinearAlgebra", "LinearAlgebra", "Mooncake", "Random", "ReverseDiff", "StaticArrays", "StaticArraysCore", "Symbolics", "Test", "TestItemRunner", "Zygote", "ZygoteRules"]
