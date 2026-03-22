@@ -190,28 +190,33 @@
     # For a rotation rotor R₀ (real components, Euclidean-unit):
     #
     #   Euclidean norm of e^{imφ}·R₀  = |e^{imφ}| · ‖R₀‖_euc = 1  →  no-op (wrong)
-    #   Spinor norm of e^{imφ}·R₀     = e^{imφ}                →  divide out (correct)
+    #   Spinor norm of e^{imφ}·R₀     = e^{imφ} ≠ 1             →  divide out (correct)
     #
-    # This is the sharpest possible distinction between the two norms.
+    # NOTE: Rotor*Rotor re-normalises (the outer Rotor(...) constructor calls rotor(...)).
+    # So "not unit" must be verified via _hypot, not via q*conj(q).
     # ────────────────────────────────────────────────────────────────────────────────
     @testset "Pure phase exp[Iφ] is not a Lorentz transformation, $T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         θ = T(π/5)
-        # Pure rotation rotor: real components, Euclidean-unit, spinor-unit
-        rot_z = (Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+        (w, x, y, z) = (Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
 
         for φ ∈ T[π/6, π/4, π/3, π/2, 2π/3]
             λ = cos(φ) + im*sin(φ)          # e^{imφ}, |λ| = 1
+            v = SVector{4,Complex{T}}(λ*w, λ*x, λ*y, λ*z)
 
-            # Scaled element is NOT a valid Lorentz rotor: its conj-norm is exp[2iφ] ≠ 1
-            (w, x, y, z) = rot_z
-            q_scaled = Rotor{Complex{T}}(λ*w, λ*x, λ*y, λ*z)
-            r_scaled = q_scaled * conj(q_scaled)
-            @test !isapprox(r_scaled[1], one(Complex{T}); rtol=ϵ)  # spinor norm ≠ 1
-            @test r_scaled[1] ≈ Complex{T}(cos(2φ) + im*sin(2φ)) rtol=ϵ
+            # Spinor norm is ±e^{imφ} (≠ 1) — so this is NOT a valid Lorentz rotor.
+            # _hypot returns sqrt(λ²), which may be +λ or -λ depending on the branch of
+            # sqrt, so we check h² rather than h itself.
+            h = Quaternionic._hypot(Tuple(v))
+            @test h^2 ≈ Complex{T}(λ^2) rtol=ϵ
+            @test !isapprox(h, one(Complex{T}); rtol=ϵ)
 
-            # rotor() normalises and recovers a valid rotor
+            # Euclidean norm = 1 (same as R₀) — Euclidean normalisation is a no-op here
+            eucl = sqrt(sum(abs2, v))
+            @test eucl ≈ one(T) rtol=ϵ
+
+            # rotor() uses spinor normalisation and gives a valid Lorentz rotor
             q = rotor(λ*w, λ*x, λ*y, λ*z)
             r = q * conj(q)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
