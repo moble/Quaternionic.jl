@@ -1,6 +1,25 @@
 # We'll need this awkward way of getting the `components` field when we set `getproperty`
 components(q::AbstractQuaternion) = getfield(q, :components)
 
+# This helper function is mostly copied from Base.math, except that we restrict to Complex
+# elements, and we omit `abs2` in the final sum.  This is crucial because it is the
+# appropriate norm for complex quaternions, which are supposed to represent rotors in the
+# spacetime algebra.
+function _hypot(x::NTuple{N,Complex{T}}) where {N, T<:Number}
+    maxabs = maximum(abs, x)
+    if isnan(maxabs) && any(isinf, x)
+        return typeof(maxabs)(Inf)
+    elseif (iszero(maxabs) || isinf(maxabs))
+        return maxabs
+    else
+        return maxabs * sqrt(sum(y -> (y / maxabs)^2, x))
+    end
+end
+
+# We need that helper to normalize complex quaternions
+normalize(v::AbstractVector{Complex{T}}) where T = v ./ _hypot(Tuple(v))
+
+# We simplify for real-valued quaternions, falling back on the default `hypot`
 normalize(v::AbstractVector) = v ./ hypot(v...)
 
 

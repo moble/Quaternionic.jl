@@ -78,6 +78,7 @@ end
     addtests("base.jl")
     addtests("algebra.jl")
     addtests("math.jl")
+    addtests("lorentz.jl")
     addtests("random.jl")
     addtests("conversion.jl")
     addtests("distance.jl")
