@@ -96,7 +96,14 @@
                 (T(1)/√T(3), T(1)/√T(3), T(1)/√T(3)),
             ]
                 c, s = cos(θ/2), sin(θ/2)
-                q = rotor(Complex{T}(c), Complex{T}(nx*s), Complex{T}(ny*s), Complex{T}(nz*s))
+                q = Quaternion{Complex{T}}(
+                    components(
+                        rotor(
+                            Complex{T}(c), Complex{T}(nx*s),
+                            Complex{T}(ny*s), Complex{T}(nz*s)
+                        )
+                    )
+                )
                 r = q * conj(q)
                 @test r[1] ≈ one(Complex{T})       rtol=ϵ
                 @test r[2] ≈ zero(Complex{T})      atol=ϵ
@@ -125,7 +132,7 @@
             ch, sh = cosh(φ/2), sinh(φ/2)
 
             # Boost in x: (cosh, -im·sinh, 0, 0)
-            q_x = rotor(Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T}))
+            q_x = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T}))))
             r = q_x * conj(q_x)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ*ch
@@ -133,7 +140,7 @@
             @test r[4] ≈ zero(Complex{T}) atol=ϵ
 
             # Boost in y: (cosh, 0, im·sinh, 0)
-            q_y = rotor(Complex{T}(ch), zero(Complex{T}), im*T(sh), zero(Complex{T}))
+            q_y = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), zero(Complex{T}), im*T(sh), zero(Complex{T}))))
             r = q_y * conj(q_y)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ
@@ -141,7 +148,7 @@
             @test r[4] ≈ zero(Complex{T}) atol=ϵ
 
             # Boost in z: (cosh, 0, 0, -im·sinh)
-            q_z = rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), -im*T(sh))
+            q_z = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), -im*T(sh))))
             r = q_z * conj(q_z)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ
@@ -168,9 +175,9 @@
 
         for λ ∈ Complex{T}[2, 1+im, 3+4im, -2im]
             # Scaling a unit rotor by λ gives spinor norm λ (not |λ|).
-            # After rotor() normalises, q*conj(q) should be 1 again.
+            # After rotor() normalises, computing q*conj(q) as Quaternion arithmetic should give 1.
             for (w, x, y, z) ∈ [boost_x_components, rot_z_components]
-                q = rotor(λ*w, λ*x, λ*y, λ*z)
+                q = Quaternion{Complex{T}}(components(rotor(λ*w, λ*x, λ*y, λ*z)))
                 r = q * conj(q)
                 @test r[1] ≈ one(Complex{T})  rtol=ϵ
                 @test r[2] ≈ zero(Complex{T}) atol=ϵ
@@ -216,8 +223,9 @@
             eucl = sqrt(sum(abs2, v))
             @test eucl ≈ one(T) rtol=ϵ
 
-            # rotor() uses spinor normalisation and gives a valid Lorentz rotor
-            q = rotor(λ*w, λ*x, λ*y, λ*z)
+            # rotor() uses spinor normalisation and gives a valid Lorentz rotor.
+            # Cast to Quaternion first so that q*conj(q) does not re-normalise.
+            q = Quaternion{Complex{T}}(components(rotor(λ*w, λ*x, λ*y, λ*z)))
             r = q * conj(q)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ
@@ -242,14 +250,14 @@
                 ch, sh = cosh(φ/2), sinh(φ/2)
 
                 # Spatial rotation about z
-                q_rot = rotor(
+                q_rot = Quaternion{Complex{T}}(components(rotor(
                     Complex{T}(cos(θ/2)), zero(Complex{T}),
                     zero(Complex{T}), Complex{T}(sin(θ/2))
-                )
+                )))
                 # Boost in x
-                q_boost = rotor(
+                q_boost = Quaternion{Complex{T}}(components(rotor(
                     Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T})
-                )
+                )))
 
                 # Both orderings
                 for q_prod ∈ [q_rot * q_boost, q_boost * q_rot]
@@ -268,14 +276,14 @@
 
         for φ₁ ∈ T[0.4, 1.0, 1.6]
             for φ₂ ∈ T[0.3, 0.8, 1.4]
-                q1 = rotor(
+                q1 = Quaternion{Complex{T}}(components(rotor(
                     Complex{T}(cosh(φ₁/2)), -im*T(sinh(φ₁/2)),
                     zero(Complex{T}), zero(Complex{T})
-                )
-                q2 = rotor(
+                )))
+                q2 = Quaternion{Complex{T}}(components(rotor(
                     Complex{T}(cosh(φ₂/2)), zero(Complex{T}),
                     im*T(sinh(φ₂/2)), zero(Complex{T})
-                )
+                )))
                 q_prod = q1 * q2
                 r = q_prod * conj(q_prod)
                 @test r[1] ≈ one(Complex{T})  rtol=ϵ
