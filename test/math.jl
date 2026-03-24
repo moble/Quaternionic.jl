@@ -99,12 +99,14 @@
     end
 
     @testset "Special values for abs $T" for T in FloatTypes
-        @test abs2(Quaternion{Complex{T}}(1+2im, 3+4im, false, false)) == T(1+4+9+16)
-        @test abs2(QuatVec{Complex{T}}(1+2im, 3+4im, false, false)) == T(9+16)
+        # abs2 and abs2vec now return the spinor norm (Σzᵢ²) for Complex{T} components,
+        # not the Euclidean norm (Σ|zᵢ|²).  Rotor always returns one(real(T)) regardless.
+        @test abs2(Quaternion{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-10, 28)
+        @test abs2(QuatVec{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
         @test abs2(Rotor{Complex{T}}(1+2im, 3+4im, false, false)) == one(T)
-        @test abs2vec(Quaternion{Complex{T}}(1+2im, 3+4im, false, false)) == T(9+16)
-        @test abs2vec(QuatVec{Complex{T}}(1+2im, 3+4im, false, false)) == T(9+16)
-        @test abs2vec(Rotor{Complex{T}}(1+2im, 3+4im, false, false)) == T(9+16)
+        @test abs2vec(Quaternion{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
+        @test abs2vec(QuatVec{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
+        @test abs2vec(Rotor{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
     end
 
     @testset "Special values for sqrt $T" for T in FloatTypes
