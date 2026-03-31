@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:pkgdocs.julialang.org)"
+      "WebFetch(domain:pkgdocs.julialang.org)",
+      "Bash(mkdir -p /Users/boyle/Research/Code/Notes/Quaternionic.jl/docs)",
+      "Bash(git -C /Users/boyle/Research/Code/Notes init)",
+      "WebFetch(domain:documenter.juliadocs.org)",
+      "mcp__julia__julia_eval"
     ]
   }
 }

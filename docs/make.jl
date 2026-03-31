@@ -14,6 +14,8 @@ bib = CitationBibliography(
 
 DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
 
+include("local_notes.jl")
+
 makedocs(;
     plugins=[bib],
     sitename="Quaternionic.jl",
@@ -26,12 +28,14 @@ makedocs(;
     ),
     authors="Michael Boyle <michael.oliver.boyle@gmail.com>",
     repo=Remotes.GitHub("moble", "Quaternionic.jl"),
+    remotes=notes_remotes,
     pages=[
         "Introduction" => "index.md",
         "Basics" => "manual.md",
         "Functions of time" => "functions_of_time.md",
         "Differentiating by quaternions" => "differentiation.md",
-        "All functions" => "functions.md"
+        "All functions" => "functions.md",
+        notes_pages...,
     ],
     # doctest = false,
     doctestfilters = [
