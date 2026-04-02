@@ -5,7 +5,17 @@
       "Bash(mkdir -p /Users/boyle/Research/Code/Notes/Quaternionic.jl/docs)",
       "Bash(git -C /Users/boyle/Research/Code/Notes init)",
       "WebFetch(domain:documenter.juliadocs.org)",
-      "mcp__julia__julia_eval"
+      "mcp__julia__julia_eval",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(julia --version)",
+      "mcp__kaimon__ex",
+      "mcp__kaimon__type_info",
+      "mcp__kaimon__search_methods",
+      "mcp__kaimon__code_typed",
+      "mcp__kaimon__run_tests",
+      "mcp__kaimon__ping",
+      "mcp__kaimon__investigate_environment"
     ]
   }
 }

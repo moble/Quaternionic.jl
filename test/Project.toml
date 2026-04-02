@@ -28,6 +28,9 @@ TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
+[sources]
+Quaternionic = {path = ".."}
+
 [compat]
 Aqua = "0.8"
 ChainRulesTestUtils = "1.13.0"
@@ -41,6 +44,3 @@ FiniteDifferences = "0.12.33"
 ReverseDiff = "1.16.1"
 Test = "1.11.0"
 TestItemRunner = "1"
-
-[sources]
-Quaternionic = {path = ".."}
