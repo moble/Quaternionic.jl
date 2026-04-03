@@ -40,7 +40,9 @@
         @test quaternion(T[0, 2, 3, 4]...) == quaternion(T(2), T(3), T(4))
         @test quaternion(T[1, 0, 0, 0]...) == quaternion(T(1))
         if !(T<:Integer)
-            @test rotor(T(1), 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
+            if !(T<:Symbolics.Num)  # SVector / Symbolics.Num is ambiguous
+                @test rotor(T(1), 2, 3, 4) == Rotor{T}(SVector{4, T}(1, 2, 3, 4)/√T(30))
+            end
             @test Rotor{T}(1, 0, 0, 0) == Rotor{T}(1)
             if !(T<:Symbolics.Num)
                 @test rotor(T[1, 2, 3, 4]...) ≈ rotor(SVector{4, T}(1, 2, 3, 4)/√T(30)) rtol=0 atol=2eps(T)
