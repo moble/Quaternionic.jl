@@ -37,9 +37,9 @@ julia> abs(quaternion(1,2,4,10))
 ```
 """
 Base.abs(q::AbstractQuaternion) = hypot(components(q)...)
-Base.abs(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(Tuple(components(q)))
+Base.abs(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(components(q))
 Base.abs(q::QuatVec) = hypot(vec(q)...)
-Base.abs(q::QuatVec{Complex{T}}) where {T<:Real} = _hypot(Tuple(vec(q)))
+Base.abs(q::QuatVec{Complex{T}}) where {T<:Real} = _hypot(vec(q))
 Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
 
 """
@@ -71,7 +71,7 @@ julia> absvec(quaternion(1,2,3,6))
 ```
 """
 absvec(q::AbstractQuaternion) = hypot(vec(q)...)
-absvec(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(Tuple(vec(q)))
+absvec(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(vec(q))
 
 # norm(q::Quaternion) = Base.abs2(q)  ## This might just be confusing
 
