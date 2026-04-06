@@ -7,7 +7,7 @@ notes_src = joinpath(@__DIR__, "src", "local_notes")
 
 if isdir(notes_src)
     files = filter(f -> endswith(f, ".md"), readdir(notes_src; sort=true))
-    notes_pages = isempty(files) ? [] : ["Notes" => map(f -> "local_notes/$f", files)]
+    notes_pages = isempty(files) ? [] : ["Local Notes" => map(f -> "local_notes/$f", files)]
 
     notes_root = readchomp(`git -C $(realpath(notes_src)) rev-parse --show-toplevel`)
     notes_remote_url = readchomp(`git -C $notes_root remote get-url origin`)
