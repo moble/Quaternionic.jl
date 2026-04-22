@@ -51,22 +51,56 @@ inverse is ``𝐈^{-1} = -𝐈 = 𝐳𝐲𝐱``.
 
 ### Duality
 
-``𝐈`` has a special property in three dimensions: it *commutes* with every
-element of the algebra, so left- and right-multiplication by it are
-equivalent.  This makes it possible to use ``𝐈`` (or ``𝐈^{-1}``) to map
-between vectors and bivectors in a way analogous to the [Hodge star
-operator](https://en.wikipedia.org/wiki/Hodge_star_operator).  Explicit
-computation gives
+``𝐈`` has a special property in three dimensions: since moving it past any
+grade-1 vector costs ``(-1)^{n-1} = (-1)^2 = +1`` sign changes, it commutes
+with every element of the algebra.  Left- and right-multiplication by ``𝐈``
+are therefore identical, and we can unambiguously write ``𝐈\,𝐯 = 𝐯\,𝐈``.
+
+The [Hodge dual](https://en.wikipedia.org/wiki/Hodge_star_operator) maps
+grade-``k`` elements to grade-``(n-k)`` elements.[^hodge]  For grade-1 vectors
+in ℝ³ the reverse is trivial (``\widetilde{𝐯} = 𝐯``), and explicit computation
+gives
 ```math
-𝐈\,𝐱 = 𝐲𝐳, \qquad 𝐈\,𝐲 = 𝐳𝐱, \qquad 𝐈\,𝐳 = 𝐱𝐲,
+\star 𝐱 = 𝐲𝐳, \qquad \star 𝐲 = 𝐳𝐱, \qquad \star 𝐳 = 𝐱𝐲.
 ```
-while multiplication by ``𝐈^{-1} = -𝐈`` flips each sign:
+For the grade-2 bivectors the reverse introduces a sign, and one finds
 ```math
-𝐈^{-1}𝐱 = 𝐳𝐲, \qquad 𝐈^{-1}𝐲 = 𝐱𝐳, \qquad 𝐈^{-1}𝐳 = 𝐲𝐱.
+\star(𝐲𝐳) = 𝐱, \qquad \star(𝐳𝐱) = 𝐲, \qquad \star(𝐱𝐲) = 𝐳.
 ```
-We will use this duality to define the quaternion units in the next section,
-and will see that the choice between ``𝐈`` and ``𝐈^{-1}`` corresponds
-precisely to the two sign conventions for quaternion multiplication.
+Since ``𝐈^2 = -1`` in ℝ³, we have ``𝐈^{-1} = -𝐈``, so the map
+``𝐯 \mapsto 𝐈^{-1}𝐯`` gives the *negatives* of the Hodge duals:
+```math
+𝐈^{-1}𝐱 = 𝐳𝐲 = -\star 𝐱, \qquad
+𝐈^{-1}𝐲 = 𝐱𝐳 = -\star 𝐲, \qquad
+𝐈^{-1}𝐳 = 𝐲𝐱 = -\star 𝐳.
+```
+The two natural maps ``𝐯 \mapsto \pm \star 𝐯`` correspond exactly to the two
+sign conventions for quaternion multiplication.
+
+[^hodge]: The Hodge dual is defined in general by the property
+    ``a \wedge \star b = (a \mid b)\, 𝐈``, where ``(a \mid b)`` is the
+    symmetric bilinear form naturally induced by the metric on grade-``r``
+    elements.  For a geometric algebra this form is characterized by
+    ```math
+    (a \mid b) = \langle a\, \widetilde{b} \rangle_0,
+    ```
+    where ``\langle \cdot \rangle_0`` extracts the grade-0 (scalar) part.
+    The reverse ``\widetilde{b}`` compensates for the reordering cost of
+    extracting a scalar from a product of two same-grade blades: without it,
+    one picks up an extra factor of ``(-1)^{r(r-1)/2}``.  Three alternative
+    expressions are all equal:
+    ```math
+    (a \mid b)
+    = \langle a\, \widetilde{b} \rangle_0
+    = \langle \widetilde{a}\, b \rangle_0
+    = \langle b\, \widetilde{a} \rangle_0
+    = \langle \widetilde{b}\, a \rangle_0,
+    ```
+    because ``\langle MN \rangle_0 = \langle NM \rangle_0`` (cyclic property of
+    the scalar part) and ``\langle \widetilde{M} \rangle_0 = \langle M
+    \rangle_0``.  With this bilinear form, the formula
+    ``\star A = \widetilde{A}\, 𝐈`` can be verified to satisfy the defining
+    property for arbitrary grade and arbitrary signature ``(p, q)``.
 
 
 ## The even subalgebra: Quaternions
