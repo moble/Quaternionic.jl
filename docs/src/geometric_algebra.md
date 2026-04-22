@@ -12,7 +12,7 @@ quaternions (needed for Lorentz boosts via the spacetime algebra) is covered
 on a separate page.
 
 
-## The geometric algebra over ℝ³
+## The geometric algebra over ``ℝ³``
 
 We start with the standard right-handed Cartesian coordinate system and its
 unit basis vectors ``(𝐱, 𝐲, 𝐳)``.  The *geometric product* of two
