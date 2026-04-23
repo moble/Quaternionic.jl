@@ -160,7 +160,7 @@ and ``R\,𝐯\,R^{-1} = R\,𝐯\,\widetilde{R}`` rotates the component of
 ``𝐯`` in the plane of ``\hat{B}`` by angle ``\vartheta``.
 
 The set of all such "rotors" ``R`` forms a group under multiplication,
-called the *spin group*: ``\mathrm{Spin}(3) \cong \mathrm{SU}(2)``.
+called the *spin group*: ``\mathrm{Spin}(3) ≅ \mathrm{SU}(2)``.
 The factor of ``1/2`` is a hallmark of the well known double-cover
 structure over the rotation group ``\mathrm{SO}(3)``.
 
@@ -197,9 +197,10 @@ whether ``\exp(\vartheta\,𝐳𝐱)`` maps ``𝐳`` toward ``+𝐱`` or
 
 ## The even subalgebra: Quaternions
 
-Products of an *even* number of vectors — grades 0 and 2 — form a closed
-subalgebra, the *even subalgebra*, spanned by ``\{𝟏, 𝐱𝐲, 𝐱𝐳, 𝐲𝐳\}``.
-This four-dimensional algebra is precisely the quaternions.[^2]
+Products of an *even* number of vectors — grades 0 and 2 — form a
+closed subalgebra, the *even subalgebra*, spanned by ``\{𝟏, 𝐱𝐲,
+𝐲𝐳, 𝐳𝐱\}``.[^2]  This four-dimensional algebra is precisely
+isomorphic to the algebra of quaternions.
 
 [^2]: Elements built from an *odd* number of vectors do not form a
     closed subalgebra; two such elements will multiply to give a
