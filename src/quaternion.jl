@@ -7,10 +7,11 @@ components(q::AbstractQuaternion) = getfield(q, :components)
 # spacetime algebra.
 function _hypot(x)
     maxabs = maximum(abs, x)
+    result_type = promote_type(eltype(x), typeof(maxabs))
     if isnan(maxabs) && any(isinf, x)
-        return typeof(maxabs)(Inf)
+        return convert(result_type, Inf)
     elseif (iszero(maxabs) || isinf(maxabs))
-        return maxabs
+        return convert(result_type, maxabs)
     else
         return maxabs * sqrt(sum(y -> (y / maxabs)^2, x))
     end
