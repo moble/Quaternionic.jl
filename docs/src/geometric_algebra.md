@@ -29,11 +29,13 @@ product is linear, associative, and distributive, and satisfies
 ```
 Two key consequences follow immediately.  Parallel vectors commute:
 ``𝐯 𝐰 = 𝐰 𝐯`` when ``𝐯 ∥ 𝐰``.  Orthogonal vectors anticommute:
-``𝐯 𝐰 = -𝐰 𝐯`` when ``𝐯 ⟂ 𝐰``.
+``𝐯 𝐰 = -𝐰 𝐯`` when ``𝐯 ⟂ 𝐰``.  In particular, computations with
+an orthonormal basis become simple exercises in counting the parity of
+permutations.
 
-The full algebra over ℝ³ has dimension ``2^3 = 8``.  A basis is provided by
-products of the Cartesian basis vectors, grouped by *grade* (number of
-vector factors):
+The full algebra over ``ℝ³`` has dimension ``2^3 = 8``.  A basis is
+provided by products of the Cartesian basis vectors, grouped by
+*grade* (number of vector factors):
 ```math
 \begin{array}{ll}
 \text{grade 0 (scalar):}       & \boldsymbol{1}, \\[4pt]
@@ -49,137 +51,229 @@ Each bivector squares to ``-1``.  For example,
 The pseudoscalar ``𝐈 = 𝐱𝐲𝐳`` also squares to ``-1``, so its
 inverse is ``𝐈^{-1} = -𝐈 = 𝐳𝐲𝐱``.
 
+``𝐈`` has a special property in three dimensions: since moving it
+past any grade-1 vector costs ``(-1)^{n-1} = (-1)^2 = +1`` sign
+changes, it commutes with every element of the algebra.  Left- and
+right-multiplication by ``𝐈`` are therefore identical, and we can
+unambiguously write ``𝐈\,𝐯 = 𝐯\,𝐈``.
+
+### The reverse
+
+The *reverse* of a multivector, denoted ``\widetilde{A}``, is obtained
+by reversing the order of the vector factors in each basis blade:
+```math
+\widetilde{e_{i_1} e_{i_2} \cdots e_{i_r}}
+  = e_{i_r} \cdots e_{i_2}\, e_{i_1}.
+```
+Reordering the ``r`` vectors back to standard order requires
+``r(r-1)/2`` transpositions, each costing a sign change, so a
+grade-``r`` blade picks up a factor of ``(-1)^{r(r-1)/2}``.  In ``ℝ³``:
+- Grades 0 and 1 are unchanged: ``\widetilde{𝐯} = 𝐯``.
+- Grades 2 and 3 negate: for example
+```math
+\widetilde{𝐱𝐲} = 𝐲𝐱 = -𝐱𝐲, \qquad \widetilde{𝐈} = 𝐳𝐲𝐱 = -𝐱𝐲𝐳 = -𝐈.
+```
+
 ### Duality
 
-``𝐈`` has a special property in three dimensions: since moving it past any
-grade-1 vector costs ``(-1)^{n-1} = (-1)^2 = +1`` sign changes, it commutes
-with every element of the algebra.  Left- and right-multiplication by ``𝐈``
-are therefore identical, and we can unambiguously write ``𝐈\,𝐯 = 𝐯\,𝐈``.
+The [Hodge dual](https://en.wikipedia.org/wiki/Hodge_star_operator)
+maps grade-``k`` elements to grade-``(n-k)`` elements.  The
+formula[^1]
+```math
+\star b = \widetilde{b}\, 𝐈
+```
+holds for blades of any grade and any metric signature.  For grade-1
+vectors ``\widetilde{𝐯} = 𝐯``, so right-multiplication by ``𝐈``
+suffices:
+```math
+\star 𝐱 = 𝐱\, 𝐈 = 𝐲𝐳, \qquad
+\star 𝐲 = 𝐲\, 𝐈 = 𝐳𝐱, \qquad
+\star 𝐳 = 𝐳\, 𝐈 = 𝐱𝐲.
+```
+For grade-2 bivectors the reverse introduces a sign (e.g.,
+``\widetilde{𝐲𝐳} = 𝐳𝐲 = -𝐲𝐳``), giving
+```math
+\star(𝐲𝐳) = (𝐳𝐲)(𝐱𝐲𝐳) = 𝐱, \qquad
+\star(𝐳𝐱) = 𝐲, \qquad
+\star(𝐱𝐲) = 𝐳.
+```
 
-The [Hodge dual](https://en.wikipedia.org/wiki/Hodge_star_operator) maps
-grade-``k`` elements to grade-``(n-k)`` elements.[^hodge]  For grade-1 vectors
-in ℝ³ the reverse is trivial (``\widetilde{𝐯} = 𝐯``), and explicit computation
-gives
-```math
-\star 𝐱 = 𝐲𝐳, \qquad \star 𝐲 = 𝐳𝐱, \qquad \star 𝐳 = 𝐱𝐲.
-```
-For the grade-2 bivectors the reverse introduces a sign, and one finds
-```math
-\star(𝐲𝐳) = 𝐱, \qquad \star(𝐳𝐱) = 𝐲, \qquad \star(𝐱𝐲) = 𝐳.
-```
-Since ``𝐈^2 = -1`` in ℝ³, we have ``𝐈^{-1} = -𝐈``, so the map
-``𝐯 \mapsto 𝐈^{-1}𝐯`` gives the *negatives* of the Hodge duals:
-```math
-𝐈^{-1}𝐱 = 𝐳𝐲 = -\star 𝐱, \qquad
-𝐈^{-1}𝐲 = 𝐱𝐳 = -\star 𝐲, \qquad
-𝐈^{-1}𝐳 = 𝐲𝐱 = -\star 𝐳.
-```
-The two natural maps ``𝐯 \mapsto \pm \star 𝐯`` correspond exactly to the two
-sign conventions for quaternion multiplication.
-
-[^hodge]: The Hodge dual is defined in general by the property
-    ``a \wedge \star b = (a \mid b)\, 𝐈``, where ``(a \mid b)`` is the
-    symmetric bilinear form naturally induced by the metric on grade-``r``
-    elements.  For a geometric algebra this form is characterized by
+[^1]: The Hodge dual is defined by linearity and the property that for
+    grade-``r`` elements ``a`` and ``b``, we have ``a \wedge \star b =
+    (a \mid b)\, 𝐈``, where ``(a \mid b)`` is the symmetric bilinear
+    form given by
     ```math
     (a \mid b) = \langle a\, \widetilde{b} \rangle_0,
     ```
-    where ``\langle \cdot \rangle_0`` extracts the grade-0 (scalar) part.
-    The reverse ``\widetilde{b}`` compensates for the reordering cost of
-    extracting a scalar from a product of two same-grade blades: without it,
-    one picks up an extra factor of ``(-1)^{r(r-1)/2}``.  Three alternative
-    expressions are all equal:
+    with ``\langle \cdot \rangle_0`` extracting the scalar part.  The
+    reverse ensures symmetry; without it one picks up a sign
+    ``(-1)^{r(r-1)/2}`` from reordering.  The formula ``\star b =
+    \widetilde{b}\, 𝐈`` satisfies the defining property for any grade
+    and signature:
     ```math
-    (a \mid b)
-    = \langle a\, \widetilde{b} \rangle_0
-    = \langle \widetilde{a}\, b \rangle_0
-    = \langle b\, \widetilde{a} \rangle_0
-    = \langle \widetilde{b}\, a \rangle_0,
+    a \wedge \star b
+    = \langle a\, (\star b) \rangle_n
+    = \langle a\, \widetilde{b}\, 𝐈 \rangle_n
+    = \langle a\, \widetilde{b} \rangle_0\, 𝐈
+    = (a \mid b)\, 𝐈,
     ```
-    because ``\langle MN \rangle_0 = \langle NM \rangle_0`` (cyclic property of
-    the scalar part) and ``\langle \widetilde{M} \rangle_0 = \langle M
-    \rangle_0``.  With this bilinear form, the formula
-    ``\star A = \widetilde{A}\, 𝐈`` can be verified to satisfy the defining
-    property for arbitrary grade and arbitrary signature ``(p, q)``.
+    where the first step uses ``a \wedge c = \langle ac \rangle_n``
+    when the grades of ``a`` and ``c`` sum to ``n``, and the third
+    uses the fact that right-multiplication by ``𝐈`` shifts grade by
+    ``n``, so only the scalar part of ``a\widetilde{b}`` contributes.
 
+
+## Reflections and rotations
+
+One of the most important applications of the geometric product is to
+represent reflections and rotations via simple products with other
+elements of the algebra.  For a unit vector ``𝐧`` (``𝐧^2 = 1``), the
+sandwich map ``𝐯 \mapsto -𝐧\,𝐯\,𝐧`` reflects ``𝐯`` through the
+hyperplane orthogonal to ``𝐧`` — or, we might say, "along" ``𝐧``.
+Decompose ``𝐯 = 𝐯_\parallel + 𝐯_\perp``: the parallel component
+commutes with ``𝐧`` (parallel vectors commute), giving
+``-𝐧\,𝐯_\parallel\,𝐧 = -𝐯_\parallel``; the perpendicular component
+anticommutes, giving ``-𝐧\,𝐯_\perp\,𝐧 = +𝐯_\perp``.  So the
+component along ``𝐧`` is flipped and the hyperplane component is
+preserved — the correct reflection.
+
+The [Cartan–Dieudonné
+theorem](https://en.wikipedia.org/wiki/Cartan%E2%80%93Dieudonn%C3%A9_theorem)
+states that every rotation of ``\mathbb{R}^n`` is a composition of an
+even number of reflections.  Composing two reflections along unit
+vectors ``𝐦`` and ``𝐧``:
+```math
+-𝐦\bigl(-𝐧\,𝐯\,𝐧\bigr)𝐦 = (𝐦𝐧)\,𝐯\,(𝐦𝐧)^{-1}.
+```
+The product ``R = 𝐦𝐧`` is an even-grade element satisfying ``R
+\widetilde{R} = 1``.  For unit vectors separated by angle ``\alpha``
+this product equals ``\cos\alpha + \sin\alpha\,\hat{B}``, where
+``\hat{B}`` is the unit bivector of the plane spanned by ``𝐦`` and
+``𝐧``.  The effect of ``R\,𝐯\,R^{-1}`` is to rotate ``𝐯`` by an
+angle ``2\alpha`` in the plane of ``\hat{B}``.  Setting ``\alpha =
+\vartheta/2``:
+```math
+R = \exp\!\left(\frac{\vartheta}{2}\,\hat{B}\right)
+  = \cos\frac{\vartheta}{2} + \sin\frac{\vartheta}{2}\,\hat{B},
+```
+and ``R\,𝐯\,R^{-1} = R\,𝐯\,\widetilde{R}`` rotates the component of
+``𝐯`` in the plane of ``\hat{B}`` by angle ``\vartheta``.
+
+The set of all such "rotors" ``R`` forms a group under multiplication,
+called the *spin group*: ``\mathrm{Spin}(3) \cong \mathrm{SU}(2)``.
+The factor of ``1/2`` is a hallmark of the well known double-cover
+structure over the rotation group ``\mathrm{SO}(3)``.
+
+Each plane is represented by either of two unit bivectors that differ
+by a sign.  For example, the ``𝐱𝐲``-plane is represented by either
+``𝐱𝐲`` or ``𝐲𝐱 = -𝐱𝐲``.  We must determine which sign gives a
+*right-handed* rotation.  Consider ``R = \exp(\frac{\vartheta}{2}\,𝐱𝐲) =
+\cos\frac{\vartheta}{2} + \sin\frac{\vartheta}{2}\,(𝐱𝐲)`` acting on ``𝐱``.  We can readily calculate
+```math
+R\,𝐱\,\widetilde{R}
+= \left(\cos^2\!\frac{\vartheta}{2} - \sin^2\!\frac{\vartheta}{2}\right)\,𝐱
+  - 2\sin\frac{\vartheta}{2}\cos\frac{\vartheta}{2}\,𝐲
+= \cos(\vartheta)\,𝐱 - \sin(\vartheta)\,𝐲.
+```
+A right-handed rotation by ``\vartheta`` about ``𝐳`` (curling the
+right hand from ``𝐱`` toward ``𝐲``, thumb along ``+𝐳``) maps ``𝐱
+\to \cos\vartheta\,𝐱 + \sin\vartheta\,𝐲``.  The formula above has a
+negative ``\sin`` term: ``\exp(\theta\,𝐱𝐲)`` rotates ``𝐱`` toward
+``-𝐲``, i.e., *clockwise* in the ``𝐱𝐲``-plane (left-handed about
+``𝐳``).  Right-handed rotation by ``\vartheta`` about ``+𝐳``
+requires the opposite sign: ``\exp(\frac{\vartheta}{2}\,𝐲𝐱)``.  The
+same test on the remaining coordinate planes — checking whether
+``\exp(\vartheta\,𝐲𝐳)`` maps ``𝐲`` toward ``+𝐳`` or ``-𝐳``, and
+whether ``\exp(\vartheta\,𝐳𝐱)`` maps ``𝐳`` toward ``+𝐱`` or
+``-𝐱`` — gives in each case the same conclusion: the bivector with
+*reversed* index order is the right-handed one.  The results are:
+```math
+\begin{array}{ll}
+\text{right-handed rotation about } 𝐱: & \exp\left(\tfrac{\vartheta}{2}\,𝐳𝐲\right), \\[4pt]
+\text{right-handed rotation about } 𝐲: & \exp\left(\tfrac{\vartheta}{2}\,𝐱𝐳\right), \\[4pt]
+\text{right-handed rotation about } 𝐳: & \exp\left(\tfrac{\vartheta}{2}\,𝐲𝐱\right).
+\end{array}
+```
 
 ## The even subalgebra: Quaternions
 
 Products of an *even* number of vectors — grades 0 and 2 — form a closed
 subalgebra, the *even subalgebra*, spanned by ``\{𝟏, 𝐱𝐲, 𝐱𝐳, 𝐲𝐳\}``.
-This four-dimensional algebra is precisely the quaternions.[^1]
+This four-dimensional algebra is precisely the quaternions.[^2]
 
-[^1]: Elements built from an *odd* number of vectors produce reflections
-      (rather than rotations) when used in the sandwich product ``𝐐\, 𝐯\,
-      𝐐^{-1}``.  This is why rotations are represented exclusively by
-      even-grade elements.  See [DoranLasenby_2010](@citet) for details.
+[^2]: Elements built from an *odd* number of vectors do not form a
+    closed subalgebra; two such elements will multiply to give a
+    multivector with only *even* grades.  Odd-grade elements are
+    useful for representing reflections, but are not used frequently.
 
-### The canonical bivector basis: ``𝐢``, ``𝐣``, ``𝐤``
-
-We define the quaternion units as the duals of the Cartesian basis vectors
-under ``𝐈^{-1}``:
+In quaternion terminology, the bivector basis elements are canonically
+presented as the generators of rotations about the specific axes.
+Comparing with the results at the end of the previous section, the
+right-handed generators are
 ```math
-𝐢 = 𝐈^{-1}𝐱 = 𝐳𝐲, \qquad
-𝐣 = 𝐈^{-1}𝐲 = 𝐱𝐳, \qquad
-𝐤 = 𝐈^{-1}𝐳 = 𝐲𝐱.
+\begin{aligned}
+𝐢 &= -\star 𝐱 = 𝐳𝐲, \\
+𝐣 &= -\star 𝐲 = 𝐱𝐳, \\
+𝐤 &= -\star 𝐳 = 𝐲𝐱.
+\end{aligned}
 ```
-Each of these squares to ``-1`` (as expected for a bivector), and one can
-verify the standard cyclic rules:
+Each of these squares to ``-1`` (as expected for a unit bivector), and
+one can verify the standard cyclic rules:
 ```math
 𝐢^2 = 𝐣^2 = 𝐤^2 = 𝐢𝐣𝐤 = -\boldsymbol{1},
 \qquad
 𝐢𝐣 = 𝐤, \quad 𝐣𝐤 = 𝐢, \quad 𝐤𝐢 = 𝐣.
 ```
-We will see below that this choice ensures ``𝐢`` generates right-handed
-rotations about ``𝐱``, ``𝐣`` about ``𝐲``, and ``𝐤`` about ``𝐳``.
+The opposite sign choice, ``𝐢' = \star 𝐱 = 𝐲𝐳``, produces
+left-handed rotations and satisfies ``𝐢'𝐣'𝐤' = +\boldsymbol{1}``.
+This is the convention used in much of the engineering literature.[^3]
 
-Using ``𝐈`` instead of ``𝐈^{-1}`` would give the alternative assignment
-``𝐢 = 𝐲𝐳``, ``𝐣 = 𝐳𝐱``, ``𝐤 = 𝐱𝐲``, which flips the sign of every
-multiplication: ``𝐢𝐣𝐤 = +\boldsymbol{1}``.  This is the convention used in
-much of the robotics and aerospace literature.[^2]
+[^3]: The two quaternion conventions are sometimes called the
+      *Hamilton* convention (``𝐢𝐣𝐤 = -1``, used here and in most of
+      mathematics and physics) and the *Shuster* or *JPL* convention
+      (``𝐢'𝐣'𝐤' = +1``, common in engineering).  However, note that
+      this difference may also be compensated by a different choice of
+      the "sandwich" product: ``𝐯' = \widetilde{𝐑}\, 𝐯\, 𝐑``
+      instead of ``𝐯' = 𝐑 𝐯\, \widetilde{𝐑}`` as we use.  This may
+      also be degenerate with different choices of active vs. passive
+      rotations.  See [SommerEtAl_2018](@citet) for a thorough
+      discussion of the differences and how they arise.
 
-[^2]: The two quaternion conventions are sometimes called the *Hamilton*
-      convention (``𝐢𝐣𝐤 = -1``, used here and in most mathematics and
-      physics) and the *Shuster* or *JPL* convention (``𝐢𝐣𝐤 = +1``, common
-      in spacecraft attitude control).  See [SommerEtAl_2018](@citet) for a
-      thorough discussion of the differences and how they arise.
-
-### Components and storage
-
-A general quaternion is written
+A general quaternion can be written
 ```math
 𝐐 = w\,\boldsymbol{1} + x\,𝐢 + y\,𝐣 + z\,𝐤,
 ```
-and stored as the tuple `(w, x, y, z)`, matching the component names used
-throughout the package.
+and is represented in this package by the `Quaternion` type.
+Specifically, ``(w, x, y, z)`` are the names of the components used
+throughout this package, and the symbols `𝐢`, `𝐣`, and `𝐤` are
+exported with precisely the meaning given here:
+```jldoctest
+julia> using Quaternionic
 
+julia> 𝐢^2 == 𝐣^2 == 𝐤^2 == 𝐢*𝐣*𝐤 == -1
+true
 
-## The reverse and the quaternion conjugate
-
-The *reverse* ``\widetilde{𝐐}`` of a geometric-algebra element reverses the
-order of every vector factor in each basis element.  For a grade-0 element
-the reverse is the identity; for a grade-2 bivector it introduces a sign flip
-(since swapping two anticommuting vectors costs a minus sign):
-```math
-\widetilde{𝐢} = \widetilde{𝐳𝐲} = 𝐲𝐳 = -𝐢, \quad
-\widetilde{𝐣} = -𝐣, \quad
-\widetilde{𝐤} = -𝐤.
+julia> 𝐢*𝐣 == 𝐤 && 𝐣*𝐤 == 𝐢 && 𝐤*𝐢 == 𝐣
+true
 ```
-For a general quaternion this gives
+
+For this general quaternion, the reverse is
 ```math
 \widetilde{𝐐} = w - x\,𝐢 - y\,𝐣 - z\,𝐤,
 ```
 which is exactly the *quaternion conjugate* `conj(Q)` in the code.
-
 Two important consequences follow.  First,
 ```math
 𝐐\,\widetilde{𝐐} = w^2 + x^2 + y^2 + z^2
 ```
-is a *pure scalar* — a non-negative real number for real quaternions.  In
-analogy with `abs2` for complex numbers, this product is `abs2(Q)` in the
-code.  Second, every nonzero quaternion has an inverse
+is a *pure scalar* — a non-negative real number for real quaternions.
+In analogy with `abs2` for complex numbers, this product is `abs2(Q)`
+in the code, and `abs(Q)` is its square root.  Second, every nonzero
+quaternion has an inverse
 ```math
-𝐐^{-1} = \frac{\widetilde{𝐐}}{𝐐\,\widetilde{𝐐}} = \frac{\texttt{conj}(Q)}{\texttt{abs2}(Q)}.
+𝐐^{-1} = \frac{\widetilde{𝐐}}{𝐐\,\widetilde{𝐐}}
+= \frac{\texttt{conj(Q)}}{\texttt{abs2(Q)}}
+= \texttt{inv(Q)}.
 ```
 
 !!! note "Real vs. complex quaternions"
@@ -187,130 +281,59 @@ code.  Second, every nonzero quaternion has an inverse
     For real quaternions, ``𝐐\,\widetilde{𝐐}`` is a positive real scalar.
     For complex quaternions, ``𝐐\,\widetilde{𝐐}`` is still a *scalar*
     element of the algebra (no ``𝐢``, ``𝐣``, or ``𝐤`` component), but it
-    is complex-valued — it is the *spinor norm* ``\sum_i z_i^2`` rather than
-    the Euclidean norm ``\sum_i |z_i|^2``.  The distinction matters for
-    Lorentz boosts; it is discussed on the spacetime algebra page.
+    is complex-valued.  In particular, this is the *spinor norm*
+    ``\sum_i z_i^2`` rather than the Euclidean norm ``\sum_i |z_i|^2``.
+    The distinction matters for Lorentz boosts, as discussed on the
+    [spacetime algebra page](spacetime_algebra.md).
 
+The general quaternion is represented in this package by the
+`Quaternion` type.  Unit quaternions (rotors, which have
+``𝐐\,\widetilde{𝐐} = 1``) are represented by the `Rotor` type.  And
+"pure-vector" quaternions (having ``w=0``) are represented by the
+`QuatVec` type.
 
-## Rotors and the double cover of SO(3)
-
-A *rotor* is a unit quaternion — a quaternion satisfying
-``𝐑\,\widetilde{𝐑} = \boldsymbol{1}``.  Any unit quaternion can be written
-```math
-𝐑 = \exp\!\left(\frac{\rho}{2}\,\hat{𝔯}\right)
-  = \cos\frac{\rho}{2} + \hat{𝔯}\,\sin\frac{\rho}{2},
+Note that the function-call syntax `R(v)` implements the sandwich
+``𝐑\, 𝐯\, \widetilde{𝐑}`` efficiently with a dedicated formula that
+is roughly twice as fast as the multiplication sequence `R * v *
+conj(R)`:
+```julia
+R * v * conj(R) ≈ R(v)   # both correct; R(v) is ~2× faster
 ```
-where ``\rho`` is a real angle and ``\hat{𝔯} = \hat{r}_x 𝐢 + \hat{r}_y 𝐣 +
-\hat{r}_z 𝐤`` is a unit pure-vector quaternion.
-
-The group of unit quaternions is ``\mathrm{Spin}(3) \cong \mathrm{SU}(2)``,
-topologically the 3-sphere ``\mathbb{S}^3``.  It is a *double cover* of the
-rotation group ``\mathrm{SO}(3)``: both ``𝐑`` and ``-𝐑`` represent the same
-rotation (as we will see below), but they are distinct quaternions
-representing distinct *spinors*.
+This applies to both `Quaternion` and `Rotor` objects acting on a
+`QuatVec`.
 
 
 ## The vector–quaternion isomorphism and rotations
 
-### The isomorphism
-
-The duality relations ``𝐢 = 𝐈^{-1}𝐱``, etc., provide a natural
-identification between ℝ³ and the space of pure-vector quaternions:
+We have already demonstrated an isomorphism between the vector space
+of ``ℝ³`` and the space of "pure-vector" quaternions via the
+(negative) Hodge dual:
 ```math
-𝐱 \leftrightarrow 𝐢, \qquad
-𝐲 \leftrightarrow 𝐣, \qquad
-𝐳 \leftrightarrow 𝐤.
+𝐯 \mapsto 𝐕 = -\star 𝐯.
 ```
-This is more than a vector-space isomorphism.  For any two pure quaternions
-``𝐩 = p_x 𝐢 + p_y 𝐣 + p_z 𝐤`` and ``𝐪 = q_x 𝐢 + q_y 𝐣 + q_z 𝐤``, direct
-expansion of the geometric product gives
+Here, ``𝐕`` represents the corresponding quaternion.  The inverse
+map is given by the same formula:[^4]
 ```math
-𝐩\,𝐪 = -(𝐩 \cdot 𝐪) + (𝐩 \times 𝐪),
+𝐕 \mapsto 𝐯 = -\star 𝐕.
 ```
-where the dot product contributes a scalar and the cross product contributes
-a pure quaternion via the same identification.  This is the exact analogue of
-the geometric product for vectors, ``𝐯𝐰 = 𝐯 \cdot 𝐰 + 𝐯 \wedge 𝐰``, with
-Hodge duality mapping ``𝐯 \wedge 𝐰 \leftrightarrow 𝐯 \times 𝐰``.  In
-particular, the antisymmetric part gives
+This isomorphism is a vector-space isomorphism.  But, importantly, it
+is also compatible with rotation in the sense that rotating ``𝐯`` is
+the same as mapping to ``𝐕``, rotating ``𝐕``, and then mapping back
+to the original vector space.  That is,
 ```math
-\frac{𝐩\,𝐪 - 𝐪\,𝐩}{2} = 𝐩 \times 𝐪,
-```
-which is precisely the Lie bracket of the cross-product algebra on ℝ³.  The
-map is therefore an isomorphism of Lie algebras.
-
-Under this identification, a vector ``𝐯 = v_x 𝐱 + v_y 𝐲 + v_z 𝐳`` is
-represented by the pure quaternion ``v_x 𝐢 + v_y 𝐣 + v_z 𝐤``, and we freely
-pass between the two descriptions throughout the package.
-
-### The rotation formula
-
-A rotor ``𝐑`` acts on a vector ``𝐯`` (written as a pure quaternion) by the
-*sandwich product*
-```math
-𝐯' = 𝐑\, 𝐯\, 𝐑^{-1} = 𝐑\, 𝐯\, \widetilde{𝐑}.
-```
-To see that this is a right-handed rotation through angle ``\rho`` about the
-axis ``\hat{𝔯}``, decompose ``𝐯 = 𝐯_\parallel + 𝐯_\perp`` into parts
-parallel and perpendicular to ``\hat{𝔯}``.
-
-- ``𝐯_\parallel`` commutes with ``\hat{𝔯}`` (parallel vectors commute), so
-  it commutes with ``𝐑`` and passes through unchanged.
-- ``𝐯_\perp`` anticommutes with ``\hat{𝔯}`` (orthogonal vectors
-  anticommute), so the two factors of ``𝐑`` act non-trivially.  Expanding:
-
-```math
-\begin{aligned}
-𝐑\, 𝐯_\perp\, 𝐑^{-1}
-&= \left(\cos\tfrac{\rho}{2} + \sin\tfrac{\rho}{2}\,\hat{𝔯}\right)
-   𝐯_\perp
-   \left(\cos\tfrac{\rho}{2} - \sin\tfrac{\rho}{2}\,\hat{𝔯}\right) \\
-&= \cos^2\!\tfrac{\rho}{2}\; 𝐯_\perp
-   + \sin\tfrac{\rho}{2}\cos\tfrac{\rho}{2}\,[\hat{𝔯}, 𝐯_\perp]
-   - \sin^2\!\tfrac{\rho}{2}\;\hat{𝔯}\, 𝐯_\perp\, \hat{𝔯} \\
-&= \cos\rho\; 𝐯_\perp + \sin\rho\; \hat{𝔯} \times 𝐯_\perp,
-\end{aligned}
+R 𝐯 \widetilde{R} = -\star \left( R (-\star 𝐯) \widetilde{R} \right).
 ```
 
-which is precisely the right-handed rotation of ``𝐯_\perp`` through angle
-``\rho`` about ``\hat{𝔯}``.  Putting the two parts together:
+[^4]: This is true for vectors in ``ℝ³``.  There may be an additional
+    sign for different grades or spaces: for a grade-``r`` element in
+    an ``n``-dimensional space with signature ``(p,q)``, we have
+    ``\star \star b = (-1)^{r(n-r)} \chi(q) b``.  Here, ``\chi`` is
+    the parity function which is ``+1`` for even ``q`` and ``-1`` for
+    odd ``q``.
 
-```math
-𝐑\, 𝐯\, 𝐑^{-1}
-= 𝐯_\parallel + \cos\rho\; 𝐯_\perp + \sin\rho\; \hat{𝔯} \times 𝐯_\perp.
-```
+Thus, we can freely move back and forth between the two
+representations of vectors.
 
-The presence of *two* factors of ``𝐑`` in the sandwich explains two things.
-First, the rotation angle is twice the quaternion half-angle: each factor
-of ``𝐑 = \cos(\rho/2) + \ldots`` contributes a half-angle, and together
-they give the full angle ``\rho``.  Second, negating ``𝐑 \to -𝐑`` leaves the
-sandwich unchanged, confirming the double cover.
-
-### Rotations about coordinate axes
-
-As a concrete check, the rotor for a 90° rotation about ``𝐳`` is
-```math
-𝐑 = \exp\!\left(\frac{\pi}{4} 𝐤\right)
-  = \frac{1}{\sqrt{2}} + \frac{1}{\sqrt{2}}\, 𝐤.
-```
-Applying it to ``𝐢`` (corresponding to ``𝐱``):
-```math
-𝐑\, 𝐢\, 𝐑^{-1}
-= \left(\tfrac{1}{\sqrt{2}} + \tfrac{1}{\sqrt{2}} 𝐤\right)
-  𝐢
-  \left(\tfrac{1}{\sqrt{2}} - \tfrac{1}{\sqrt{2}} 𝐤\right)
-= 𝐣,
-```
-confirming a right-handed rotation ``𝐱 \to 𝐲`` about ``𝐳``.
-
-### Efficient computation
-
-In the package, the function-call syntax `R(v)` implements the sandwich
-``𝐑\, 𝐯\, \widetilde{𝐑}`` efficiently with a dedicated formula — roughly
-twice as fast as the three-multiplication sequence `R * v * conj(R)`:
-```julia
-Q * v * conj(Q) ≈ Q(v)   # both correct; Q(v) is ~2× faster
-```
-This applies to both `Quaternion` and `Rotor` objects acting on a `QuatVec`.
 
 ## Further reading
 
