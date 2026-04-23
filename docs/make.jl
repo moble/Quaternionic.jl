@@ -33,6 +33,7 @@ makedocs(;
         "Introduction" => "index.md",
         "Basics" => "manual.md",
         "Geometric Algebra" => "geometric_algebra.md",
+        "Spacetime Algebra" => "spacetime_algebra.md",
         "Functions of time" => "functions_of_time.md",
         "Differentiating by quaternions" => "differentiation.md",
         "All functions" => "functions.md",
