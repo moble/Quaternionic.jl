@@ -37,9 +37,9 @@ _rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v; atol=1e-12) =
     norm(Λ₁₂(v) - (Λ₁ * Λ₂)(v)) ≤ atol
 
 function _ga_norm_conditions(Λ; atol=1e-12)
-    R¹, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rˣʸ, Rˣᶻ, Rʸᶻ, Rᵗˣʸᶻ = components(Λ)
-    quad  = R¹^2 + Rˣʸ^2 + Rˣᶻ^2 + Rʸᶻ^2 - Rᵗˣ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rᵗˣʸᶻ^2
-    cross = R¹ * Rᵗˣʸᶻ - Rʸᶻ * Rᵗˣ + Rˣᶻ * Rᵗʸ - Rˣʸ * Rᵗᶻ
+    R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = components(Λ)
+    quad  = R¹^2 + Rᶻʸ^2 + Rˣᶻ^2 + Rʸˣ^2 - Rᵗˣ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rᵗˣʸᶻ^2
+    cross = R¹ * Rᵗˣʸᶻ + Rᶻʸ * Rᵗˣ + Rˣᶻ * Rᵗʸ + Rʸˣ * Rᵗᶻ
     return abs(quad - 1) ≤ atol && abs(cross) ≤ atol
 end
 
@@ -47,12 +47,12 @@ function _ga_reverse_components(Λ; atol=1e-12)
     c  = components(Λ)
     ci = components(inv(Λ))
     abs(ci[1] - c[1]) ≤ atol &&   # R¹     unchanged  (grade 0)
-    abs(ci[2] + c[2]) ≤ atol &&   # Rᵗˣ    negated    (grade 2)
-    abs(ci[3] + c[3]) ≤ atol &&   # Rᵗʸ    negated    (grade 2)
-    abs(ci[4] + c[4]) ≤ atol &&   # Rᵗᶻ    negated    (grade 2)
-    abs(ci[5] + c[5]) ≤ atol &&   # Rˣʸ    negated    (grade 2)
-    abs(ci[6] + c[6]) ≤ atol &&   # Rˣᶻ    negated    (grade 2)
-    abs(ci[7] + c[7]) ≤ atol &&   # Rʸᶻ    negated    (grade 2)
+    abs(ci[2] + c[2]) ≤ atol &&   # Rᶻʸ    negated    (grade 2)
+    abs(ci[3] + c[3]) ≤ atol &&   # Rˣᶻ    negated    (grade 2)
+    abs(ci[4] + c[4]) ≤ atol &&   # Rʸˣ    negated    (grade 2)
+    abs(ci[5] + c[5]) ≤ atol &&   # Rᵗˣ    negated    (grade 2)
+    abs(ci[6] + c[6]) ≤ atol &&   # Rᵗʸ    negated    (grade 2)
+    abs(ci[7] + c[7]) ≤ atol &&   # Rᵗᶻ    negated    (grade 2)
     abs(ci[8] - c[8]) ≤ atol      # Rᵗˣʸᶻ  unchanged  (grade 4)
 end
 
@@ -69,7 +69,7 @@ _spatial_vecs = [[zero(_lT); randn(_lT, 3)] for _ ∈ 1:_ln]
 
 Random.seed!(123)
 _boost_rapidities  = abs.(randn(_lT, _ln)) .+ _lT(0.1)
-_boost_directions  = [la_normalize(randn(_lT, 3)) for _ ∈ 1:_ln]
+_boost_directions  = [QuatVec(la_normalize(randn(_lT, 3))) for _ ∈ 1:_ln]
 _boost_Λs          = [Boost(η, n̂) for (η, n̂) ∈ zip(_boost_rapidities, _boost_directions)]
 
 _mixed_seq  = [x for pair ∈ zip(_rot_Λs, _boost_Λs) for x ∈ pair]
@@ -207,35 +207,35 @@ _composed   = accumulate(*, _mixed_seq)
         for η ∈ [0.3, 0.7, 1.2, 1.8, 2.5]
             ch, sh = cosh(η/2), sinh(η/2)
 
-            c = components(Boost(η, [0.0, 0.0, 1.0]))
+            c = components(Boost(η, [1.0, 0.0, 0.0]))
             @test c[1] ≈ ch  atol=1e-14   # R¹
-            @test c[2] ≈ 0.0 atol=1e-14   # Rᵗˣ
-            @test c[3] ≈ 0.0 atol=1e-14   # Rᵗʸ
-            @test c[4] ≈ sh  atol=1e-14   # Rᵗᶻ
-            @test c[5] ≈ 0.0 atol=1e-14
-            @test c[6] ≈ 0.0 atol=1e-14
-            @test c[7] ≈ 0.0 atol=1e-14
+            @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
+            @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
+            @test c[4] ≈ 0.0 atol=1e-14   # Rʸˣ
+            @test c[5] ≈ sh  atol=1e-14   # Rᵗˣ
+            @test c[6] ≈ 0.0 atol=1e-14   # Rᵗʸ
+            @test c[7] ≈ 0.0 atol=1e-14   # Rᵗᶻ
             @test c[8] ≈ 0.0 atol=1e-14   # Rᵗˣʸᶻ
 
-            c = components(Boost(η, [1.0, 0.0, 0.0]))
-            @test c[1] ≈ ch  atol=1e-14
-            @test c[2] ≈ sh  atol=1e-14   # Rᵗˣ
-            @test c[3] ≈ 0.0 atol=1e-14
-            @test c[4] ≈ 0.0 atol=1e-14
-            @test c[5] ≈ 0.0 atol=1e-14
-            @test c[6] ≈ 0.0 atol=1e-14
-            @test c[7] ≈ 0.0 atol=1e-14
-            @test c[8] ≈ 0.0 atol=1e-14
-
             c = components(Boost(η, [0.0, 1.0, 0.0]))
-            @test c[1] ≈ ch  atol=1e-14
-            @test c[2] ≈ 0.0 atol=1e-14
-            @test c[3] ≈ sh  atol=1e-14   # Rᵗʸ
-            @test c[4] ≈ 0.0 atol=1e-14
-            @test c[5] ≈ 0.0 atol=1e-14
-            @test c[6] ≈ 0.0 atol=1e-14
-            @test c[7] ≈ 0.0 atol=1e-14
-            @test c[8] ≈ 0.0 atol=1e-14
+            @test c[1] ≈ ch  atol=1e-14   # R¹
+            @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
+            @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
+            @test c[4] ≈ 0.0 atol=1e-14   # Rʸˣ
+            @test c[5] ≈ 0.0 atol=1e-14   # Rᵗˣ
+            @test c[6] ≈ sh  atol=1e-14   # Rᵗʸ
+            @test c[7] ≈ 0.0 atol=1e-14   # Rᵗᶻ
+            @test c[8] ≈ 0.0 atol=1e-14   # Rᵗˣʸᶻ
+
+            c = components(Boost(η, [0.0, 0.0, 1.0]))
+            @test c[1] ≈ ch  atol=1e-14   # R¹
+            @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
+            @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
+            @test c[4] ≈ 0.0 atol=1e-14   # Rʸˣ
+            @test c[5] ≈ 0.0 atol=1e-14   # Rᵗˣ
+            @test c[6] ≈ 0.0 atol=1e-14   # Rᵗʸ
+            @test c[7] ≈ sh  atol=1e-14   # Rᵗᶻ
+            @test c[8] ≈ 0.0 atol=1e-14   # Rᵗˣʸᶻ
         end
     end
 
