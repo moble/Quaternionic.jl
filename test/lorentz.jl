@@ -228,7 +228,7 @@
                 )))
                 # Boost in x
                 q_boost = Quaternion{Complex{T}}(components(rotor(
-                    Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T})
+                    Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T})
                 )))
 
                 # Both orderings
@@ -249,7 +249,7 @@
         for φ₁ ∈ T[0.4, 1.0, 1.6]
             for φ₂ ∈ T[0.3, 0.8, 1.4]
                 q1 = Quaternion{Complex{T}}(components(rotor(
-                    Complex{T}(cosh(φ₁/2)), -im*T(sinh(φ₁/2)),
+                    Complex{T}(cosh(φ₁/2)), im*T(sinh(φ₁/2)),
                     zero(Complex{T}), zero(Complex{T})
                 )))
                 q2 = Quaternion{Complex{T}}(components(rotor(
