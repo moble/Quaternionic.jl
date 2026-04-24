@@ -127,12 +127,13 @@ this GA form and the quaternion storage.
 """
 function Boost(η::T, n̂::AbstractVector) where {T<:Real}
     length(n̂) == 3 || throw(DimensionMismatch("boost direction must be a 3-vector; got length $(length(n̂))"))
+    Base.require_one_based_indexing(n̂)
     ch, sh = cosh(η / 2), sinh(η / 2)
     return Rotor{Complex{T}}(
         complex(ch),
-        complex(zero(T), sh * T(n̂[1])),
-        complex(zero(T), sh * T(n̂[2])),
-        complex(zero(T), sh * T(n̂[3])),
+        complex(zero(T), sh * n̂[1]),
+        complex(zero(T), sh * n̂[2]),
+        complex(zero(T), sh * n̂[3]),
     )
 end
 
@@ -141,9 +142,9 @@ function Boost(η::T, n̂::QuatVec) where {T<:Real}
     _, nx, ny, nz = components(n̂)
     return Rotor{Complex{T}}(
         complex(ch),
-        complex(zero(T), sh * T(nx)),
-        complex(zero(T), sh * T(ny)),
-        complex(zero(T), sh * T(nz)),
+        complex(zero(T), sh * nx),
+        complex(zero(T), sh * ny),
+        complex(zero(T), sh * nz),
     )
 end
 
@@ -163,41 +164,41 @@ the GA reverse.  The eight real GA components `(R¹, Rᶻʸ, …, Rᵗˣʸᶻ)` 
 extracted via [`ga_components(::Lorentz)`](@ref), and the bilinear
 expansion of the grade-1 projection of `R·V·R̃` is applied directly.
 """
-function (Λ::Lorentz{T})(v::AbstractVector) where {T<:Real}
+function (Λ::Lorentz)(v::AbstractVector)
+    return typeof(v)(Λ(SVector{4}(v)))
+end
+function (Λ::Lorentz{T1})(v::SVector{4, T2}) where {T1<:Real, T2<:Real}
     R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = ga_components(Λ)
-    vᵗ = T(v[1])
-    vˣ = T(v[2])
-    vʸ = T(v[3])
-    vᶻ = T(v[4])
 
-    v′ᵗ =
-        vᵗ * (R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 + Rˣᶻ^2 + Rᶻʸ^2) +
-        vˣ * (2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ + 2Rᵗʸ * Rʸˣ - 2Rᵗᶻ * Rˣᶻ) +
-        vʸ * (2R¹ * Rᵗʸ - 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ + 2Rᵗᶻ * Rᶻʸ) +
-        vᶻ * (2R¹ * Rᵗᶻ + 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ - 2Rᵗʸ * Rᶻʸ)
+    v′ᵗ = v ⋅ @SVector [
+        R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 + Rˣᶻ^2 + Rᶻʸ^2,
+        2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ + 2Rᵗʸ * Rʸˣ - 2Rᵗᶻ * Rˣᶻ,
+        2R¹ * Rᵗʸ - 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ + 2Rᵗᶻ * Rᶻʸ,
+        2R¹ * Rᵗᶻ + 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ - 2Rᵗʸ * Rᶻʸ
+    ]
 
-    v′ˣ =
-        vᵗ * (2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ - 2Rᵗʸ * Rʸˣ + 2Rᵗᶻ * Rˣᶻ) +
-        vˣ * (R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 - Rˣᶻ^2 + Rᶻʸ^2) +
-        vʸ * (-2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ - 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ) +
-        vᶻ * (2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ + 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ)
+    v′ˣ = v ⋅ @SVector [
+        2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ - 2Rᵗʸ * Rʸˣ + 2Rᵗᶻ * Rˣᶻ,
+        R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 - Rˣᶻ^2 + Rᶻʸ^2,
+        -2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ - 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ,
+        2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ + 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ
+    ]
 
-    v′ʸ =
-        vᵗ * (2R¹ * Rᵗʸ + 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ - 2Rᵗᶻ * Rᶻʸ) +
-        vˣ * (2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ + 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ) +
-        vʸ * (R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 + Rˣᶻ^2 - Rᶻʸ^2) +
-        vᶻ * (-2R¹ * Rᶻʸ - 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ)
+    v′ʸ = v ⋅ @SVector [
+        2R¹ * Rᵗʸ + 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ - 2Rᵗᶻ * Rᶻʸ,
+        2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ + 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ,
+        R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 + Rˣᶻ^2 - Rᶻʸ^2,
+        -2R¹ * Rᶻʸ - 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ
+    ]
 
-    v′ᶻ =
-        vᵗ * (2R¹ * Rᵗᶻ - 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ + 2Rᵗʸ * Rᶻʸ) +
-        vˣ * (-2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ - 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ) +
-        vʸ * (2R¹ * Rᶻʸ + 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ) +
-        vᶻ * (R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 - Rˣᶻ^2 - Rᶻʸ^2)
+    v′ᶻ = v ⋅ @SVector [
+        2R¹ * Rᵗᶻ - 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ + 2Rᵗʸ * Rᶻʸ,
+        -2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ - 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ,
+        2R¹ * Rᶻʸ + 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ,
+        R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 - Rˣᶻ^2 - Rᶻʸ^2
+    ]
+    
+    v′ = @SVector [v′ᵗ, v′ˣ, v′ʸ, v′ᶻ]
 
-    vout = similar(v, T)
-    vout[1] = v′ᵗ
-    vout[2] = v′ˣ
-    vout[3] = v′ʸ
-    vout[4] = v′ᶻ
-    return vout
+    return v′
 end
