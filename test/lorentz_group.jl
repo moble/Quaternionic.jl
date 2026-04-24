@@ -255,6 +255,63 @@ _composed   = accumulate(*, _mixed_seq)
         end
     end
 
+    @testset "Rotation and boost: known action on unit 4-vectors" begin
+        # Rotation by π/3 about each coordinate axis.
+        # Rotor(cos(θ/2), sin(θ/2), 0, 0) rotates about x (fixes [0,1,0,0])
+        # Rotor(cos(θ/2), 0, sin(θ/2), 0) rotates about y (fixes [0,0,1,0])
+        # Rotor(cos(θ/2), 0, 0, sin(θ/2)) rotates about z (fixes [0,0,0,1])
+        θ = π / 3
+        c, s = cos(θ), sin(θ)   # c = 1/2, s = √3/2
+
+        Λ_Rx = Lorentz{Float64}(Rotor(cos(θ/2), sin(θ/2), 0.0, 0.0))
+        Λ_Ry = Lorentz{Float64}(Rotor(cos(θ/2), 0.0, sin(θ/2), 0.0))
+        Λ_Rz = Lorentz{Float64}(Rotor(cos(θ/2), 0.0, 0.0, sin(θ/2)))
+
+        # Rotation about x: fixes t and x; rotates y→z plane
+        @test Λ_Rx([1.0, 0.0, 0.0, 0.0]) ≈ [1.0, 0.0, 0.0, 0.0] atol=1e-14
+        @test Λ_Rx([0.0, 1.0, 0.0, 0.0]) ≈ [0.0, 1.0, 0.0, 0.0] atol=1e-14
+        @test Λ_Rx([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, 0.0,  c,  s]   atol=1e-14
+        @test Λ_Rx([0.0, 0.0, 0.0, 1.0]) ≈ [0.0, 0.0, -s,  c]   atol=1e-14
+
+        # Rotation about y: fixes t and y; rotates z→x plane
+        @test Λ_Ry([1.0, 0.0, 0.0, 0.0]) ≈ [1.0, 0.0, 0.0, 0.0] atol=1e-14
+        @test Λ_Ry([0.0, 1.0, 0.0, 0.0]) ≈ [0.0,  c, 0.0, -s]   atol=1e-14
+        @test Λ_Ry([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, 0.0, 1.0, 0.0] atol=1e-14
+        @test Λ_Ry([0.0, 0.0, 0.0, 1.0]) ≈ [0.0,  s, 0.0,  c]   atol=1e-14
+
+        # Rotation about z: fixes t and z; rotates x→y plane
+        @test Λ_Rz([1.0, 0.0, 0.0, 0.0]) ≈ [1.0, 0.0, 0.0, 0.0] atol=1e-14
+        @test Λ_Rz([0.0, 1.0, 0.0, 0.0]) ≈ [0.0,  c,  s, 0.0]   atol=1e-14
+        @test Λ_Rz([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, -s,  c, 0.0]   atol=1e-14
+        @test Λ_Rz([0.0, 0.0, 0.0, 1.0]) ≈ [0.0, 0.0, 0.0, 1.0] atol=1e-14
+
+        # Boost with β = 1/3 (rapidity η = atanh(1/3)) in each direction.
+        η  = atanh(1.0 / 3.0)
+        ch, sh = cosh(η), sinh(η)
+
+        Λ_Bx = Boost(η, [1.0, 0.0, 0.0])
+        Λ_By = Boost(η, [0.0, 1.0, 0.0])
+        Λ_Bz = Boost(η, [0.0, 0.0, 1.0])
+
+        # Boost in x: mixes t and x; fixes y and z
+        @test Λ_Bx([1.0, 0.0, 0.0, 0.0]) ≈ [ch,  sh,  0.0, 0.0] atol=1e-14
+        @test Λ_Bx([0.0, 1.0, 0.0, 0.0]) ≈ [sh,  ch,  0.0, 0.0] atol=1e-14
+        @test Λ_Bx([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, 0.0, 1.0, 0.0] atol=1e-14
+        @test Λ_Bx([0.0, 0.0, 0.0, 1.0]) ≈ [0.0, 0.0, 0.0, 1.0] atol=1e-14
+
+        # Boost in y: mixes t and y; fixes x and z
+        @test Λ_By([1.0, 0.0, 0.0, 0.0]) ≈ [ch,  0.0, sh,  0.0] atol=1e-14
+        @test Λ_By([0.0, 1.0, 0.0, 0.0]) ≈ [0.0, 1.0, 0.0, 0.0] atol=1e-14
+        @test Λ_By([0.0, 0.0, 1.0, 0.0]) ≈ [sh,  0.0, ch,  0.0] atol=1e-14
+        @test Λ_By([0.0, 0.0, 0.0, 1.0]) ≈ [0.0, 0.0, 0.0, 1.0] atol=1e-14
+
+        # Boost in z: mixes t and z; fixes x and y
+        @test Λ_Bz([1.0, 0.0, 0.0, 0.0]) ≈ [ch,  0.0, 0.0, sh]  atol=1e-14
+        @test Λ_Bz([0.0, 1.0, 0.0, 0.0]) ≈ [0.0, 1.0, 0.0, 0.0] atol=1e-14
+        @test Λ_Bz([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, 0.0, 1.0, 0.0] atol=1e-14
+        @test Λ_Bz([0.0, 0.0, 0.0, 1.0]) ≈ [sh,  0.0, 0.0, ch]  atol=1e-14
+    end
+
     @testset "Boost: collinear rapidities add" begin
         for (η₁, η₂) ∈ [(0.3, 0.5), (1.0, 1.5), (0.1, 2.0), (0.7, 0.7)]
             for n̂ ∈ [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
