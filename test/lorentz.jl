@@ -266,4 +266,500 @@
         end
     end
 
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 6.  exp of boost bivectors
+    #
+    # A boost bivector in the x-direction is im*(φ/2)·𝐢, i.e. the QuatVec (0, im*φ/2, 0, 0).
+    # Exponentiating gives the boost rotor because cos(ix) = cosh(x) and sin(ix) = i·sinh(x):
+    #   exp(im*φ/2·𝐢) = cosh(φ/2) + im·sinh(φ/2)·𝐢
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "exp of boost bivectors, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            # Boost in x: exp(im*φ/2·𝐢) = (cosh(φ/2), im·sinh(φ/2), 0, 0)
+            r_x = exp(QuatVec{Complex{T}}(im*T(φ/2), zero(Complex{T}), zero(Complex{T})))
+            @test r_x[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_x[2] ≈ Complex{T}(0, sh) rtol=ϵ
+            @test r_x[3] ≈ zero(Complex{T})  atol=ϵ
+            @test r_x[4] ≈ zero(Complex{T})  atol=ϵ
+
+            # Boost in y: exp(im*φ/2·𝐣) = (cosh(φ/2), 0, im·sinh(φ/2), 0)
+            r_y = exp(QuatVec{Complex{T}}(zero(Complex{T}), im*T(φ/2), zero(Complex{T})))
+            @test r_y[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_y[2] ≈ zero(Complex{T})  atol=ϵ
+            @test r_y[3] ≈ Complex{T}(0, sh) rtol=ϵ
+            @test r_y[4] ≈ zero(Complex{T})  atol=ϵ
+
+            # Boost in z: exp(im*φ/2·𝐤) = (cosh(φ/2), 0, 0, im·sinh(φ/2))
+            r_z = exp(QuatVec{Complex{T}}(zero(Complex{T}), zero(Complex{T}), im*T(φ/2)))
+            @test r_z[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_z[2] ≈ zero(Complex{T})  atol=ϵ
+            @test r_z[3] ≈ zero(Complex{T})  atol=ϵ
+            @test r_z[4] ≈ Complex{T}(0, sh) rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 7.  log of boost rotors
+    #
+    # The inverse of §6: log recovers the boost bivector.
+    #   log(cosh(φ/2) + im·sinh(φ/2)·𝐢) = im*(φ/2)·𝐢
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "log of boost rotors, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            # Via Rotor type (log returns QuatVec)
+            lq_x = log(rotor(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T})))
+            @test lq_x[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lq_x[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_x[4] ≈ zero(Complex{T})   atol=ϵ
+
+            lq_y = log(rotor(Complex{T}(ch), zero(Complex{T}), im*T(sh), zero(Complex{T})))
+            @test lq_y[2] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_y[3] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lq_y[4] ≈ zero(Complex{T})   atol=ϵ
+
+            lq_z = log(rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), im*T(sh)))
+            @test lq_z[2] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_z[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_z[4] ≈ Complex{T}(0, φ/2) rtol=ϵ
+
+            # Via Quaternion type (log returns Quaternion with zero scalar part)
+            q = Quaternion{Complex{T}}(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))
+            lq = log(q)
+            @test lq[1] ≈ zero(Complex{T})    atol=ϵ
+            @test lq[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 8.  exp/log round-trips
+    #
+    # exp(log(q)) ≈ q  and  log(exp(v)) ≈ v  for boost and rotation rotors.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "exp/log round-trips, $T" for T in LorentzTypes
+        ϵ = 128eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            q = Quaternion{Complex{T}}(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))
+            eq = exp(log(q))
+            @test eq[1] ≈ q[1] rtol=ϵ
+            @test eq[2] ≈ q[2] rtol=ϵ
+            @test eq[3] ≈ q[3] atol=ϵ
+            @test eq[4] ≈ q[4] atol=ϵ
+
+            v = QuatVec{Complex{T}}(im*T(φ/2), zero(Complex{T}), zero(Complex{T}))
+            lv = log(exp(v))
+            @test lv[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lv[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lv[4] ≈ zero(Complex{T})   atol=ϵ
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            c, s = cos(θ/2), sin(θ/2)
+            q = Quaternion{Complex{T}}(Complex{T}(c), zero(Complex{T}), zero(Complex{T}), Complex{T}(s))
+            eq = exp(log(q))
+            @test eq[1] ≈ q[1] rtol=ϵ
+            @test eq[4] ≈ q[4] rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 9.  sqrt of boost and rotation rotors
+    #
+    # sqrt(boost(φ)) = boost(φ/2) and sqrt(rotation(θ)) = rotation(θ/2).
+    # Equivalently, sqrt(q)^2 ≈ q.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "sqrt of boost and rotation rotors, $T" for T in LorentzTypes
+        ϵ = 64eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch4, sh4 = cosh(φ/4), sinh(φ/4)   # half-rapidity
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            sq = sqrt(q)
+            @test sq[1] ≈ Complex{T}(ch4)    rtol=ϵ
+            @test sq[2] ≈ Complex{T}(0, sh4) rtol=ϵ
+            @test sq[3] ≈ zero(Complex{T})   atol=ϵ
+            @test sq[4] ≈ zero(Complex{T})   atol=ϵ
+
+            sq2 = sq * sq
+            @test sq2[1] ≈ q[1] rtol=ϵ
+            @test sq2[2] ≈ q[2] rtol=ϵ
+            @test sq2[3] ≈ q[3] atol=ϵ
+            @test sq2[4] ≈ q[4] atol=ϵ
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            sq = sqrt(q)
+            @test sq[1] ≈ Complex{T}(cos(θ/4)) rtol=ϵ
+            @test sq[4] ≈ Complex{T}(sin(θ/4)) rtol=ϵ
+
+            sq2 = sq * sq
+            @test sq2[1] ≈ q[1] rtol=ϵ
+            @test sq2[4] ≈ q[4] rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 10.  inv of unit complexified quaternions
+    #
+    # For a unit spinor norm, inv(q) = conj(q): the scalar is unchanged and the vector
+    # components are negated — without conjugating the complex coefficients.
+    # Therefore q * inv(q) = inv(q) * q = 1.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "inv of unit complexified quaternions, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            qi = inv(q)
+            @test qi[1] ≈  q[1] rtol=ϵ    # scalar unchanged
+            @test qi[2] ≈ -q[2] rtol=ϵ    # vector negated (not complex-conjugated)
+            @test qi[3] ≈ -q[3] atol=ϵ
+            @test qi[4] ≈ -q[4] atol=ϵ
+
+            for r ∈ [qi * q, q * qi]
+                @test r[1] ≈ one(Complex{T})  rtol=ϵ
+                @test r[2] ≈ zero(Complex{T}) atol=ϵ
+                @test r[3] ≈ zero(Complex{T}) atol=ϵ
+                @test r[4] ≈ zero(Complex{T}) atol=ϵ
+            end
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            qi = inv(q)
+            for r ∈ [qi * q, q * qi]
+                @test r[1] ≈ one(Complex{T})  rtol=ϵ
+                @test r[2] ≈ zero(Complex{T}) atol=ϵ
+                @test r[3] ≈ zero(Complex{T}) atol=ϵ
+                @test r[4] ≈ zero(Complex{T}) atol=ϵ
+            end
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 11.  angle and ^ for complexified quaternions
+    #
+    # For a rotation rotor cast to Complex{T}: angle(q) = Complex{T}(θ).
+    # For a boost rotor with rapidity φ: angle(q) = Complex{T}(0, φ).
+    # A Lorentz boost is a "rotation by imaginary angle" in the STA.
+    #
+    # q ^ s uses exp(s·log(q)) and gives:
+    #   rotation^s = rotation by s·θ
+    #   boost^s    = boost with rapidity s·φ
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "angle and ^ for complexified quaternions, $T" for T in LorentzTypes
+        ϵ = 64eps(T)
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            @test angle(q) ≈ Complex{T}(θ) rtol=ϵ
+
+            qs = q ^ T(0.5)
+            @test qs[1] ≈ Complex{T}(cos(θ/4)) rtol=ϵ
+            @test qs[4] ≈ Complex{T}(sin(θ/4)) rtol=ϵ
+        end
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            @test angle(q) ≈ Complex{T}(0, φ) rtol=ϵ
+
+            # q^2 = boost with double rapidity
+            qs = q ^ T(2)
+            @test qs[1] ≈ Complex{T}(cosh(φ))    rtol=ϵ
+            @test qs[2] ≈ Complex{T}(0, sinh(φ)) rtol=ϵ
+            @test qs[3] ≈ zero(Complex{T})        atol=ϵ
+            @test qs[4] ≈ zero(Complex{T})        atol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 12.  log and exp of pure-phase scalar quaternions
+    #
+    # A pure phase embedded as q = (exp(im*φ), 0, 0, 0) ∈ ℍ(ℂ) is NOT a Lorentz
+    # rotor (spinor norm = exp(im*φ) ≠ 1), but log and exp still invert each other:
+    #   log(exp(im*φ), 0, 0, 0) = (im*φ, 0, 0, 0)
+    # Restricted to φ ∈ (0, π/2) to stay in the principal branch.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "log/exp of pure-phase scalar quaternions, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[π/6, π/4, π/3]
+            λ = Complex{T}(cos(φ), sin(φ))   # exp(im*φ)
+            q = Quaternion{Complex{T}}(λ, zero(Complex{T}), zero(Complex{T}), zero(Complex{T}))
+            lq = log(q)
+            @test lq[1] ≈ Complex{T}(0, φ) rtol=ϵ
+            @test lq[2] ≈ zero(Complex{T}) atol=ϵ
+            @test lq[3] ≈ zero(Complex{T}) atol=ϵ
+            @test lq[4] ≈ zero(Complex{T}) atol=ϵ
+
+            # exp(log(q)) ≈ q
+            @test exp(log(q))[1] ≈ λ rtol=ϵ
+
+            # log(exp(v)) ≈ v  where v = (im*φ, 0, 0, 0)
+            v = Quaternion{Complex{T}}(Complex{T}(0, φ), zero(Complex{T}), zero(Complex{T}), zero(Complex{T}))
+            lv = log(exp(v))
+            @test lv[1] ≈ Complex{T}(0, φ) rtol=ϵ
+            @test lv[2] ≈ zero(Complex{T}) atol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 6.  exp of boost bivectors
+    #
+    # A boost bivector in the x-direction is im*(φ/2)·𝐢, i.e. the QuatVec (0, im*φ/2, 0, 0).
+    # Exponentiating gives the boost rotor because cos(ix) = cosh(x) and sin(ix) = i·sinh(x):
+    #   exp(im*φ/2·𝐢) = cosh(φ/2) + im·sinh(φ/2)·𝐢
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "exp of boost bivectors, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            # Boost in x: exp(im*φ/2·𝐢) = (cosh(φ/2), im·sinh(φ/2), 0, 0)
+            r_x = exp(QuatVec{Complex{T}}(im*T(φ/2), zero(Complex{T}), zero(Complex{T})))
+            @test r_x[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_x[2] ≈ Complex{T}(0, sh) rtol=ϵ
+            @test r_x[3] ≈ zero(Complex{T})  atol=ϵ
+            @test r_x[4] ≈ zero(Complex{T})  atol=ϵ
+
+            # Boost in y: exp(im*φ/2·𝐣) = (cosh(φ/2), 0, im·sinh(φ/2), 0)
+            r_y = exp(QuatVec{Complex{T}}(zero(Complex{T}), im*T(φ/2), zero(Complex{T})))
+            @test r_y[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_y[2] ≈ zero(Complex{T})  atol=ϵ
+            @test r_y[3] ≈ Complex{T}(0, sh) rtol=ϵ
+            @test r_y[4] ≈ zero(Complex{T})  atol=ϵ
+
+            # Boost in z: exp(im*φ/2·𝐤) = (cosh(φ/2), 0, 0, im·sinh(φ/2))
+            r_z = exp(QuatVec{Complex{T}}(zero(Complex{T}), zero(Complex{T}), im*T(φ/2)))
+            @test r_z[1] ≈ Complex{T}(ch)    rtol=ϵ
+            @test r_z[2] ≈ zero(Complex{T})  atol=ϵ
+            @test r_z[3] ≈ zero(Complex{T})  atol=ϵ
+            @test r_z[4] ≈ Complex{T}(0, sh) rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 7.  log of boost rotors
+    #
+    # The inverse of §6: log recovers the boost bivector.
+    #   log(cosh(φ/2) + im·sinh(φ/2)·𝐢) = im*(φ/2)·𝐢
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "log of boost rotors, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            # Via Rotor type (log returns QuatVec)
+            lq_x = log(rotor(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T})))
+            @test lq_x[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lq_x[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_x[4] ≈ zero(Complex{T})   atol=ϵ
+
+            lq_y = log(rotor(Complex{T}(ch), zero(Complex{T}), im*T(sh), zero(Complex{T})))
+            @test lq_y[2] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_y[3] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lq_y[4] ≈ zero(Complex{T})   atol=ϵ
+
+            lq_z = log(rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), im*T(sh)))
+            @test lq_z[2] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_z[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lq_z[4] ≈ Complex{T}(0, φ/2) rtol=ϵ
+
+            # Via Quaternion type (log returns Quaternion with zero scalar part)
+            q = Quaternion{Complex{T}}(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))
+            lq = log(q)
+            @test lq[1] ≈ zero(Complex{T})    atol=ϵ
+            @test lq[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 8.  exp/log round-trips
+    #
+    # exp(log(q)) ≈ q  and  log(exp(v)) ≈ v  for boost and rotation rotors.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "exp/log round-trips, $T" for T in LorentzTypes
+        ϵ = 128eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch, sh = cosh(φ/2), sinh(φ/2)
+
+            q = Quaternion{Complex{T}}(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))
+            eq = exp(log(q))
+            @test eq[1] ≈ q[1] rtol=ϵ
+            @test eq[2] ≈ q[2] rtol=ϵ
+            @test eq[3] ≈ q[3] atol=ϵ
+            @test eq[4] ≈ q[4] atol=ϵ
+
+            v = QuatVec{Complex{T}}(im*T(φ/2), zero(Complex{T}), zero(Complex{T}))
+            lv = log(exp(v))
+            @test lv[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
+            @test lv[3] ≈ zero(Complex{T})   atol=ϵ
+            @test lv[4] ≈ zero(Complex{T})   atol=ϵ
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            c, s = cos(θ/2), sin(θ/2)
+            q = Quaternion{Complex{T}}(Complex{T}(c), zero(Complex{T}), zero(Complex{T}), Complex{T}(s))
+            eq = exp(log(q))
+            @test eq[1] ≈ q[1] rtol=ϵ
+            @test eq[4] ≈ q[4] rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 9.  sqrt of boost and rotation rotors
+    #
+    # sqrt(boost(φ)) = boost(φ/2) and sqrt(rotation(θ)) = rotation(θ/2).
+    # Equivalently, sqrt(q)^2 ≈ q.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "sqrt of boost and rotation rotors, $T" for T in LorentzTypes
+        ϵ = 64eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            ch4, sh4 = cosh(φ/4), sinh(φ/4)   # half-rapidity
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            sq = sqrt(q)
+            @test sq[1] ≈ Complex{T}(ch4)    rtol=ϵ
+            @test sq[2] ≈ Complex{T}(0, sh4) rtol=ϵ
+            @test sq[3] ≈ zero(Complex{T})   atol=ϵ
+            @test sq[4] ≈ zero(Complex{T})   atol=ϵ
+
+            sq2 = sq * sq
+            @test sq2[1] ≈ q[1] rtol=ϵ
+            @test sq2[2] ≈ q[2] rtol=ϵ
+            @test sq2[3] ≈ q[3] atol=ϵ
+            @test sq2[4] ≈ q[4] atol=ϵ
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            sq = sqrt(q)
+            @test sq[1] ≈ Complex{T}(cos(θ/4)) rtol=ϵ
+            @test sq[4] ≈ Complex{T}(sin(θ/4)) rtol=ϵ
+
+            sq2 = sq * sq
+            @test sq2[1] ≈ q[1] rtol=ϵ
+            @test sq2[4] ≈ q[4] rtol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 10.  inv of unit complexified quaternions
+    #
+    # For a unit spinor norm, inv(q) = conj(q): the scalar is unchanged and the vector
+    # components are negated — without conjugating the complex coefficients.
+    # Therefore q * inv(q) = inv(q) * q = 1.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "inv of unit complexified quaternions, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            qi = inv(q)
+            @test qi[1] ≈  q[1] rtol=ϵ    # scalar unchanged
+            @test qi[2] ≈ -q[2] rtol=ϵ    # vector negated (not complex-conjugated)
+            @test qi[3] ≈ -q[3] atol=ϵ
+            @test qi[4] ≈ -q[4] atol=ϵ
+
+            for r ∈ [qi * q, q * qi]
+                @test r[1] ≈ one(Complex{T})  rtol=ϵ
+                @test r[2] ≈ zero(Complex{T}) atol=ϵ
+                @test r[3] ≈ zero(Complex{T}) atol=ϵ
+                @test r[4] ≈ zero(Complex{T}) atol=ϵ
+            end
+        end
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            qi = inv(q)
+            for r ∈ [qi * q, q * qi]
+                @test r[1] ≈ one(Complex{T})  rtol=ϵ
+                @test r[2] ≈ zero(Complex{T}) atol=ϵ
+                @test r[3] ≈ zero(Complex{T}) atol=ϵ
+                @test r[4] ≈ zero(Complex{T}) atol=ϵ
+            end
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 11.  angle and ^ for complexified quaternions
+    #
+    # For a rotation rotor cast to Complex{T}: angle(q) = Complex{T}(θ).
+    # For a boost rotor with rapidity φ: angle(q) = Complex{T}(0, φ).
+    # A Lorentz boost is a "rotation by imaginary angle" in the STA.
+    #
+    # q ^ s uses exp(s·log(q)) and gives:
+    #   rotation^s = rotation by s·θ
+    #   boost^s    = boost with rapidity s·φ
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "angle and ^ for complexified quaternions, $T" for T in LorentzTypes
+        ϵ = 64eps(T)
+
+        for θ ∈ T[π/7, π/4, π/3, 2π/3]
+            q = Quaternion{Complex{T}}(Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
+            @test angle(q) ≈ Complex{T}(θ) rtol=ϵ
+
+            qs = q ^ T(0.5)
+            @test qs[1] ≈ Complex{T}(cos(θ/4)) rtol=ϵ
+            @test qs[4] ≈ Complex{T}(sin(θ/4)) rtol=ϵ
+        end
+
+        for φ ∈ T[0.5, 1.0, 1.5, 2.0]
+            q = Quaternion{Complex{T}}(Complex{T}(cosh(φ/2)), im*T(sinh(φ/2)), zero(Complex{T}), zero(Complex{T}))
+            @test angle(q) ≈ Complex{T}(0, φ) rtol=ϵ
+
+            # q^2 = boost with double rapidity
+            qs = q ^ T(2)
+            @test qs[1] ≈ Complex{T}(cosh(φ))    rtol=ϵ
+            @test qs[2] ≈ Complex{T}(0, sinh(φ)) rtol=ϵ
+            @test qs[3] ≈ zero(Complex{T})        atol=ϵ
+            @test qs[4] ≈ zero(Complex{T})        atol=ϵ
+        end
+    end
+
+    # ────────────────────────────────────────────────────────────────────────────────
+    # 12.  log and exp of pure-phase scalar quaternions
+    #
+    # A pure phase embedded as q = (exp(im*φ), 0, 0, 0) ∈ ℍ(ℂ) is NOT a Lorentz
+    # rotor (spinor norm = exp(im*φ) ≠ 1), but log and exp still invert each other:
+    #   log(exp(im*φ), 0, 0, 0) = (im*φ, 0, 0, 0)
+    # Restricted to φ ∈ (0, π/2) to stay in the principal branch.
+    # ────────────────────────────────────────────────────────────────────────────────
+    @testset "log/exp of pure-phase scalar quaternions, $T" for T in LorentzTypes
+        ϵ = 32eps(T)
+
+        for φ ∈ T[π/6, π/4, π/3]
+            λ = Complex{T}(cos(φ), sin(φ))   # exp(im*φ)
+            q = Quaternion{Complex{T}}(λ, zero(Complex{T}), zero(Complex{T}), zero(Complex{T}))
+            lq = log(q)
+            @test lq[1] ≈ Complex{T}(0, φ) rtol=ϵ
+            @test lq[2] ≈ zero(Complex{T}) atol=ϵ
+            @test lq[3] ≈ zero(Complex{T}) atol=ϵ
+            @test lq[4] ≈ zero(Complex{T}) atol=ϵ
+
+            # exp(log(q)) ≈ q
+            @test exp(log(q))[1] ≈ λ rtol=ϵ
+
+            # log(exp(v)) ≈ v  where v = (im*φ, 0, 0, 0)
+            v = Quaternion{Complex{T}}(Complex{T}(0, φ), zero(Complex{T}), zero(Complex{T}), zero(Complex{T}))
+            lv = log(exp(v))
+            @test lv[1] ≈ Complex{T}(0, φ) rtol=ϵ
+            @test lv[2] ≈ zero(Complex{T}) atol=ϵ
+        end
+    end
+
 end  # @testset "Lorentz/STA normalization"
