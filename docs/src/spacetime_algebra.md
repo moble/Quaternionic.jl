@@ -247,6 +247,13 @@ Lorentz transformations.
     and confirming that a positive rapidity boosts ``t \to \cosh\varphi\,t +
     \sinh\varphi\,x`` and ``x \to \sinh\varphi\,t + \cosh\varphi\,x``.
 
+## API reference
+
+```@autodocs
+Modules = [Quaternionic]
+Pages   = ["Lorentz.jl"]
+```
+
 ## Further reading
 
 The spacetime algebra and its application to relativistic physics are
