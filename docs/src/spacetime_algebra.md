@@ -225,15 +225,15 @@ Euclidean norm: ``R\widetilde{R} = \cos^2(\vartheta/2) +
 A boost in the ``𝐯``-direction by rapidity ``\varphi`` uses the boost
 bivector ``𝐭𝐯``:
 ```math
-B = \exp\!\left(-\frac{\varphi}{2}\,𝐭𝐯\right)
-  = \cosh\frac{\varphi}{2} - \sinh\frac{\varphi}{2}\,𝐭𝐯.
+B = \exp\!\left(\frac{\varphi}{2}\,𝐭𝐯\right)
+  = \cosh\frac{\varphi}{2} + \sinh\frac{\varphi}{2}\,𝐭𝐯.
 ```
-The sign convention ``-\varphi/2`` makes a positive rapidity
+The sign convention ``+\varphi/2`` makes a positive rapidity
 correspond to a boost in the positive ``𝐯``-direction.[^boost]  The
 spinor norm is
 ```math
 B\,\widetilde{B}
-= \cosh^2\!\frac{\varphi}{2} + \left(-𝐭𝐯\sinh\frac{\varphi}{2}\right)^{\!2}
+= \cosh^2\!\frac{\varphi}{2} + \left(𝐭𝐯\sinh\frac{\varphi}{2}\right)^{\!2}
 = \cosh^2\!\frac{\varphi}{2} - \sinh^2\!\frac{\varphi}{2}
 = 1,
 ```
