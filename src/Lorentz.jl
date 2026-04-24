@@ -153,7 +153,7 @@ end
 # ---------------------------------------------------------------------------
 
 """
-    (Λ::Lorentz{T})(v::AbstractVector) → similar(v, T)
+    (Λ::Lorentz)(v::AbstractVector) → similar(v)
 
 Apply `Λ` to the Minkowski 4-vector `v = [vᵗ, vˣ, vʸ, vᶻ]` (signature −+++)
 and return the transformed vector in a fresh container of the same type with

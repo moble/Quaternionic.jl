@@ -1,4 +1,11 @@
 # We'll need this awkward way of getting the `components` field when we set `getproperty`
+"""
+    components(q::AbstractQuaternion{T})
+
+Return the components of `q` as stored in the struct — as an `SVector{4, T}`.  The
+components are ordered as `(w, x, y, z)`, where `w` is the scalar part and `x`, `y`, and `z`
+are the vector parts.
+"""
 components(q::AbstractQuaternion) = getfield(q, :components)
 
 # This helper function is mostly copied from Base.math, except that we restrict to Complex
