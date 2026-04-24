@@ -15,6 +15,7 @@ bib = CitationBibliography(
 DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
 
 include("local_notes.jl")
+(notes_pages, notes_remotes) = local_notes()
 
 makedocs(;
     plugins=[bib],
