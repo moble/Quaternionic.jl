@@ -21,7 +21,7 @@ export from_float_array, to_float_array,
     from_rotation_matrix, to_rotation_matrix
 export distance, distance2
 export align
-export Lorentz, Rotation, Boost
+export Lorentz, Boost, ga_components
 export unflip, unflip!, slerp, squad
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
