@@ -237,6 +237,56 @@ function Base.log(q::Rotor{T}) where {T}
     end
 end
 
+function Base.log(q::Quaternion{Complex{T}}) where {T<:Real}
+    if iszerovalue(q)
+        return Quaternion{Complex{T}}(Complex{T}(-Inf), false, false, false)
+    end
+    a = abs(q)
+    cosv = q[1]
+    if real(cosv) ≥ 0
+        f = if iszerovalue(vec(q))
+            sinv² = abs2vec(q)
+            x = sinv² / cosv^2
+            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+        else
+            sinv = absvec(q)
+            v = atan(sinv / cosv)
+            invsinc(v) / a
+        end
+        return log(a) + f * quatvec(q)
+    elseif iszerovalue(vec(q))
+        return Quaternion{Complex{T}}(log(a), false, false, Complex{T}(π))
+    else
+        sinv = absvec(q)
+        v′ = atan(-sinv / cosv)
+        f = -invsinc(v′) * (v′ - π) / v′ / a
+        return log(a) + f * quatvec(q)
+    end
+end
+
+function Base.log(q::Rotor{Complex{T}}) where {T<:Real}
+    cosv = q[1]
+    if real(cosv) ≥ 0
+        f = if iszerovalue(vec(q))
+            sinv² = abs2vec(q)
+            x = sinv² / cosv^2
+            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+        else
+            sinv = absvec(q)
+            v = atan(sinv / cosv)
+            invsinc(v)
+        end
+        return f * quatvec(q)
+    elseif iszerovalue(vec(q))
+        return QuatVec{Complex{T}}(false, false, Complex{T}(π))
+    else
+        sinv = absvec(q)
+        v′ = atan(-sinv / cosv)
+        f = -invsinc(v′) * (v′ - π) / v′
+        return f * quatvec(q)
+    end
+end
+
 @doc raw"""
     exp(q)
 
@@ -410,6 +460,19 @@ end
 function Base.sqrt(q::AbstractQuaternion{Float16})
     T = wrapper(typeof(q))
     T{Float16}(sqrt(T{Float32}(q)))
+end
+
+function Base.sqrt(q::QT) where {T<:Real, QT<:AbstractQuaternion{Complex{T}}}
+    if iszerovalue(vec(q))
+        return QT(sqrt(q[1]), false, false, false)
+    end
+    c₁ = if real(q[1]) ≥ 0
+        (abs(q) + q[1])
+    else
+        (abs2vec(q) / (abs(q) - q[1]))
+    end
+    c₂ = √inv(2c₁)
+    return QT(c₁*c₂, q[2]*c₂, q[3]*c₂, q[4]*c₂)
 end
 
 

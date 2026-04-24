@@ -1,32 +1,4 @@
 # Tests for normalization of complexified quaternions as Lorentz spinors in the STA.
-#
-# Complexified quaternions ℍ(ℂ) are the natural home for Lorentz-group rotors in the
-# Spacetime Algebra (STA) with signature -+++.  Following Doran & Lasenby, the
-# GA identification is (with 𝐞_{x,y,z} as the spatial unit vectors):
-#
-#   𝐢 = 𝐞𝐲 𝐞𝐳  (= yz)
-#   𝐣 = 𝐞𝐳 𝐞𝐱  (= -zx, note sign!)
-#   𝐤 = 𝐞𝐱 𝐞𝐲  (= xy)
-#   𝒾 (complex imaginary) ↔ pseudoscalar 𝐈 = 𝐞𝐭 𝐞𝐱 𝐞𝐲 𝐞𝐳  (= txyz)
-#
-# From these it follows that the spacetime bivectors map as:
-#
-#   tx ↔ -im*𝐢   (boost in x)
-#   ty ↔  im*𝐣   (boost in y)
-#   tz ↔ -im*𝐤   (boost in z)
-#
-# The reverse in GA flips sign on all bivector parts.  In the even subalgebra, mapped
-# back to complexified quaternions, this is exactly the quaternion conjugate:
-# conj(w + x𝐢 + y𝐣 + z𝐤) = w - x𝐢 - y𝐣 - z𝐤, *without* conjugating the complex
-# coefficients w, x, y, z ∈ ℂ.
-#
-# A rotor R is normalized by R R̃ = 1, which in complexified-quaternion terms means
-# q * conj(q) = 1, where the norm squared is w² + x² + y² + z² ∈ ℂ (complex squares,
-# NOT |w|² + |x|² + |y|² + |z|²).
-#
-# This is why the specialised _hypot for Complex components is needed: the standard
-# hypot uses abs (absolute value), giving the Euclidean ℂ⁴ norm instead of the spinor
-# norm.
 
 @testset "Lorentz/STA normalization" begin
 
@@ -41,7 +13,7 @@
     #   Spinor norm² = λ²(cosh² - sinh²) = λ²  →  _hypot = λ  (real, positive)
     #   Euclidean norm = λ√(cosh² + sinh²) > λ  for φ ≠ 0
     #
-    # After spinor-normalisation we recover the original unit boost rotor.
+    # After spinor-normalization we recover the original unit boost rotor.
     # With the Euclidean norm instead, the imaginary component would be too small.
     # ────────────────────────────────────────────────────────────────────────────────
     @testset "_hypot is spinor norm, not Euclidean norm, for $T" for T in LorentzTypes
@@ -61,7 +33,7 @@
                 # Euclidean norm is strictly larger
                 @test λ * √(ch^2 + sh^2) > λ + ϵ
 
-                # Spinor-normalisation recovers the unit boost rotor
+                # Spinor-normalization recovers the unit boost rotor
                 normalized = v / h
                 @test normalized[1] ≈ Complex{T}(ch)    rtol=ϵ
                 @test normalized[2] ≈ Complex{T}(-im*sh) rtol=ϵ
@@ -119,11 +91,11 @@
     # A Lorentz boost in the j-direction with rapidity φ:
     #   R = exp(φ/2 · Bⱼ)
     # where Bⱼ is the corresponding spacetime bivector.  Using the STA mapping:
-    #   R_x = cosh(φ/2) - im·sinh(φ/2)·𝐢    [tx ↔ -im𝐢]
-    #   R_y = cosh(φ/2) + im·sinh(φ/2)·𝐣    [ty ↔  im𝐣]
-    #   R_z = cosh(φ/2) - im·sinh(φ/2)·𝐤    [tz ↔ -im𝐤]
+    #   R_x = cosh(φ/2) + im·sinh(φ/2)·𝐢    [tx ↔ im𝐢]
+    #   R_y = cosh(φ/2) + im·sinh(φ/2)·𝐣    [ty ↔ im𝐣]
+    #   R_z = cosh(φ/2) + im·sinh(φ/2)·𝐤    [tz ↔ im𝐤]
     #
-    # The spinor norm² for each is cosh²(φ/2) + (-im)²sinh²(φ/2) = cosh² - sinh² = 1.
+    # The spinor norm² for each is cosh²(φ/2) + (im)²sinh²(φ/2) = cosh² - sinh² = 1.
     # ────────────────────────────────────────────────────────────────────────────────
     @testset "Boost rotors, $T" for T in LorentzTypes
         ϵ = 32eps(T)
@@ -131,8 +103,8 @@
         for φ ∈ T[0, 0.5, 1.0, 1.5, 2.0]
             ch, sh = cosh(φ/2), sinh(φ/2)
 
-            # Boost in x: (cosh, -im·sinh, 0, 0)
-            q_x = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T}))))
+            # Boost in x: (cosh, +im·sinh, 0, 0)
+            q_x = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))))
             r = q_x * conj(q_x)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ*ch
@@ -147,8 +119,8 @@
             @test r[3] ≈ zero(Complex{T}) atol=ϵ*ch
             @test r[4] ≈ zero(Complex{T}) atol=ϵ
 
-            # Boost in z: (cosh, 0, 0, -im·sinh)
-            q_z = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), -im*T(sh))))
+            # Boost in z: (cosh, 0, 0, +im·sinh)
+            q_z = Quaternion{Complex{T}}(components(rotor(Complex{T}(ch), zero(Complex{T}), zero(Complex{T}), im*T(sh))))
             r = q_z * conj(q_z)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ
             @test r[2] ≈ zero(Complex{T}) atol=ϵ
@@ -158,24 +130,24 @@
     end
 
     # ────────────────────────────────────────────────────────────────────────────────
-    # 4.  rotor() normalises by the spinor norm
+    # 4.  rotor() normalizes by the spinor norm
     #
     # If we scale a (physically unit) rotor by an arbitrary complex factor λ, then call
     # rotor(), the result should recover the original (up to an overall sign/phase that
     # still leaves it a valid unit rotor, i.e. gives q*conj(q) = 1).
     # ────────────────────────────────────────────────────────────────────────────────
-    @testset "rotor() normalises by spinor norm, $T" for T in LorentzTypes
+    @testset "rotor() normalizes by spinor norm, $T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         # Base unit rotors to scale
         φ, θ = T(0.9), T(π/5)
         ch, sh = cosh(φ/2), sinh(φ/2)
-        boost_x_components = (Complex{T}(ch), -im*T(sh), zero(Complex{T}), zero(Complex{T}))
+        boost_x_components = (Complex{T}(ch), im*T(sh), zero(Complex{T}), zero(Complex{T}))
         rot_z_components   = (Complex{T}(cos(θ/2)), zero(Complex{T}), zero(Complex{T}), Complex{T}(sin(θ/2)))
 
         for λ ∈ Complex{T}[2, 1+im, 3+4im, -2im]
             # Scaling a unit rotor by λ gives spinor norm λ (not |λ|).
-            # After rotor() normalises, computing q*conj(q) as Quaternion arithmetic should give 1.
+            # After rotor() normalizes, computing q*conj(q) as Quaternion arithmetic should give 1.
             for (w, x, y, z) ∈ [boost_x_components, rot_z_components]
                 q = Quaternion{Complex{T}}(components(rotor(λ*w, λ*x, λ*y, λ*z)))
                 r = q * conj(q)
@@ -199,7 +171,7 @@
     #   Euclidean norm of e^{imφ}·R₀  = |e^{imφ}| · ‖R₀‖_euc = 1  →  no-op (wrong)
     #   Spinor norm of e^{imφ}·R₀     = e^{imφ} ≠ 1             →  divide out (correct)
     #
-    # NOTE: Rotor*Rotor re-normalises (the outer Rotor(...) constructor calls rotor(...)).
+    # NOTE: Rotor*Rotor re-normalizes (the outer Rotor(...) constructor calls rotor(...)).
     # So "not unit" must be verified via _hypot, not via q*conj(q).
     # ────────────────────────────────────────────────────────────────────────────────
     @testset "Pure phase exp[Iφ] is not a Lorentz transformation, $T" for T in LorentzTypes
@@ -219,12 +191,12 @@
             @test h^2 ≈ Complex{T}(λ^2) rtol=ϵ
             @test !isapprox(h, one(Complex{T}); rtol=ϵ)
 
-            # Euclidean norm = 1 (same as R₀) — Euclidean normalisation is a no-op here
+            # Euclidean norm = 1 (same as R₀) — Euclidean normalization is a no-op here
             eucl = sqrt(sum(abs2, v))
             @test eucl ≈ one(T) rtol=ϵ
 
-            # rotor() uses spinor normalisation and gives a valid Lorentz rotor.
-            # Cast to Quaternion first so that q*conj(q) does not re-normalise.
+            # rotor() uses spinor normalization and gives a valid Lorentz rotor.
+            # Cast to Quaternion first so that q*conj(q) does not re-normalize.
             q = Quaternion{Complex{T}}(components(rotor(λ*w, λ*x, λ*y, λ*z)))
             r = q * conj(q)
             @test r[1] ≈ one(Complex{T})  rtol=ϵ

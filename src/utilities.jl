@@ -42,6 +42,11 @@ _sincu(x::Float16) = Float16(_sincu(Float32(x)))
 invsinc(x::Float16) = Float16(invsinc(Float32(x)))
 #invsinc(x::ComplexF16) = ComplexF16(invsinc(ComplexF32(x)))
 invsinc_tol(::Type{T}) where {T} = sqrt(sqrt(sqrt(eps(T))))
+invsinc_tol(::Type{Complex{T}}) where {T<:AbstractFloat} = invsinc_tol(T)
+@inline invsinc(x::Complex{T}) where {T<:AbstractFloat} =
+    abs(x) < invsinc_tol(T) ? evalpoly(x^2,
+        (one(x), one(x)/6, 7one(x)/360, 31one(x)/15120, 127one(x)/604800, 73one(x)/3421440, 1414477one(x)/653837184000)
+    ) : x/sin(x)
 
 # # Derivative of un-normalized sinc function
 # function _coscu(x::Number)
