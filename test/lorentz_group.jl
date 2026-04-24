@@ -37,15 +37,15 @@ _rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v; atol=1e-12) =
     norm(Λ₁₂(v) - (Λ₁ * Λ₂)(v)) ≤ atol
 
 function _ga_norm_conditions(Λ; atol=1e-12)
-    R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = components(Λ)
+    R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = ga_components(Λ)
     quad  = R¹^2 + Rᶻʸ^2 + Rˣᶻ^2 + Rʸˣ^2 - Rᵗˣ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rᵗˣʸᶻ^2
     cross = R¹ * Rᵗˣʸᶻ + Rᶻʸ * Rᵗˣ + Rˣᶻ * Rᵗʸ + Rʸˣ * Rᵗᶻ
     return abs(quad - 1) ≤ atol && abs(cross) ≤ atol
 end
 
 function _ga_reverse_components(Λ; atol=1e-12)
-    c  = components(Λ)
-    ci = components(inv(Λ))
+    c  = ga_components(Λ)
+    ci = ga_components(inv(Λ))
     abs(ci[1] - c[1]) ≤ atol &&   # R¹     unchanged  (grade 0)
     abs(ci[2] + c[2]) ≤ atol &&   # Rᶻʸ    negated    (grade 2)
     abs(ci[3] + c[3]) ≤ atol &&   # Rˣᶻ    negated    (grade 2)
@@ -63,7 +63,7 @@ const _lT = Float64
 const _ln = 20
 
 _rot_rotors  = [randn(Rotor{_lT}) for _ ∈ 1:_ln]
-_rot_Λs      = [Rotation(R) for R ∈ _rot_rotors]
+_rot_Λs      = [Lorentz{_lT}(R) for R ∈ _rot_rotors]
 _gen_vecs    = [randn(_lT, 4) for _ ∈ 1:_ln]
 _spatial_vecs = [[zero(_lT); randn(_lT, 3)] for _ ∈ 1:_ln]
 
@@ -138,7 +138,7 @@ _composed   = accumulate(*, _mixed_seq)
 
     @testset "Rotation: double cover — R and −R give the same transformation" begin
         for (R, v) ∈ zip(_rot_rotors, _gen_vecs)
-            @test _double_cover(Rotation(R), Rotation(-R), v)
+            @test _double_cover(Lorentz{_lT}(R), Lorentz{_lT}(-R), v)
         end
     end
 
@@ -147,9 +147,9 @@ _composed   = accumulate(*, _mixed_seq)
     @testset "Rotation: Spin(3) → Lorentz is a group homomorphism" begin
         for i ∈ 1:(_ln-1)
             R₁, R₂ = _rot_rotors[i], _rot_rotors[i+1]
-            Λ₁₂ = Rotation(R₁ * R₂)
-            Λ₁  = Rotation(R₁)
-            Λ₂  = Rotation(R₂)
+            Λ₁₂ = Lorentz{_lT}(R₁ * R₂)
+            Λ₁  = Lorentz{_lT}(R₁)
+            Λ₂  = Lorentz{_lT}(R₂)
             for v ∈ _gen_vecs
                 @test _rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v)
             end
@@ -161,7 +161,7 @@ _composed   = accumulate(*, _mixed_seq)
     @testset "Rotation: rotation about an axis fixes that axis direction" begin
         for θ ∈ [0.3, 1.0, π/2, π, 2π - 0.1]
             R = Rotor(cos(θ/2), 0.0, 0.0, sin(θ/2))
-            Λ = Rotation(R)
+            Λ = Lorentz{Float64}(R)
             @test Λ([0.0, 0.0, 0.0, 1.0]) ≈ [0.0, 0.0, 0.0, 1.0] atol=1e-12
             v_xy = [0.0, 1.0, 0.5, 0.0]
             v_xy′ = Λ(v_xy)
@@ -170,12 +170,12 @@ _composed   = accumulate(*, _mixed_seq)
         end
         for θ ∈ [0.7, π/3]
             R = Rotor(cos(θ/2), sin(θ/2), 0.0, 0.0)
-            Λ = Rotation(R)
+            Λ = Lorentz{Float64}(R)
             @test Λ([0.0, 1.0, 0.0, 0.0]) ≈ [0.0, 1.0, 0.0, 0.0] atol=1e-12
         end
         for θ ∈ [1.2, π/4]
             R = Rotor(cos(θ/2), 0.0, sin(θ/2), 0.0)
-            Λ = Rotation(R)
+            Λ = Lorentz{Float64}(R)
             @test Λ([0.0, 0.0, 1.0, 0.0]) ≈ [0.0, 0.0, 1.0, 0.0] atol=1e-12
         end
     end
@@ -184,8 +184,8 @@ _composed   = accumulate(*, _mixed_seq)
         for θ ∈ [0.3, 0.9, 1.5, π/3]
             R_θ  = Rotor(Quaternion(cos(θ/2), 0.0, 0.0, sin(θ/2)))
             R_2θ = Rotor(Quaternion(cos(θ),   0.0, 0.0, sin(θ)))
-            Λ_θ  = Rotation(R_θ)
-            Λ_2θ = Rotation(R_2θ)
+            Λ_θ  = Lorentz{Float64}(R_θ)
+            Λ_2θ = Lorentz{Float64}(R_2θ)
             v = [0.0, 1.0, 0.0, 0.0]
             @test Λ_2θ(v) ≈ (Λ_θ * Λ_θ)(v) atol=1e-12
         end
@@ -194,7 +194,7 @@ _composed   = accumulate(*, _mixed_seq)
     @testset "Rotation: 2π rotation acts as the identity on 4-vectors" begin
         Random.seed!(7)
         R_2π = Rotor(-1.0, 0.0, 0.0, 0.0)
-        Λ_2π = Rotation(R_2π)
+        Λ_2π = Lorentz{Float64}(R_2π)
         for _ ∈ 1:10
             v = randn(4)
             @test Λ_2π(v) ≈ v atol=1e-12
@@ -207,7 +207,7 @@ _composed   = accumulate(*, _mixed_seq)
         for η ∈ [0.3, 0.7, 1.2, 1.8, 2.5]
             ch, sh = cosh(η/2), sinh(η/2)
 
-            c = components(Boost(η, [1.0, 0.0, 0.0]))
+            c = ga_components(Boost(η, [1.0, 0.0, 0.0]))
             @test c[1] ≈ ch  atol=1e-14   # R¹
             @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
             @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
@@ -217,7 +217,7 @@ _composed   = accumulate(*, _mixed_seq)
             @test c[7] ≈ 0.0 atol=1e-14   # Rᵗᶻ
             @test c[8] ≈ 0.0 atol=1e-14   # Rᵗˣʸᶻ
 
-            c = components(Boost(η, [0.0, 1.0, 0.0]))
+            c = ga_components(Boost(η, [0.0, 1.0, 0.0]))
             @test c[1] ≈ ch  atol=1e-14   # R¹
             @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
             @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
@@ -227,7 +227,7 @@ _composed   = accumulate(*, _mixed_seq)
             @test c[7] ≈ 0.0 atol=1e-14   # Rᵗᶻ
             @test c[8] ≈ 0.0 atol=1e-14   # Rᵗˣʸᶻ
 
-            c = components(Boost(η, [0.0, 0.0, 1.0]))
+            c = ga_components(Boost(η, [0.0, 0.0, 1.0]))
             @test c[1] ≈ ch  atol=1e-14   # R¹
             @test c[2] ≈ 0.0 atol=1e-14   # Rᶻʸ
             @test c[3] ≈ 0.0 atol=1e-14   # Rˣᶻ
