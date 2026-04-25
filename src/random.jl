@@ -37,15 +37,15 @@ Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{T}}) where {T<:Abstra
 Base.randn(rng::AbstractRNG, QT::Type{<:Rotor{T}}) where {T<:AbstractFloat} =
     rotor(randn(rng, T), randn(rng, T), randn(rng, T), randn(rng, T))
 
-Base.@irrational SQRT_ONE_THIRD 0.5773502691896257645 sqrt(inv(big(3.0)))
-
-Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat} =
+function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFloat}
+    SQRT_ONE_THIRD = sqrt(inv(T(3)))
     QT(
         zero(T),
         SQRT_ONE_THIRD * randn(rng, T),
         SQRT_ONE_THIRD * randn(rng, T),
         SQRT_ONE_THIRD * randn(rng, T)
     )
+end
 
 if Base.VERSION < v"1.9.0-alpha1"
     # COV_EXCL_START

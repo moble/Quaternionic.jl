@@ -1,9 +1,10 @@
 module Quaternionic
 
-using StaticArrays, LinearAlgebra, PrecompileTools
+import LinearAlgebra: LinearAlgebra, Symmetric, eigen, norm, normalize, (⋅)
+import PrecompileTools: PrecompileTools, @compile_workload, @setup_workload
+import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector
 import LaTeXStrings
-import Random: AbstractRNG, default_rng, randn!
-using TestItems: @testitem
+import Random: AbstractRNG, default_rng
 
 export AbstractQuaternion
 export Quaternion, quaternion,
