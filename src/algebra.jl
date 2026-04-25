@@ -125,7 +125,7 @@ This can be typed as `\times<tab>\hat<tab>` in a Julia-aware editor.
 @inline function ×̂(a::QuatVec, b::QuatVec)
     axb = a × b
     av = absvec(axb)
-    if av == zero(av)
+    if iszerovalue(av)
         return axb
     else
         return axb / av

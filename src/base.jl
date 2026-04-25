@@ -114,7 +114,36 @@ function Base.show(io::IO, q::Rotor)
     print(io, ")")
 end
 
-_pm_latex(x) = _pm_ascii(x)
+function _pm_latex(x)
+    if showable(MIME("text/latex"), x)
+        latex_io = IOBuffer()
+        show(latex_io, MIME("text/latex"), x)
+        s = strip(String(take!(latex_io)), '$')
+    else
+        s = "$x"
+    end
+    if s[1] ∉ "+-"
+        s = "+" * s
+    end
+    if occursin(r"[+^-]", s[2:end])
+        s = " " * s[1] * " " * "\\left(" * s[2:end] * "\\right)"
+    else
+        s = " " * s[1] * " " * s[2:end]
+    end
+    s
+end
+
+function Base.show(io::IO, ::MIME"text/latex", q::AbstractQuaternion)
+    print(
+        io,
+        "\$",
+        q isa QuatVec ? "" : q[1],
+        _pm_latex(q[2]), "\\,\\mathbf{i}",
+        _pm_latex(q[3]), "\\,\\mathbf{j}",
+        _pm_latex(q[4]), "\\,\\mathbf{k}",
+        "\$"
+    )
+end
 
 
 function Base.read(s::IO, QT::Type{Q}) where {T<:Number, Q<:AbstractQuaternion{T}}
