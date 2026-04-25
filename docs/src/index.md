@@ -71,8 +71,9 @@ julia> 0.1 + 2.3imx + 4.5imz
 julia> 0.1 + 2.3𝐢 + 0.0𝐣 + 4.5𝐤
 0.1 + 2.3𝐢 + 0.0𝐣 + 4.5𝐤
 ```
-As with the complex `im`, the result of multiplying `imx`, etc., with any real
-number will be a quaternion with the type of the other number.
+As with the complex `im`, the result of multiplying `imx`, etc., with
+any real number will be a quaternion with the type of the other
+number.
 
 [^1]:
     Note that, mathematically speaking, quaternions can only be defined over a
@@ -84,8 +85,8 @@ number will be a quaternion with the type of the other number.
     return a `Quaternion` of some different type, just as is the case for
     `Complex{<:Integer}`.
 
-It is also possible to construct random quaternions using [`randn`](@ref) with a
-`Quaternion` type.
+It is also possible to construct random quaternions using
+[`randn`](@ref) with a `Quaternion` type.
 ```jldoctest example; setup = :(using Random; Random.seed!(1234))
 julia> randn(QuaternionF64)
 -0.17986445341174084 + 0.5436042462142929𝐢 - 0.20979480846942436𝐣 + 0.3594549687329696𝐤
@@ -93,19 +94,21 @@ julia> randn(QuaternionF64)
 julia> randn(RotorF32)
 rotor(0.18842402 - 0.30743068𝐢 + 0.92128336𝐣 + 0.14567046𝐤)
 ```
-Each component of the quaternion is chosen from a normal distribution with mean
-0 and standard deviation 1, which means that the resulting quaternion will have
-an equal probability of being in any direction — the probability distribution is
-"isotropic".  This is, for example, and good way of choosing a random direction:
+Each component of the quaternion is chosen from a normal distribution
+with mean 0 and standard deviation 1, which means that the resulting
+quaternion will have an equal probability of being in any direction —
+the probability distribution is "isotropic".  This is, for example,
+and good way of choosing a random direction:
 ```jldoctest example
 julia> normalize(randn(QuatVecF64))
  - 0.3018853063494534𝐢 + 0.4571280910615297𝐣 - 0.8365997670169042𝐤
 ```
-Note that we have called [`normalize`](@ref Quaternionic.normalize) to
-obtain a unit vector in a random direction.
+Note that we have called `normalize` (originally from `LinearAlgebra`,
+but also exported by `Quaternionic`) to obtain a unit vector in a
+random direction.
 
-Components of the quaternion are stored as a four-element static array (even for
-`QuatVec`):
+Components of the quaternion are stored as a four-element static array
+(even for `QuatVec`):
 ```jldoctest example
 julia> components(q)
 4-element StaticArraysCore.SVector{4, Float64} with indices SOneTo(4):

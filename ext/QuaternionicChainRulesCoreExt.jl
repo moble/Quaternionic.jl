@@ -145,7 +145,8 @@ function rrule(::typeof(rotor), w, x, y, z)
             # - z*w/n^3 + 𝐢*z*x/n^3 + 𝐣*z*y/n^3 + 𝐤*(-1/n + z*z/n^3),
         )
     end
-    v = normalize(SVector{4}(w, x, y, z))
+    a = SVector{4}(w, x, y, z)
+    v = a ./ abs(Quaternion{eltype(a)}(a))
     return Rotor{eltype(v)}(v), Rotor_pullback
 end
 
@@ -173,7 +174,8 @@ function rrule(::typeof(rotor), x, y, z)
             (∂t∂z*Δt + ∂u∂z*Δu + ∂v∂z*Δv)
         )
     end
-    v = normalize(SVector{4}(false, x, y, z))
+    a = SVector{4}(false, x, y, z)
+    v = a ./ abs(Quaternion{eltype(a)}(a))
     return Rotor{eltype(v)}(v), Rotor_pullback
 end
 

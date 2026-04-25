@@ -1,7 +1,7 @@
 module QuaternionicFastDifferentiationExt
 
 using StaticArrays: SVector
-import Quaternionic: Quaternionic, normalize, absvec,
+import Quaternionic: Quaternionic, absvec,
     AbstractQuaternion, Quaternion, Rotor, QuatVec,
     quaternion, rotor, quatvec,
     QuatVecF64, RotorF64, QuaternionF64,
@@ -12,7 +12,6 @@ isdefined(Base, :get_extension) ?
     (using ..FastDifferentiation: FastDifferentiation, Node)
 
 
-normalize(v::AbstractVector{Node}) = v ./ √sum(x->x^2, v)
 Base.abs(q::AbstractQuaternion{Node}) = √sum(x->x^2, components(q))
 Base.abs(q::QuatVec{Node}) = √sum(x->x^2, vec(q))
 absvec(q::AbstractQuaternion{Node}) = √sum(x->x^2, vec(q))

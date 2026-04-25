@@ -140,13 +140,11 @@ Return a copy of this quaternion, normalized.
 Note that this returns the same type as the input quaternion.  If you want to
 convert to a `Rotor`, just call `rotor(q)`, which includes a normalization
 step.
+
+This extends `LinearAlgebra.normalize` for quaternion types.
 """
-@inline function normalize(q::AbstractQuaternion)
-    return q / abs(q)
-end
-@inline function normalize(q::Rotor)
-    return rotor(q)  # already normalizes
-end
+@inline LinearAlgebra.normalize(q::AbstractQuaternion) = q / abs(q)
+@inline LinearAlgebra.normalize(q::Rotor) = rotor(q)
 
 function (R::Rotor)(v::QuatVec)
     quatvec(SA[
