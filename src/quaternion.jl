@@ -24,12 +24,6 @@ function _hypot(x)
     end
 end
 
-# We need that helper to normalize complex quaternions
-normalize(v::AbstractVector{Complex{T}}) where T = v ./ _hypot(v)
-
-# We simplify for real-valued quaternions, falling back on the default `hypot`
-normalize(v::AbstractVector) = v ./ hypot(v...)
-
 
 """
     Quaternion{T<:Number} <: Number
@@ -141,7 +135,7 @@ you can call
     Rotor{T}(v)
 
 where `v<:AbstractArray` can be converted to an `SVector{4, T}`.  If you want to handle the
-normalization step, you can use [`normalize`](@ref).
+normalization step, you can use `LinearAlgebra.normalize`.
 
 However, once a `Rotor` is created, its norm will often be *assumed* to be precisely 1.  So
 if its true norm is significantly different, you will likely see weird results — including
@@ -160,7 +154,7 @@ julia> rotor(quaternion(1, 2, 3, 4))
 rotor(0.18257418583505536 + 0.3651483716701107𝐢 + 0.5477225575051661𝐣 + 0.7302967433402214𝐤)
 julia> Rotor{Float16}(1, 2, 3, 4)
 rotor(1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤)
-julia> normalize(Rotor{Float16}(1, 2, 3, 4))
+julia> rotor(Rotor{Float16}(1, 2, 3, 4))
 rotor(0.1826 + 0.3652𝐢 + 0.548𝐣 + 0.7305𝐤)
 julia> rotor(1.0)
 rotor(1.0 + 0.0𝐢 + 0.0𝐣 + 0.0𝐤)
@@ -177,13 +171,14 @@ struct Rotor{T<:Number} <: AbstractQuaternion{T}
 end
 
 function rotor(a::SVector{4,T}) where {T<:Number}
-    â = normalize(a)
+    â = a ./ abs(Quaternion{T}(a))
     Rotor{eltype(â)}(â)
 end
 #rotor(a::AbstractVector) = Rotor{T}(SVector{4,T}(a))  # See below
 rotor(a::AbstractQuaternion) = rotor(components(a))
 function rotor(w, x, y, z)
-    v = normalize(SVector{4}(w, x, y, z))
+    a = SVector{4}(w, x, y, z)
+    v = a ./ abs(Quaternion{eltype(a)}(a))
     Rotor{eltype(v)}(v)
 end
 rotor(x,y,z) = rotor(false, x,y,z)

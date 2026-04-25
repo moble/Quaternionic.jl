@@ -73,7 +73,7 @@ julia> absvec(quaternion(1,2,3,6))
 absvec(q::AbstractQuaternion) = hypot(vec(q)...)
 absvec(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(vec(q))
 
-# norm(q::Quaternion) = Base.abs2(q)  ## This might just be confusing
+LinearAlgebra.norm(q::AbstractQuaternion) = abs(q)
 
 Base.inv(q::AbstractQuaternion) = conj(q) / abs2(q)
 Base.inv(q::Rotor) = conj(q)  # Specialize to ensure output is also a Rotor

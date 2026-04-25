@@ -12,7 +12,7 @@ export Quaternion, quaternion,
 export Rotor, rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, quatvec, QuatVecF64, QuatVecF32, QuatVecF16
 export components, basetype
-export (⋅), (×), (×̂), normalize
+export (⋅), (×), (×̂), normalize, norm
 export abs2vec, absvec
 export from_float_array, to_float_array,
     from_euler_angles, to_euler_angles,
