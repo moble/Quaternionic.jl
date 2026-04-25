@@ -65,6 +65,7 @@ jobs:
     permissions:
       contents: write
       statuses: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
       - uses: julia-actions/setup-julia@v2
@@ -81,3 +82,8 @@ jobs:
             using Quaternionic
             DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
             doctest(Quaternionic)'
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          message: |
+            [Documentation preview](https://moble.github.io/Quaternionic.jl/previews/PR${{ github.event.pull_request.number }}/)
