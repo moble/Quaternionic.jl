@@ -7,15 +7,20 @@
     ChainRulesCore.debug_mode() = true
     Random.seed!(42)
 
+    # We have to skip Enzyme and Mooncake on Windows because of
+    # https://github.com/EnzymeAD/Enzyme.jl/issues/2986 and
+    # https://github.com/EnzymeAD/Enzyme.jl/issues/2962 
+    # This could probably test for Julia 1.12 as well, but we'll
+    # see how it goes with Windows support first
     backends = [
-        AutoEnzyme(),
-        # AutoFastDifferentiation(),  # see below; has to wait for conditionals support
-        AutoFiniteDifferences(fdm=FiniteDifferences.central_fdm(3,1)),
-        AutoForwardDiff(),
-        AutoMooncake(config=nothing),
-        AutoReverseDiff(),
-        AutoZygote(),  # Fails with incorrect results when return type is Quaternionic
-        AutoChainRules(Zygote.ZygoteRuleConfig()),  # Same as above
+        Sys.iswindows() ? [] : [AutoEnzyme()];
+        # AutoFastDifferentiation();  # see below; has to wait for conditionals support
+        AutoFiniteDifferences(fdm=FiniteDifferences.central_fdm(3,1));
+        AutoForwardDiff();
+        Sys.iswindows() ? [] : [AutoMooncake(config=nothing)];
+        AutoReverseDiff();
+        AutoZygote();  # Fails with incorrect results when return type is Quaternionic
+        AutoChainRules(Zygote.ZygoteRuleConfig());  # Same as above
     ]
 
     P = randn(QuaternionF64)
