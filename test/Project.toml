@@ -1,4 +1,5 @@
 [deps]
+ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -33,6 +34,7 @@ ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 Quaternionic = {path = ".."}
 
 [compat]
+ADTypes = "1.22.0"
 Aqua = "0.8"
 ChainRulesTestUtils = "1.13.0"
 Coverage = "1.7.0"
