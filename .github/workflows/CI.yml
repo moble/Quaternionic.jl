@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     if: >-
         !contains(github.ref, 'refs/tags/')
@@ -33,8 +33,6 @@ jobs:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        arch:
-          - x64
         # include:
         #   - version: 'nightly'
         #     os: ubuntu-latest
@@ -44,7 +42,6 @@ jobs:
       - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
           show-versioninfo: true
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
