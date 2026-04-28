@@ -33,11 +33,17 @@ Base.iszero(q::AbstractQuaternion{T}) where {T<:Number} = iszero(q[1]) && iszero
 Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q[2]) && iszero(q[3]) && iszero(q[4])
 
 """
+    value(x)
+
+This is essentially the identity function, but intended to be overridden for types like
+`ForwardDiff.Dual`, where the value is the part of the dual number that corresponds to the
+original function value, and the tangent part is the part that corresponds to the
+derivative.
+"""
+value(x) = x
+
+"""
     iszerovalue(x)
-
-!!! warning "Private function!"
-
-    This function is private and may change or be removed without warning.
 
 This is essentially `Base.iszero`, but intended to be overridden for types like
 `ForwardDiff.Dual`, where the value may be zero, but if the tangent is not zero, then
@@ -52,7 +58,7 @@ isolated cases, a Taylor series should be provided that will be exactly zero for
 Like `Base.iszero`, this function is defined recursively for arrays and quaternions.
 
 """
-iszerovalue(x) = iszero(x)
+iszerovalue(x) = iszero(value(x))
 iszerovalue(x::AbstractArray) = all(iszerovalue, x)
 iszerovalue(q::AbstractQuaternion) = iszerovalue(components(q))
 iszerovalue(q::QuatVec) = iszerovalue(vec(q))

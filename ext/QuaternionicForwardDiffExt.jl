@@ -3,7 +3,9 @@ module QuaternionicForwardDiffExt
 using Quaternionic
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
-Quaternionic.iszerovalue(x::ForwardDiff.Dual) = iszero(ForwardDiff.value(x))
+Quaternionic.value(x::ForwardDiff.Dual) = ForwardDiff.value(x)
+# Then, this will be automatic:
+# Quaternionic.iszerovalue(x::ForwardDiff.Dual) = iszero(Quaternionic.value(x))
 
 ###############################################
 # Let ForwardDiff act naturally on quaternions.
