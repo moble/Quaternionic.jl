@@ -27,9 +27,14 @@
     # ── Predicate helpers ─────────────────────────────────────────────────────
 
     # True if A and B represent the same element of SO⁺(3,1) (±1 spinor cover)
-    same_Λ(A, B; atol) =
-        isapprox(components(A), components(B); atol) ||
-        isapprox(components(A), -components(B); atol)
+    function same_Λ(A, B; atol)
+        # `norm` acting on a complex quaternion is the spinor norm, which will return a
+        # complex number.  We just need to take the absolute value of that to get a
+        # real-valued distance metric.
+        let norm = abs ∘ norm
+            isapprox(A,  B; atol, norm) || isapprox(A, -B; atol, norm)
+        end
+    end
 
     # True if R (as a Lorentz rotor) has negligible imaginary parts
     is_real_rotor(R::Rotor{T}; atol) where {T} =
@@ -128,7 +133,7 @@ end
 @testitem "BR round-trip: random mixed" tags=[:validation, :fast] setup=[LorentzDecompData] begin
     import Quaternionic: BR
     using .LorentzDecompData: mixed, same_Λ, is_real_rotor, is_pure_boost
-    ε = 1024eps(Float64)  # products of ~40 elements accumulate ~40× eps error
+    ε = 200eps(Float64)
     for Λ ∈ mixed
         B, R = BR(Λ)
         @test is_real_rotor(R; atol=ε)
@@ -182,7 +187,7 @@ end
 
     function round_trip_error(T)
         θ, η = T(1.3), T(0.8)
-        n̂T = T.(Float64[1/√3, 1/√3, 1/√3])
+        n̂T = [1/√T(3), 1/√T(3), 1/√T(3)]
         B0 = Boost(η, n̂T)
         R0 = Lorentz(rotor(cos(θ/2), sin(θ/2), zero(T), zero(T)))
         Λ  = R0 * B0
