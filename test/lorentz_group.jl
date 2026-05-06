@@ -3,8 +3,6 @@
 # Strategy: metamorphic testing.  Mathematical properties are factored into
 # predicate functions, then called for many random inputs.
 
-import LinearAlgebra: norm, normalize as la_normalize
-
 """Minkowski inner product with signature −+++."""
 _minkowski(v, w) = -v[1]*w[1] + v[2]*w[2] + v[3]*w[3] + v[4]*w[4]
 
@@ -69,7 +67,7 @@ _spatial_vecs = [[zero(_lT); randn(_lT, 3)] for _ ∈ 1:_ln]
 
 Random.seed!(123)
 _boost_rapidities  = abs.(randn(_lT, _ln)) .+ _lT(0.1)
-_boost_directions  = [QuatVec(la_normalize(randn(_lT, 3))) for _ ∈ 1:_ln]
+_boost_directions  = [QuatVec(normalize(randn(_lT, 3))) for _ ∈ 1:_ln]
 _boost_Λs          = [Boost(η, n̂) for (η, n̂) ∈ zip(_boost_rapidities, _boost_directions)]
 
 _mixed_seq  = [x for pair ∈ zip(_rot_Λs, _boost_Λs) for x ∈ pair]

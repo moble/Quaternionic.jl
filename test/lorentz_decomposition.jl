@@ -8,7 +8,6 @@
 
 @testmodule LorentzDecompData begin
     using Random: seed!
-    using LinearAlgebra: normalize as la_normalize
     using Quaternionic
     import Quaternionic: RB, BR, ℂconj, ℂreal, ℂimag, ℂreim
 
@@ -18,7 +17,7 @@
 
     seed!(123)
     const rand_boosts = [
-        Boost(abs(randn()) + 0.1, QuatVec(la_normalize(randn(3))))
+        Boost(abs(randn()) + 0.1, QuatVec(normalize(randn(3))))
         for _ ∈ 1:n
     ]
 
