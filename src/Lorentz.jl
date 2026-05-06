@@ -38,10 +38,13 @@ Access the GA components via [`ga_components`](@ref).
 
 ## Constructors
 
-Use the named constructor [`Boost`](@ref).  For a pure rotation, wrap a `Rotor{T}` as
-`Lorentz{T}(complex.(components(R)...))` or simply compose boosts.
+Use the named constructor [`Boost`](@ref).  For a pure rotation, use `Lorentz(R)`.
 """
 const Lorentz{T<:Real} = Rotor{Complex{T}}
+
+Lorentz(q::AbstractQuaternion) = Rotor(complex.(components(q))...)
+Lorentz(w) = Rotor(complex(w))
+Lorentz(w, x, y, z) = Rotor(complex(w), complex(x), complex(y), complex(z))
 
 @doc raw"""
     ga_components(Λ::Lorentz{T}) → SVector{8, T}
@@ -126,7 +129,9 @@ See [`ga_components(::Lorentz)`](@ref) for the correspondence between
 this GA form and the quaternion storage.
 """
 function Boost(η::T, n̂::AbstractVector) where {T<:Real}
-    length(n̂) == 3 || throw(DimensionMismatch("boost direction must be a 3-vector; got length $(length(n̂))"))
+    length(n̂) == 3 || throw(DimensionMismatch(
+        "boost direction must be a 3-vector; got length $(length(n̂))"
+    ))
     Base.require_one_based_indexing(n̂)
     ch, sh = cosh(η / 2), sinh(η / 2)
     return Rotor{Complex{T}}(
@@ -201,4 +206,122 @@ function (Λ::Lorentz{T1})(v::SVector{4, T2}) where {T1<:Real, T2<:Real}
     v′ = @SVector [v′ᵗ, v′ˣ, v′ʸ, v′ᶻ]
 
     return v′
+end
+
+# -------------------------------------------------
+# ℂ-conjugation: component-wise complex operations,
+# as distinct from conjugate by the GA reverse
+# -------------------------------------------------
+
+"""
+    ℂconj(Λ::Lorentz{T}) → Lorentz{T}
+
+Component-wise complex conjugate of `Λ`: conjugate each complex coefficient `(w, x, y, z) →
+(w̄, x̄, ȳ, z̄)`.
+
+This is distinct from the GA reverse, which is `conj(Λ)` and just negates the quaternion
+"vector" part.  For `Λ = R*B` with `R` a pure rotation and `B` a pure boost, `ℂconj(Λ) = R *
+B⁻¹`, since `ℂconj(B) = B⁻¹` for pure boosts and `ℂconj(R) = R` for real rotors.
+"""
+ℂconj(Λ::Lorentz{T}) where {T<:Real} = Rotor{Complex{T}}(
+    conj(Λ[1]), conj(Λ[2]), conj(Λ[3]), conj(Λ[4])
+)
+
+"""
+    ℂreal(Λ::Lorentz{T}) → Quaternion{T}
+
+Complex-real part of `Λ`: `Quaternion(real(Λ[1]), real(Λ[2]), real(Λ[3]), real(Λ[4]))`.
+
+For `Λ = R*B` where `R` is a pure rotation and `B` is a pure boost with rapidity `η`, this
+equals `cosh(η/2)*R`.  Its Euclidean norm is `cosh(η/2) ≥ 1`.
+
+This is distinct from the GA "real" part, given by `real(Λ)`, which is constructed from the
+reverse, rather than the complex-conjugate.  That will just be the scalar part of `Λ`, but
+may be complex; this function returns a full quaternion, with all components real.
+"""
+ℂreal(Λ::Lorentz{T}) where {T<:Real} = Quaternion{T}(
+    real(Λ[1]), real(Λ[2]), real(Λ[3]), real(Λ[4])
+)
+
+"""
+    ℂimag(Λ::Lorentz{T}) → Quaternion{T}
+
+Imaginary-part of `Λ`: `Quaternion(imag(Λ[1]), imag(Λ[2]), imag(Λ[3]), imag(Λ[4]))`.
+
+For `Λ = R*B` where `R` is a pure rotation and `B` is a pure boost with rapidity `η` in
+direction `n̂`, this equals `sinh(η/2)*R*n̂`.
+
+This is distinct from the GA "imaginary" part, given by `imag(Λ)`, which is constructed from
+the reverse, rather than the complex-conjugate.  That will just be the quaternion "vector"
+part of `Λ`, but may be complex; this function returns a full quaternion, with all
+components real.
+"""
+ℂimag(Λ::Lorentz{T}) where {T<:Real} = Quaternion{T}(
+    imag(Λ[1]), imag(Λ[2]), imag(Λ[3]), imag(Λ[4])
+)
+
+"""
+    ℂreim(Λ::Lorentz{T}) → (Quaternion{T}, Quaternion{T})
+
+Return `(ℂreal(Λ), ℂimag(Λ))` as a single call.
+"""
+ℂreim(Λ::Lorentz{T}) where {T<:Real} = (ℂreal(Λ), ℂimag(Λ))
+
+# ---------------------------------------------------------------------------
+# Polar decomposition
+# ---------------------------------------------------------------------------
+
+"""
+    lorentz_decomposition(Λ::Lorentz{T}, ::Val{:RB}) → (R::Rotor{T}, B::Lorentz{T})
+    lorentz_decomposition(Λ::Lorentz{T}, ::Val{:BR}) → (R::Rotor{T}, B::Lorentz{T})
+
+Internal implementation of the polar decomposition.  The `Val` argument
+selects the ordering; call [`RB`](@ref) or [`BR`](@ref) instead.
+
+**Algorithm.**  Split `Λ` into `ℜΛ = ch*R` and `ℑΛ = sh*(R*n̂)` (RB) or `sh*(n̂*R)` (BR),
+where `ch = cosh(η/2) ≥ 1` and `sh = sinh(η/2) ≥ 0`.  Then `R = rotor(ℜΛ)` (normalize)
+and `R⁻¹*ℑΛ = sh*n̂` (analytically pure QuatVec), so the boost is reconstructed directly as
+the complex quaternion `ch + im*(sh*n̂)` without any trigonometric functions.
+"""
+function lorentz_decomposition(Λ::Lorentz{T}, ::Val{:RB}) where {T<:Real}
+    ℜΛ, ℑΛ = ℂreim(Λ)
+    R = rotor(ℜΛ)
+    B = Lorentz(abs(ℜΛ) + im * (inv(R) * ℑΛ))
+    return R, B
+end
+
+function lorentz_decomposition(Λ::Lorentz{T}, ::Val{:BR}) where {T<:Real}
+    ℜΛ, ℑΛ = ℂreim(Λ)
+    R = rotor(ℜΛ)
+    B = Lorentz(abs(ℜΛ) + im * (ℑΛ * inv(R)))
+    return R, B
+end
+
+"""
+    RB(Λ::Lorentz{T}) → (R::Rotor{T}, B::Lorentz{T})
+
+Polar decomposition `Λ = R * B`: pure rotation `R` followed by pure boost `B`.
+
+`B` is in canonical form: its scalar component `cosh(η/2) > 0` is always
+positive, so the rapidity `η ≥ 0` is uniquely determined.
+
+!!! note "Double cover"
+    Since `Spin⁺(3,1)` is a double cover of `SO⁺(3,1)`, both `(R, B)` and
+    `(-R, -B)` represent the same Lorentz transformation.  The returned `R`
+    has the same sign as the scalar part of `Λ`.
+
+See also [`BR`](@ref), [`lorentz_decomposition`](@ref).
+"""
+RB(Λ::Lorentz{T}) where {T<:Real} = lorentz_decomposition(Λ, Val(:RB))
+
+"""
+    BR(Λ::Lorentz{T}) → (B::Lorentz{T}, R::Rotor{T})
+
+Polar decomposition `Λ = B * R`: pure boost `B` followed by pure rotation `R`.
+
+See also [`RB`](@ref), [`lorentz_decomposition`](@ref).
+"""
+function BR(Λ::Lorentz{T}) where {T<:Real}
+    R, B = lorentz_decomposition(Λ, Val(:BR))
+    return B, R
 end

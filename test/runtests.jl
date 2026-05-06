@@ -286,15 +286,13 @@ else
 
     @testset verbose=true "All tests" begin
 
-        # @testitem-based tests (differentiation_interface.jl and any @testitem blocks
-        # embedded in the package source).  These support the full filter set.
-        if isnothing(args.file) || contains("differentiation_interface", args.file)
-            println("Running differentiation_interface.jl")
-            if isnothing(filter_func)
-                @run_package_tests verbose = args.verbose
-            else
-                @run_package_tests verbose = args.verbose filter = filter_func
-            end
+        # @testitem-based tests: discovered throughout src/ and test/.
+        # The filter_func handles all narrowing (file, tag, name, pattern).
+        println("Running @testitem tests")
+        if isnothing(filter_func)
+            @run_package_tests verbose = args.verbose
+        else
+            @run_package_tests verbose = args.verbose filter = filter_func
         end
 
         addtests("aqua.jl")
