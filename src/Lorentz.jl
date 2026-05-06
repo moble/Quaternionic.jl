@@ -272,56 +272,48 @@ Return `(ℂreal(Λ), ℂimag(Λ))` as a single call.
 # ---------------------------------------------------------------------------
 
 """
-    lorentz_decomposition(Λ::Lorentz{T}, ::Val{:RB}) → (R::Rotor{T}, B::Lorentz{T})
-    lorentz_decomposition(Λ::Lorentz{T}, ::Val{:BR}) → (R::Rotor{T}, B::Lorentz{T})
-
-Internal implementation of the polar decomposition.  The `Val` argument
-selects the ordering; call [`RB`](@ref) or [`BR`](@ref) instead.
-
-**Algorithm.**  Split `Λ` into `ℜΛ = ch*R` and `ℑΛ = sh*(R*n̂)` (RB) or `sh*(n̂*R)` (BR),
-where `ch = cosh(η/2) ≥ 1` and `sh = sinh(η/2) ≥ 0`.  Then `R = rotor(ℜΛ)` (normalize)
-and `R⁻¹*ℑΛ = sh*n̂` (analytically pure QuatVec), so the boost is reconstructed directly as
-the complex quaternion `ch + im*(sh*n̂)` without any trigonometric functions.
-"""
-function lorentz_decomposition(Λ::Lorentz{T}, ::Val{:RB}) where {T<:Real}
-    ℜΛ, ℑΛ = ℂreim(Λ)
-    R = rotor(ℜΛ)
-    B = Lorentz(abs(ℜΛ) + im * (inv(R) * ℑΛ))
-    return R, B
-end
-
-function lorentz_decomposition(Λ::Lorentz{T}, ::Val{:BR}) where {T<:Real}
-    ℜΛ, ℑΛ = ℂreim(Λ)
-    R = rotor(ℜΛ)
-    B = Lorentz(abs(ℜΛ) + im * (ℑΛ * inv(R)))
-    return R, B
-end
-
-"""
     RB(Λ::Lorentz{T}) → (R::Rotor{T}, B::Lorentz{T})
 
 Polar decomposition `Λ = R * B`: pure rotation `R` followed by pure boost `B`.
 
-`B` is in canonical form: its scalar component `cosh(η/2) > 0` is always
-positive, so the rapidity `η ≥ 0` is uniquely determined.
-
 !!! note "Double cover"
-    Since `Spin⁺(3,1)` is a double cover of `SO⁺(3,1)`, both `(R, B)` and
-    `(-R, -B)` represent the same Lorentz transformation.  The returned `R`
-    has the same sign as the scalar part of `Λ`.
+    Since `Spin⁺(3,1)` is a double cover of `SO⁺(3,1)`, both `(R, B)` and `(-R, -B)`
+    represent the same Lorentz transformation.  The scalar part of the returned `R` has the
+    same sign as the scalar part of `Λ`.
 
-See also [`BR`](@ref), [`lorentz_decomposition`](@ref).
+The general Lorentz transformation `Λ` can be expressed as the product of a pure rotation
+`R` and a pure boost `B` in either order.  For this function, we assume `Λ = R * B`.  The
+boost is, in turn, determined by a rapidity `η ≥ 0` and a unit direction `n̂`, so that
+`B = cosh(η/2) + im*sinh(η/2)*n̂` in the quaternionic encoding.  Therefore, we have
+
+    Λ = R * B = cosh(η/2)*R + im*sinh(η/2)*(R*n̂).
+
+Since `cosh(η/2)` is 1 for no boost, and grows smoothly with `η`, we can find `R` very
+simply by normalizing the complex-real part of `Λ`.  And since the norm of `R` is 1, we can
+find `cosh(η/2)` as the magnitude of the complex-real part of `Λ`.  Then, we find
+`sinh(η/2)*n̂` simply by multiplying the complex-imaginary part of `Λ` by `inv(R)`, and
+reconstruct `B` simply by adding the result to `cosh(η/2)`.
+
+See also [`BR`](@ref).
 """
-RB(Λ::Lorentz{T}) where {T<:Real} = lorentz_decomposition(Λ, Val(:RB))
+function RB(Λ::Lorentz{T}) where {T<:Real}
+    ℜΛ, ℑΛ = ℂreim(Λ)
+    R = rotor(ℜΛ)
+    B = Lorentz(abs(ℜΛ) + im * (conj(R) * ℑΛ))
+    return R, B
+end
 
 """
     BR(Λ::Lorentz{T}) → (B::Lorentz{T}, R::Rotor{T})
 
 Polar decomposition `Λ = B * R`: pure boost `B` followed by pure rotation `R`.
 
-See also [`RB`](@ref), [`lorentz_decomposition`](@ref).
+The algorithm here is the same as for [`RB`](@ref), but with the order of multiplication by
+`inv(R)` reversed.
 """
 function BR(Λ::Lorentz{T}) where {T<:Real}
-    R, B = lorentz_decomposition(Λ, Val(:BR))
+    ℜΛ, ℑΛ = ℂreim(Λ)
+    R = rotor(ℜΛ)
+    B = Lorentz(abs(ℜΛ) + im * (ℑΛ * conj(R)))
     return B, R
 end
