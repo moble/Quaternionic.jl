@@ -15,7 +15,7 @@ export QuatVec, quatvec, QuatVecF64, QuatVecF32, QuatVecF16
 export components, basetype
 public value, iszerovalue
 public ℂconj, ℂreal, ℂimag, ℂreim
-public RB, BR
+public RB, BR, Rv, vR
 export (⋅), (×), (×̂), normalize, norm
 export abs2vec, absvec
 export from_float_array, to_float_array,
