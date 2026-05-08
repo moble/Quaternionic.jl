@@ -7,22 +7,33 @@
 #   - Multi-precision: error shrinks as precision increases
 
 @testmodule LorentzDecompData begin
-    using Random: seed!
+    using Random: Xoshiro
     using Quaternionic
+    using DoubleFloats: Double64
     import Quaternionic: RB, BR, ℂconj, ℂreal, ℂimag, ℂreim
 
-    seed!(42)
     const n = 20
-    const rand_rotations = [Lorentz(randn(Rotor{Float64})) for _ ∈ 1:n]
 
-    seed!(123)
-    const rand_boosts = [
-        Boost(abs(randn()) + 0.1, QuatVec(normalize(randn(3))))
-        for _ ∈ 1:n
-    ]
+    # Raw data generated at Double64 precision so all float types see the same
+    # rapidity values (different types produce different randn sequences).
+    const _rot_spinors = let rng = Xoshiro(42)
+        [randn(rng, Rotor{Double64}) for _ ∈ 1:n]
+    end
+
+    const _boost_data = let rng = Xoshiro(123)
+        [(min(abs(randn(rng, Double64)), Double64(2)) + Double64(0.1),
+          QuatVec(normalize(randn(rng, Double64, 3))))
+         for _ ∈ 1:n]
+    end
+
+    rand_rotations(T) = [Lorentz(Rotor{T}(T.(components(r))...)) for r ∈ _rot_spinors]
+    rand_boosts(T)    = [Boost(T(η), QuatVec{T}(T.(components(n̂))...)) for (η, n̂) ∈ _boost_data]
 
     # Accumulated products: alternating rotation × boost
-    const mixed = accumulate(*, [x for pair ∈ zip(rand_rotations, rand_boosts) for x ∈ pair])
+    function mixed(T)
+        seq = [x for pair ∈ zip(rand_rotations(T), rand_boosts(T)) for x ∈ pair]
+        accumulate(*, seq)
+    end
 
     # ── Predicate helpers ─────────────────────────────────────────────────────
 
@@ -53,7 +64,8 @@ end
 @testitem "RB/BR: identity" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: RB, BR
     using .LorentzDecompData: same_Λ, is_real_rotor, is_pure_boost
-    for T ∈ (Float32, Float64)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
         ε = 10eps(T)
         Λ = one(Lorentz{T})
 
@@ -72,7 +84,8 @@ end
 @testitem "RB/BR: minus identity" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: RB, BR
     using .LorentzDecompData: same_Λ, is_real_rotor, is_pure_boost
-    for T ∈ (Float32, Float64)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
         ε = 10eps(T)
         Λ = -one(Lorentz{T})
 
@@ -89,30 +102,36 @@ end
 @testitem "RB/BR: pure rotation" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: RB, BR
     using .LorentzDecompData: rand_rotations, same_Λ, is_pure_boost
-    ε = 64eps(Float64)
-    for Λ ∈ rand_rotations
-        R, B = RB(Λ)
-        @test is_pure_boost(B; atol=ε)            # B ≈ identity boost
-        @test same_Λ(Lorentz(R) * B, Λ; atol=ε)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        ε = 64eps(T)
+        for Λ ∈ rand_rotations(T)
+            R, B = RB(Λ)
+            @test is_pure_boost(B; atol=ε)            # B ≈ identity boost
+            @test same_Λ(Lorentz(R) * B, Λ; atol=ε)
 
-        B2, R2 = BR(Λ)
-        @test is_pure_boost(B2; atol=ε)
-        @test same_Λ(B2 * Lorentz(R2), Λ; atol=ε)
+            B2, R2 = BR(Λ)
+            @test is_pure_boost(B2; atol=ε)
+            @test same_Λ(B2 * Lorentz(R2), Λ; atol=ε)
+        end
     end
 end
 
 @testitem "RB/BR: pure boost" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: RB, BR
     using .LorentzDecompData: rand_boosts, same_Λ, is_real_rotor
-    ε = 64eps(Float64)
-    for Λ ∈ rand_boosts
-        R, B = RB(Λ)
-        @test is_real_rotor(R; atol=ε)            # R ≈ identity rotation
-        @test same_Λ(Lorentz(R) * B, Λ; atol=ε)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        ε = 64eps(T)
+        for Λ ∈ rand_boosts(T)
+            R, B = RB(Λ)
+            @test is_real_rotor(R; atol=ε)            # R ≈ identity rotation
+            @test same_Λ(Lorentz(R) * B, Λ; atol=ε)
 
-        B2, R2 = BR(Λ)
-        @test is_real_rotor(R2; atol=ε)
-        @test same_Λ(B2 * Lorentz(R2), Λ; atol=ε)
+            B2, R2 = BR(Λ)
+            @test is_real_rotor(R2; atol=ε)
+            @test same_Λ(B2 * Lorentz(R2), Λ; atol=ε)
+        end
     end
 end
 
@@ -121,24 +140,31 @@ end
 @testitem "RB round-trip: random mixed" tags=[:validation, :fast] setup=[LorentzDecompData] begin
     import Quaternionic: RB
     using .LorentzDecompData: mixed, same_Λ, is_real_rotor, is_pure_boost
-    ε = 4096eps(Float64)  # products of ~40 elements accumulate ~40× eps error
-    for Λ ∈ mixed
-        R, B = RB(Λ)
-        @test is_real_rotor(R; atol=ε)
-        @test is_pure_boost(B; atol=ε)
-        @test same_Λ(Lorentz(R) * B, Λ; atol=ε)
+    using DoubleFloats: Double64
+    # Errors scale as N×eps(T)×cosh(η/2): N≤109 for structural checks, N≤23 for round-trip.
+    for T ∈ (Float32, Float64, Double64)
+        for Λ ∈ mixed(T)
+            R, B = RB(Λ)
+            cosh_half = abs(real(getfield(B, :components)[1]))
+            @test is_real_rotor(R; atol=128eps(T)*cosh_half)
+            @test is_pure_boost(B; atol=128eps(T)*cosh_half)
+            @test same_Λ(Lorentz(R) * B, Λ; atol=32eps(T)*cosh_half)
+        end
     end
 end
 
 @testitem "BR round-trip: random mixed" tags=[:validation, :fast] setup=[LorentzDecompData] begin
     import Quaternionic: BR
     using .LorentzDecompData: mixed, same_Λ, is_real_rotor, is_pure_boost
-    ε = 200eps(Float64)
-    for Λ ∈ mixed
-        B, R = BR(Λ)
-        @test is_real_rotor(R; atol=ε)
-        @test is_pure_boost(B; atol=ε)
-        @test same_Λ(B * Lorentz(R), Λ; atol=ε)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        for Λ ∈ mixed(T)
+            B, R = BR(Λ)
+            cosh_half = abs(real(getfield(B, :components)[1]))
+            @test is_real_rotor(R; atol=128eps(T)*cosh_half)
+            @test is_pure_boost(B; atol=128eps(T)*cosh_half)
+            @test same_Λ(B * Lorentz(R), Λ; atol=32eps(T)*cosh_half)
+        end
     end
 end
 
@@ -176,7 +202,7 @@ end
     for T ∈ (Float32, Float64, Double64)
         ε = 100eps(T)
         for η ∈ T[0.3, 1.0, 2.5, 5.0]
-            for n̂ ∈ [QuatVec{T}(1,0,0), QuatVec{T}(0,1,0), QuatVec(T(1)/√T(3), T(1)/√T(3), T(1)/√T(3))]
+            for n̂ ∈ [QuatVec{T}(1,0,0), QuatVec{T}(0,1,0), QuatVec{T}(1,1,1)/√T(3)]
                 for θ ∈ T[π/6, π/3, 2π/3]
                     Λ = Lorentz(rotor(cos(θ/2), 0, 0, sin(θ/2))) * Boost(η, n̂)
                     R, B_rb = RB(Λ)
@@ -185,12 +211,13 @@ end
                 end
             end
         end
-    end
-    # Float64 accumulated products accumulate more error (~139 eps max on this data)
-    for Λ ∈ mixed
-        R, B_rb = RB(Λ)
-        B_br, _ = BR(Λ)
-        @test same_Λ(B_br, Lorentz(R) * B_rb * Lorentz(conj(R)); atol=256eps(Float64))
+        # Accumulated products: error scales as N×eps(T)×cosh(η/2), N≤16
+        for Λ ∈ mixed(T)
+            R, B_rb = RB(Λ)
+            B_br, _ = BR(Λ)
+            cosh_half = abs(real(getfield(B_rb, :components)[1]))
+            @test same_Λ(B_br, Lorentz(R) * B_rb * Lorentz(conj(R)); atol=32eps(T)*cosh_half)
+        end
     end
 end
 
@@ -204,7 +231,7 @@ end
         θ, η = T(1.3), T(0.8)
         n̂T = [1/√T(3), 1/√T(3), 1/√T(3)]
         B0 = Boost(η, n̂T)
-        R0 = Lorentz(rotor(cos(θ/2), sin(θ/2),0, 0))
+        R0 = Lorentz(rotor(cos(θ/2), sin(θ/2), 0, 0))
         Λ  = R0 * B0
         R, B = RB(Λ)
         maximum(abs, components(Lorentz(R) * B) - components(Λ))
@@ -229,7 +256,8 @@ end
 @testitem "Rv/vR: identity" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: Rv, vR
     using .LorentzDecompData: same_Λ
-    for T ∈ (Float32, Float64)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
         ε = 10eps(T)
         Λ = one(Lorentz{T})
 
@@ -246,22 +274,26 @@ end
 @testitem "Rv/vR: pure rotation → zero velocity" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: Rv, vR
     using .LorentzDecompData: rand_rotations, same_Λ
-    ε = 64eps(Float64)
-    for Λ ∈ rand_rotations
-        R, v⃗ = Rv(Λ)
-        @test norm(v⃗) ≤ ε
-        @test same_Λ(Lorentz(R), Λ; atol=ε)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        ε = 64eps(T)
+        for Λ ∈ rand_rotations(T)
+            R, v⃗ = Rv(Λ)
+            @test norm(v⃗) ≤ ε
+            @test same_Λ(Lorentz(R), Λ; atol=ε)
 
-        v⃗2, R2 = vR(Λ)
-        @test norm(v⃗2) ≤ ε
-        @test same_Λ(Lorentz(R2), Λ; atol=ε)
+            v⃗2, R2 = vR(Λ)
+            @test norm(v⃗2) ≤ ε
+            @test same_Λ(Lorentz(R2), Λ; atol=ε)
+        end
     end
 end
 
 @testitem "Rv/vR: pure boost → identity rotation and known velocity" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
     import Quaternionic: Rv, vR
     using .LorentzDecompData: is_real_rotor
-    for T ∈ (Float32, Float64)
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
         ε = 64eps(T)
         for η ∈ T[0.375, 0.75, 1.5, 2.0]
             β = tanh(η)
@@ -295,9 +327,9 @@ end
     for T ∈ (Float32, Float64, Double64)
         ε = 10eps(T)
         for η ∈ T[0.3, 1.0, 2.5, 5.0]
-            for n̂ ∈ [QuatVec{T}(1,0,0), QuatVec{T}(0,1,0), QuatVec{T}(1, 1, 1)/√T(3)]
+            for n̂ ∈ [QuatVec{T}(1,0,0), QuatVec{T}(0,1,0), QuatVec{T}(1,1,1)/√T(3)]
                 for θ ∈ T[π/6, π/3, 2π/3]
-                    Λ = Lorentz(rotor(cos(θ/2), zero(T), zero(T), sin(θ/2))) * Boost(η, n̂)
+                    Λ = Lorentz(rotor(cos(θ/2), 0, 0, sin(θ/2))) * Boost(η, n̂)
                     R, v_rv = Rv(Λ)
                     v_vr, R2 = vR(Λ)
                     @test R == R2
@@ -305,13 +337,13 @@ end
                 end
             end
         end
-    end
-    # Float64 accumulated products and random inputs: equivariance still holds to ~2 eps
-    for Λ ∈ [mixed; rand_rotations; rand_boosts]
-        R, v_rv = Rv(Λ)
-        v_vr, R2 = vR(Λ)
-        @test R == R2
-        @test norm(v_vr - QuatVec(R * v_rv * conj(R))) ≤ 10eps(Float64)
+        # Accumulated products and random inputs: equivariance still holds to ~2 eps
+        for Λ ∈ [mixed(T); rand_rotations(T); rand_boosts(T)]
+            R, v_rv = Rv(Λ)
+            v_vr, R2 = vR(Λ)
+            @test R == R2
+            @test norm(v_vr - QuatVec(R * v_rv * conj(R))) ≤ 10eps(T)
+        end
     end
 end
 
