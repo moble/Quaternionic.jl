@@ -322,7 +322,7 @@ end
     Rv(Λ::Lorentz{T}) → (R::Rotor{T}, v⃗::QuatVec{T})
 
 Return the pure rotation `R` and (vectorial) boost velocity `v⃗` such that `Λ = R * Boost(η,
-v⃗)` where `η = atanh(β)` is the associated rapidity with `β = norm(v⃗)` as the boost
+v̂)` where `η = atanh(β)` is the associated rapidity with `β = norm(v⃗)` as the boost
 parameter.
 
 The boost spinor is `B = cosh(η/2) + im*sinh(η/2)*v̂` in the quaternionic encoding.  Note
@@ -354,9 +354,10 @@ end
 """
     vR(Λ::Lorentz{T}) → (v⃗::QuatVec{T}, R::Rotor{T})
 
-Return the boost velocity `v⃗` and pure rotation `R` such that `Λ = Boost(η, v⃗) * R`.
+Return the boost velocity `v⃗` and pure rotation `R` such that `Λ = Boost(η, v̂) * R`.  See
+[`Rv`](@ref) for more details.
 
-See also [`Rv`](@ref), [`BR`](@ref), and [`RB`](@ref).
+See also [`BR`](@ref) and [`RB`](@ref).
 """
 function vR(Λ::Lorentz{T}) where {T<:Real}
     B, R = BR(Λ)
