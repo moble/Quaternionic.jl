@@ -346,7 +346,7 @@ See also [`vR`](@ref), [`RB`](@ref), and [`BR`](@ref).
 function Rv(Λ::Lorentz{T}) where {T<:Real}
     R, B = RB(Λ)
     v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
-    coshη╱2 = real(real(B))  # equal to cosh(η/2); inner real gets scalar part, outer takes ℂreal
+    coshη╱2 = real(real(B))  # inner `real`` gets scalar part, outer takes ℂreal
     v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return R, v⃗
 end
@@ -362,7 +362,7 @@ See also [`BR`](@ref) and [`RB`](@ref).
 function vR(Λ::Lorentz{T}) where {T<:Real}
     B, R = BR(Λ)
     v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
-    coshη╱2 = real(real(B))  # equal to cosh(η/2); inner real gets scalar part, outer takes ℂreal
+    coshη╱2 = real(real(B))  # inner `real`` gets scalar part, outer takes ℂreal
     v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return v⃗, R
 end
