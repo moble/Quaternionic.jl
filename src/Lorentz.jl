@@ -325,7 +325,7 @@ Return the pure rotation `R` and (vectorial) boost velocity `v⃗` such that `Λ
 v̂)` where `η = atanh(β)` is the associated rapidity with `β = norm(v⃗)` as the boost
 parameter.
 
-The boost spinor is `B = cosh(η/2) + im*sinh(η/2)*v̂` in the quaternionic encoding.  Note
+The boost spinor is `B = cosh(η/2) + im*v̂*sinh(η/2)` in the quaternionic encoding.  Note
 that `v̂` is the unit vector in the direction of `v⃗`.  We can immediately obtain the values
 of those `cosh` and `sinh` factors by taking the scalar part and the norm of the vector
 part.  Using that information, the stable way to compute the velocity vector is to take the
@@ -334,20 +334,20 @@ use half-angle formulas to show that
 ```math
 \frac{β}{\sinh(η/2)}
 = \frac{\tanh(η)}{\sinh(η/2)}
-= \frac{2 \cosh(η/2)}{\cosh^2(η/2) + \sinh^2(η/2)},
+= \frac{2 \cosh(η/2)}{\cosh^2(η/2) + \sinh^2(η/2)}
+= \frac{2 \cosh(η/2)}{2\cosh^2(η/2) - 1},
 ```
-which is made up of those factors we easily obtain from the components of `B`, and does not
-involve any cancellation or division by small numbers.
+where the last equality uses the double-angle identity ``\cosh(η) = 2\cosh^2(η/2) - 1``.
+The last form is made up of entirely of the scalar component of `B`, does not involve any
+cancellation or division by small numbers, and avoids computing the norm of the vector part.
 
 See also [`vR`](@ref), [`RB`](@ref), and [`BR`](@ref).
 """
 function Rv(Λ::Lorentz{T}) where {T<:Real}
     R, B = RB(Λ)
-    sv̂ = QuatVec(ℂimag(B))  # equal to sinh(η/2)*v̂
+    v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
     coshη╱2 = real(real(B))  # equal to cosh(η/2); inner real gets scalar part, outer takes ℂreal
-    cosh²η╱2 = (coshη╱2)^2
-    sinh²η╱2 = abs2(sv̂)  # only need *squared* norm of the vector part, sinh(η/2)²
-    v⃗ = sv̂ * (2coshη╱2 / (cosh²η╱2 + sinh²η╱2))
+    v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return R, v⃗
 end
 
@@ -361,10 +361,8 @@ See also [`BR`](@ref) and [`RB`](@ref).
 """
 function vR(Λ::Lorentz{T}) where {T<:Real}
     B, R = BR(Λ)
-    sv̂ = QuatVec(ℂimag(B))  # equal to sinh(η/2)*v̂
+    v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
     coshη╱2 = real(real(B))  # equal to cosh(η/2); inner real gets scalar part, outer takes ℂreal
-    cosh²η╱2 = (coshη╱2)^2
-    sinh²η╱2 = abs2(sv̂)  # only need *squared* norm of the vector part, sinh(η/2)²
-    v⃗ = sv̂ * (2coshη╱2 / (cosh²η╱2 + sinh²η╱2))
+    v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return v⃗, R
 end
