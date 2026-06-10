@@ -160,9 +160,24 @@ function Boost(η::T, n̂::QuatVec) where {T<:Real}
 end
 
 function Boost(v⃗::QuatVec{T}) where {T<:Real}
-    η = atanh(absvec(v⃗))
-    n̂ = normalize(v⃗)
-    return Boost(η, n̂)
+    β² = abs2vec(v⃗)
+    ch, shc = if iszerovalue(v⃗)
+        # Taylor series for cosh(atanh(β)/2) and sinh(atanh(β)/2)/β in β²,
+        # correct through 4th order so that AD derivatives at β=0 are accurate.
+        1 + β²*(1 + 11β²/16)/8,
+        (1 + β²*(3 + 31β²/16)/8) / 2
+    else
+        β = sqrt(β²)
+        η = atanh(β)
+        cosh(η/2), sinh(η/2) / β
+    end
+    vˣ, vʸ, vᶻ = vec(v⃗)
+    return Rotor{Complex{T}}(
+        complex(ch),
+        complex(zero(T), shc * vˣ),
+        complex(zero(T), shc * vʸ),
+        complex(zero(T), shc * vᶻ),
+    )
 end
 
 Boost(v⃗::AbstractVector{T}) where {T<:Real} = Boost(QuatVec(v⃗))
