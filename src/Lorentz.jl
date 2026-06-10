@@ -113,10 +113,16 @@ end
 """
     Boost(η::T, n̂::AbstractVector) → Lorentz{T}
     Boost(η::T, n̂::QuatVec) → Lorentz{T}
+    Boost(v⃗::QuatVec) → Lorentz{T}
+    Boost(v⃗::AbstractVector) → Lorentz{T}
 
-Construct the pure boost with rapidity `η` along the unit direction `n̂`.
+Construct the pure boost with rapidity `η` along the unit direction `n̂`, or
+equivalently from a velocity vector `v⃗` whose magnitude `β = norm(v⃗)` encodes the
+boost speed (in units where c = 1) and whose direction gives `n̂`.
 
-The second argument may be either a 3-element `AbstractVector` `[nˣ, nʸ, nᶻ]` or a
+The first two forms take an explicit rapidity and unit direction.  The last two forms
+accept a velocity vector `v⃗` and compute `η = atanh(β)` and `n̂ = v⃗ / β` internally.
+The direction `n̂` may be either a 3-element `AbstractVector` `[nˣ, nʸ, nᶻ]` or a
 `QuatVec` (whose `x`, `y`, `z` components are used as the direction).
 
 In the even subalgebra of Cl(3,1) the rotor is
@@ -152,6 +158,14 @@ function Boost(η::T, n̂::QuatVec) where {T<:Real}
         complex(zero(T), sh * nz),
     )
 end
+
+function Boost(v⃗::QuatVec{T}) where {T<:Real}
+    η = atanh(absvec(v⃗))
+    n̂ = normalize(v⃗)
+    return Boost(η, n̂)
+end
+
+Boost(v⃗::AbstractVector{T}) where {T<:Real} = Boost(QuatVec(v⃗))
 
 # ---------------------------------------------------------------------------
 # Action on Minkowski 4-vectors

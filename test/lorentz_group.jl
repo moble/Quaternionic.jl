@@ -237,6 +237,18 @@ _composed   = accumulate(*, _mixed_seq)
         end
     end
 
+    @testset "Boost: velocity-vector constructors" begin
+        # QuatVec form matches explicit rapidity+direction form
+        for (vx, vy, vz) ∈ [(0.5, 0.0, 0.0), (0.0, 0.3, 0.0), (0.0, 0.0, 0.4), (0.2, 0.2, 0.2)]
+            v⃗ = QuatVec(vx, vy, vz)
+            β = abs(v⃗)
+            @test Boost(v⃗) == Boost(atanh(β), v⃗ / β)
+            @test Boost([vx, vy, vz]) == Boost(v⃗)
+        end
+        # zero velocity → identity
+        @test Boost(QuatVec(0.0, 0.0, 0.0)) == one(Lorentz{Float64})
+    end
+
     @testset "Boost: known action on 4-vectors" begin
         for η ∈ [0.3, 0.7, 1.2, 1.8, 2.5]
             Λ = Boost(η, [0.0, 0.0, 1.0])
