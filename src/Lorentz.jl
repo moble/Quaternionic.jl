@@ -395,3 +395,22 @@ function vR(Λ::Lorentz{T}) where {T<:Real}
     v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return v⃗, R
 end
+
+# ---------------------------------------------------------------------------
+# Iwasawa's KAN decomposition
+# ---------------------------------------------------------------------------
+
+function KAN(Λ::Lorentz{T}) where {T<:Real}
+    𝐭𝐳 = im * 𝐤
+    u₊ = (1 + 𝐭𝐳) / T(2)
+    ℂℜΛu₊ = ℂreal(Λ * u₊)
+    Rₖ = rotor(ℂℜΛu₊)
+    RₐRₙ = conj(Rₖ) * Λ
+    coshφ╱2, sinhφ╱2 = real(RₐRₙ.w), imag(RₐRₙ.z)
+    Rₐ = coshφ╱2 + sinhφ╱2 * 𝐭𝐳
+    Rₙraw = conj(Rₐ) * RₐRₙ
+    ξˣ╱sqrt2 = imag(Rₙraw.x) - real(Rₙraw.y)
+    ξʸ╱sqrt2 = imag(Rₙraw.y) + real(Rₙraw.x)
+    Rₙ = Lorentz{T}(1, (im*ξˣ╱sqrt2+ξʸ╱sqrt2)/2, (im*ξʸ╱sqrt2-ξˣ╱sqrt2)/2, 0)
+    return Rₖ, Rₐ, Rₙ
+end
