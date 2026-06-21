@@ -10,7 +10,7 @@
     using Random: Xoshiro
     using Quaternionic
     using DoubleFloats: Double64
-    import Quaternionic: RB, BR, ℂconj, ℂreal, ℂimag, ℂreim
+    import Quaternionic: RB, BR, KAN, ℂconj, ℂreal, ℂimag, ℂreim
 
     const n = 20
 
@@ -56,6 +56,35 @@
         cs = getfield(B, :components)
         abs(imag(cs[1])) < atol &&
         all(c -> abs(real(c)) < atol, cs[2:4])
+    end
+
+    # ── KAN-specific helpers ───────────────────────────────────────────────────
+
+    # A null rotation in N (fixing ℓ = (𝐭+𝐳)/√2), built from screw parameters ξˣ, ξʸ
+    # using the same encoding as `KAN` returns for its Rₙ factor.
+    function null_rotation(::Type{T}, ξˣ, ξʸ) where {T}
+        a, b = T(ξˣ)/sqrt(T(2)), T(ξʸ)/sqrt(T(2))
+        Lorentz{T}(1, (im*a + b)/2, (im*b - a)/2, 0)
+    end
+
+    # A boost along the z-axis with rapidity φ — an element of A.
+    z_boost(::Type{T}, φ) where {T} = Boost(T(φ), QuatVec{T}(0, 0, 1))
+
+    # The null vector ℓ = (𝐭+𝐳)/√2 fixed by N, as a Minkowski 4-vector.
+    ℓ_vec(::Type{T}) where {T} = T[1, 0, 0, 1] / sqrt(T(2))
+
+    # Structural predicate for A: pure z-boost (w real, x=y=0, z pure imaginary).
+    # Accepts any AbstractQuaternion (KAN returns Rₐ as a bare `Quaternion`).
+    function is_z_boost(R; atol)
+        w, x, y, z = components(R)
+        abs(imag(w)) < atol && abs(x) < atol && abs(y) < atol && abs(real(z)) < atol
+    end
+
+    # Structural predicate for N: null rotation (w=1, z=0, Re(x)=Im(y), Im(x)=−Re(y)).
+    function is_null_rotation(R; atol)
+        w, x, y, z = components(R)
+        abs(w - 1) < atol && abs(z) < atol &&
+        abs(real(x) - imag(y)) < atol && abs(imag(x) + real(y)) < atol
     end
 end
 
@@ -380,4 +409,186 @@ end
     @test vr_error(Float64)  ≤ 10eps(Float64)
     @test vr_error(Double64) ≤ 10eps(Double64)
     @test vr_error(BigFloat) ≤ 10eps(BigFloat)
+end
+
+# ── KAN (Iwasawa) decomposition ────────────────────────────────────────────────
+#
+# KAN(Λ) → (Rₖ, Rₐ, Rₙ) with Λ = Rₖ·Rₐ·Rₙ, where Rₖ ∈ K is a rotation, Rₐ ∈ A is a
+# boost along 𝐳, and Rₙ ∈ N is a null rotation fixing ℓ = (𝐭+𝐳)/√2.  Errors scale
+# with the overall transformation magnitude, captured by `maximum(abs, components(Λ))`.
+
+@testitem "KAN: reconstruction round-trip" tags=[:validation, :fast] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN, components
+    using .LorentzDecompData: mixed, rand_rotations, rand_boosts, same_Λ
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        for Λ ∈ [mixed(T); rand_rotations(T); rand_boosts(T)]
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            ε = 1024eps(T) * maximum(abs, components(Λ))
+            @test same_Λ(Lorentz(Rₖ) * Lorentz(Rₐ) * Lorentz(Rₙ), Λ; atol=ε)
+        end
+    end
+end
+
+@testitem "KAN: structural membership (K, A, N)" tags=[:validation, :fast] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN, components
+    using .LorentzDecompData: mixed, rand_rotations, rand_boosts, is_real_rotor, is_z_boost, is_null_rotation
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        for Λ ∈ [mixed(T); rand_rotations(T); rand_boosts(T)]
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            ε = 1024eps(T) * maximum(abs, components(Λ))
+            @test is_real_rotor(Rₖ; atol=ε)        # Rₖ ∈ K: pure rotation (no boost part)
+            @test is_z_boost(Rₐ; atol=ε)           # Rₐ ∈ A: boost along 𝐳 only
+            @test is_null_rotation(Rₙ; atol=ε)     # Rₙ ∈ N: null rotation, w=1, z=0
+        end
+    end
+end
+
+@testitem "KAN: fixed-point oracles" tags=[:validation, :fast] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN, components
+    using .LorentzDecompData: mixed, rand_rotations, rand_boosts, ℓ_vec
+    using DoubleFloats: Double64
+    # K fixes the time axis 𝐭; A (boost along 𝐳) fixes the transverse axes 𝐱, 𝐲;
+    # N (null rotation) fixes the null vector ℓ = (𝐭+𝐳)/√2.
+    for T ∈ (Float32, Float64, Double64)
+        𝐭, 𝐱, 𝐲 = T[1,0,0,0], T[0,1,0,0], T[0,0,1,0]
+        ℓ = ℓ_vec(T)
+        for Λ ∈ [mixed(T); rand_rotations(T); rand_boosts(T)]
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            ε = 1024eps(T) * maximum(abs, components(Λ))
+            @test isapprox(Lorentz(Rₖ)(𝐭), 𝐭; atol=ε)
+            @test isapprox(Lorentz(Rₐ)(𝐱), 𝐱; atol=ε)
+            @test isapprox(Lorentz(Rₐ)(𝐲), 𝐲; atol=ε)
+            @test isapprox(Lorentz(Rₙ)(ℓ), ℓ; atol=ε)
+        end
+    end
+end
+
+@testitem "KAN: special cases" tags=[:unit, :fast, :validation] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN
+    using .LorentzDecompData: rand_rotations, null_rotation, z_boost, same_Λ
+    using DoubleFloats: Double64
+    for T ∈ (Float32, Float64, Double64)
+        ε = 64eps(T)
+        𝟙 = one(Lorentz{T})
+
+        # Identity and minus-identity → all three factors trivial
+        for Λ ∈ (𝟙, -𝟙)
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            @test same_Λ(Lorentz(Rₖ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₐ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₙ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₖ) * Lorentz(Rₐ) * Lorentz(Rₙ), Λ; atol=ε)
+        end
+
+        # Pure rotation → Rₖ ≈ Λ, Rₐ ≈ Rₙ ≈ 𝟙
+        for Λ ∈ rand_rotations(T)
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            @test same_Λ(Lorentz(Rₖ), Λ; atol=ε)
+            @test same_Λ(Lorentz(Rₐ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₙ), 𝟙; atol=ε)
+        end
+
+        # Pure z-boost → Rₐ ≈ Λ, Rₖ ≈ Rₙ ≈ 𝟙
+        for φ ∈ T[0.3, 1.0, 2.5]
+            Λ = z_boost(T, φ)
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            @test same_Λ(Lorentz(Rₖ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₐ), Λ; atol=ε)
+            @test same_Λ(Lorentz(Rₙ), 𝟙; atol=ε)
+        end
+
+        # Pure null rotation → Rₙ ≈ Λ, Rₖ ≈ Rₐ ≈ 𝟙
+        for (ξˣ, ξʸ) ∈ [(T(0.4), T(-0.7)), (T(1.5), T(0.0)), (T(0.0), T(2.0))]
+            Λ = null_rotation(T, ξˣ, ξʸ)
+            εₙ = 64eps(T) * maximum(abs, Quaternionic.components(Λ))
+            Rₖ, Rₐ, Rₙ = KAN(Λ)
+            @test same_Λ(Lorentz(Rₖ), 𝟙; atol=εₙ)
+            @test same_Λ(Lorentz(Rₐ), 𝟙; atol=εₙ)
+            @test same_Λ(Lorentz(Rₙ), Λ; atol=εₙ)
+        end
+    end
+end
+
+@testitem "KAN: factor recovery (uniqueness)" tags=[:validation, :fast] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN, components
+    using .LorentzDecompData: rand_rotations, null_rotation, z_boost, same_Λ
+    using DoubleFloats: Double64
+    # Build Λ from known canonical factors K₀·A₀·N₀ and verify KAN recovers each.
+    # The Iwasawa decomposition is unique, so recovery is an oracle test.
+    for T ∈ (Float32, Float64, Double64)
+        for K₀ ∈ rand_rotations(T)
+            for φ ∈ T[0.5, 2.0]
+                A₀ = z_boost(T, φ)
+                for (ξˣ, ξʸ) ∈ [(T(0.4), T(-0.7)), (T(1.3), T(0.9))]
+                    N₀ = null_rotation(T, ξˣ, ξʸ)
+                    Λ = K₀ * A₀ * N₀
+                    ε = 1024eps(T) * maximum(abs, components(Λ))
+                    Rₖ, Rₐ, Rₙ = KAN(Λ)
+                    @test same_Λ(Lorentz(Rₖ), K₀; atol=ε)
+                    @test same_Λ(Lorentz(Rₐ), A₀; atol=ε)
+                    @test same_Λ(Lorentz(Rₙ), N₀; atol=ε)
+                end
+            end
+        end
+    end
+end
+
+@testitem "KAN: idempotency (decomposing a factor)" tags=[:validation, :fast] setup=[LorentzDecompData] begin
+    import Quaternionic: KAN, components
+    using .LorentzDecompData: rand_rotations, null_rotation, z_boost, same_Λ
+    using DoubleFloats: Double64
+    # Decomposing an element that already lives in a single subgroup returns it in
+    # the matching slot and the identity in the other two.
+    for T ∈ (Float32, Float64, Double64)
+        𝟙 = one(Lorentz{T})
+        ε = 64eps(T)
+
+        for K₀ ∈ rand_rotations(T)
+            Rₖ, Rₐ, Rₙ = KAN(K₀)
+            @test same_Λ(Lorentz(Rₖ), K₀; atol=ε)
+            @test same_Λ(Lorentz(Rₐ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₙ), 𝟙; atol=ε)
+        end
+
+        for φ ∈ T[0.5, 2.0]
+            A₀ = z_boost(T, φ)
+            Rₖ, Rₐ, Rₙ = KAN(A₀)
+            @test same_Λ(Lorentz(Rₖ), 𝟙; atol=ε)
+            @test same_Λ(Lorentz(Rₐ), A₀; atol=ε)
+            @test same_Λ(Lorentz(Rₙ), 𝟙; atol=ε)
+        end
+
+        for (ξˣ, ξʸ) ∈ [(T(0.4), T(-0.7)), (T(1.3), T(0.9))]
+            N₀ = null_rotation(T, ξˣ, ξʸ)
+            εₙ = 64eps(T) * maximum(abs, components(N₀))
+            Rₖ, Rₐ, Rₙ = KAN(N₀)
+            @test same_Λ(Lorentz(Rₖ), 𝟙; atol=εₙ)
+            @test same_Λ(Lorentz(Rₐ), 𝟙; atol=εₙ)
+            @test same_Λ(Lorentz(Rₙ), N₀; atol=εₙ)
+        end
+    end
+end
+
+@testitem "KAN: multi-precision convergence" tags=[:validation, :slow] begin
+    import Quaternionic: KAN, components
+    using DoubleFloats: Double64
+    # Algebraically direct algorithm: reconstruction error stays at the machine-epsilon
+    # floor across precisions (no Float64-specific constants or thresholds).
+    function recon_error(T)
+        c = sin(T(13)/20) / √T(3)
+        K₀ = Lorentz(rotor(cos(T(13)/20), c, c, c))
+        A₀ = Boost(T(8)/10, QuatVec{T}(0, 0, 1))
+        a, b = T(4)/10/√T(2), T(-7)/10/√T(2)
+        N₀ = Lorentz{T}(1, (im*a + b)/2, (im*b - a)/2, 0)
+        Λ = K₀ * A₀ * N₀
+        Rₖ, Rₐ, Rₙ = KAN(Λ)
+        recon = Lorentz(Rₖ) * Lorentz(Rₐ) * Lorentz(Rₙ)
+        maximum(abs, components(recon) - components(Λ))
+    end
+    @test recon_error(Float32)  ≤ 10eps(Float32)
+    @test recon_error(Float64)  ≤ 10eps(Float64)
+    @test recon_error(Double64) ≤ 10eps(Double64)
+    @test recon_error(BigFloat) ≤ 10eps(BigFloat)
 end
