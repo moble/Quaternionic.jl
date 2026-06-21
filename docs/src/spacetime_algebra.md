@@ -27,13 +27,13 @@ this more general algebra.
 
 One crucial new feature is the *spinor norm*: for complex quaternions,
 the GA reverse gives ``𝐐𝐐̃ = w² + x² + y² + z²``, which is a
-*"complex"* scalar, not the Euclidean norm ``|w|² + |x|² + |y|² +
-|z|²`` which will always be real.  The surprising point is that the
-normalization condition ``𝐐𝐐̃ = 1`` is now *two real* conditions,
-because this says that the "imaginary" part is zero.  This reduces the
-eight real degrees of freedom in a complex quaternion down to six,
-which is the correct number for a Lorentz transformation in four
-dimensions.
+*complex* scalar, distinct from the Euclidean norm ``|w|² + |x|² +
+|y|² + |z|²`` which will always be real.  The surprising point is that
+the normalization condition ``𝐐𝐐̃ = 1`` is now *two real*
+conditions, because this says that the "imaginary" part is zero.  This
+reduces the eight real degrees of freedom in a complex quaternion down
+to six, which is the correct number for a Lorentz transformation in
+four dimensions.
 
 
 ## The spacetime algebra
@@ -197,8 +197,6 @@ which is not equal to ``1`` in general.  Phase factors therefore do *not*
 belong to the Lorentz rotor group, even though they are unit elements under
 the Euclidean norm (``|\exp(i\varphi)| = 1``).
 
-
-
 !!! note "Real vs. complex quaternions"
 
     For real quaternions, ``𝐐\,\widetilde{𝐐} = \sum r_i^2 = \sum |r_i|^2``,
@@ -247,11 +245,177 @@ Lorentz transformations.
     and confirming that a positive rapidity boosts ``t \to \cosh\varphi\,t +
     \sinh\varphi\,x`` and ``x \to \sinh\varphi\,t + \cosh\varphi\,x``.
 
+
+## [Iwasawa's ``KA\,N`` decomposition](@id iwasawa-kan)
+
+The [Iwasawa
+decomposition](https://en.wikipedia.org/wiki/Iwasawa_decomposition) is
+a factorization of the Lorentz group or its double cover
+``\mathrm{Spin}^+(3,1)`` (or any semisimple Lie group) into three
+subgroups:
+
+```math
+G = {KA\,N}.
+```
+
+This decomposition is most useful when we have a preferred time axis
+and preferred spatial direction.  We use those to pick out boosts
+along that spatial direction, and null rotations that fix the
+corresponding null vector.  Specifically, we have the following
+subgroups:
+
+- **``K``** is the maximal compact subgroup, which in the case of the
+  Lorentz group is isomorphic to the rotation group
+  ``\mathrm{SO}(3)``, and in the case of ``\mathrm{Spin}(3,1)`` is
+  isomorphic to ``\mathrm{Spin}(3)``.
+- **``A``** is the abelian subgroup of boosts in a fixed direction.
+  We take this direction to be the z-axis, so that we have ``A =
+  \left\{ \exp\left[\tfrac{φₐ}{2} \, 𝐭𝐳 \right] \mid φₐ ∈ ℝ
+  \right\}``.
+- **``N``** is the nilpotent subgroup of null rotations, which
+  consists of all Lorentz transformations that can be represented as
+  null rotations about a fixed null vector.  We take this vector to be
+  the null vector ``\boldsymbol{ℓ}``, so that we have ``N = \left\{
+  \exp\left[\tfrac{1}{2} \boldsymbol{ℓ ξ}\right] \mid \boldsymbol{ξ} =
+  ξˣ𝐱 + ξʸ𝐲 \right\}``, where ``\boldsymbol{ℓ} = (𝐭+𝐳)/√2``.
+
+Note that ``φₐ`` here is *not* the rapidity of the overall boost if we
+factor a transformation just as a boost and a rotation.  Rather, it is
+the rapidity of the particular boost picked out as ``A`` by this
+construction.  ``N`` also contributes to the overall boost, so the
+overall rapidity is not just ``φₐ``.
+
+One nice feature of this decomposition is that we can compute the
+factorization of a given Lorentz transformation ``Λ`` fairly simply.
+We first introduce the idempotent
+
+```math
+u₊ = \frac{1}{2} (1 + 𝐭𝐳).
+```
+
+It is easy to verify ``u₊𝐭𝐳 = 𝐭𝐳u₊ = u₊`` and hence the idempotent
+identity: ``u₊² = u₊``.  Next, we write
+
+```math
+Λ = Rₖ Rₐ Rₙ,
+```
+
+where ``Rₖ ∈ K``, ``Rₐ ∈ A``, and ``Rₙ ∈ N``.  Starting with the
+rightmost factor, we have
+
+```math
+Rₙ = \exp\left[\tfrac{1}{2} \boldsymbol{ℓ ξ}\right] = 1 + \frac{1}{2} \boldsymbol{ℓ ξ},
+```
+
+because ``\boldsymbol{ℓ}`` and ``\boldsymbol{ξ}`` anticommute, and
+because ``\boldsymbol{ℓ}² = 0``, their product ``\boldsymbol{ℓ ξ}``
+itself is also nilpotent.  (Remember, that's what the "N" stands for.)
+We can simply compute the product ``Rₙ u₊`` by using the fact that
+``\boldsymbol{ξ} u₊ =  u₊ \boldsymbol{ξ}`` and expanding terms in our
+basis, then find
+
+```math
+Rₙ u₊ %&= \left(1 + \frac{1}{2} \boldsymbol{ℓ ξ}\right) u₊, \\
+%  &= u₊ + \frac{1}{2} \boldsymbol{ℓ ξ} u₊, \\
+%  &= u₊ + \frac{1}{2} \boldsymbol{ℓ} u₊ \boldsymbol{ξ}, \\
+%  &= u₊ + \frac{1}{4\sqrt{2}} (𝐭+𝐳) (1+𝐭𝐳) \boldsymbol{ξ}, \\
+%  &= u₊ + \frac{1}{4\sqrt{2}} (𝐭+𝐳+𝐭𝐭𝐳+𝐳𝐭𝐳) \boldsymbol{ξ}, \\
+%  &= u₊ + \frac{1}{4\sqrt{2}} (𝐭+𝐳-𝐳-𝐭) \boldsymbol{ξ}, \\
+= u₊.
+```
+
+Now, with
+
+```math
+Rₐ = \exp\left[\tfrac{φₐ}{2} \, 𝐭𝐳 \right]
+= \cosh\left(\frac{φₐ}{2}\right) + \sinh\left(\frac{φₐ}{2}\right) 𝐭𝐳,
+```
+
+and the fact that ``𝐭𝐳u₊ = u₊``, we have
+
+```math
+\begin{aligned}
+Rₐ u₊
+&= \left[\cosh\left(\frac{φₐ}{2}\right) + \sinh\left(\frac{φₐ}{2}\right)\right] u₊
+&= e^{φₐ/2} u₊.
+\end{aligned}
+```
+
+Putting these together, we have
+
+```math
+Λ u₊ = e^{φₐ/2} Rₖ u₊.
+```
+
+Recall that ``e^{φₐ/2}`` is a strictly positive real number, and
+``Rₖ`` is a pure rotation so it is "ℂ-real" — meaning that it is a
+linear combination of only basis elements that do not have a factor of
+``𝐭`` — whereas ``u₊`` is just a combination of 1 and a "ℂ-imaginary"
+part.  Therefore, we can take the real part of this expression to find
+
+```math
+ℂ\Re\{Λ u₊\} = \frac{e^{φₐ/2}}{2} Rₖ.
+```
+
+This is just a strictly positive real number times ``Rₖ``, which we
+know must have unit magnitude, so we can find ``Rₖ`` by normalizing
+this real part:
+
+```math
+Rₖ = \mathrm{normalize}\left(ℂ\Re\{Λ u₊\}\right).
+```
+
+We can continue solving for the remaining factors ``Rₐ`` and ``Rₙ``.
+One option would be to take the norm of the expression above and solve
+for ``φₐ``, but it requires no transcendental functions and is more
+numerically stable to extract the components directly from the
+remaining product.  We can evaluate ``RₐRₙ = Rₖ^{-1} Λ``.  But now,
+let us examine the left-hand side analytically:
+
+```math
+Rₐ Rₙ = \left[\cosh\left(\frac{φₐ}{2}\right) + \sinh\left(\frac{φₐ}{2}\right) 𝐭𝐳\right]
+  \left[1 + \frac{1}{2} \boldsymbol{ℓ ξ}\right]
+```
+
+The ``\boldsymbol{ℓ ξ}`` term is entirely within the span of ``\{𝐭𝐱,
+𝐭𝐲, 𝐳𝐱, 𝐳𝐲\}``; therefore, it is not hard to show that the
+scalar and ``𝐭𝐳`` terms in this product equal ``Rₐ``.  As usual, we
+write ``⟨·⟩₀`` to extract the scalar (grade‑0) part, and we have
+
+```math
+Rₐ = \left⟨ Rₖ^{-1} Λ \right⟩₀ + \left⟨ Rₖ^{-1} Λ\, 𝐭𝐳 \right⟩₀\, 𝐭𝐳.
+```
+
+Finally, we can find the remaining factor by rearranging the original
+factorization:
+
+```math
+Rₙ = Rₐ^{-1} Rₖ^{-1} Λ.
+```
+
+This decomposition is implemented in the [`Quaternionic.KAN`](@ref)
+function.
+
 ## API reference
 
-```@autodocs
-Modules = [Quaternionic]
-Pages   = ["Lorentz.jl"]
+```@meta
+CurrentModule = Quaternionic
+```
+
+```@docs
+Lorentz
+Lorentz(::AbstractVector)
+Boost
+ga_components
+RB
+BR
+Rv
+vR
+KAN
+ℂreal
+ℂimag
+ℂreim
+ℂconj
 ```
 
 ## Further reading

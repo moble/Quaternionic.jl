@@ -268,7 +268,7 @@ This is distinct from the GA "real" part, given by `real(Λ)`, which is construc
 reverse, rather than the complex-conjugate.  That will just be the scalar part of `Λ`, but
 may be complex; this function returns a full quaternion, with all components real.
 """
-ℂreal(Λ::Lorentz{T}) where {T<:Real} = Quaternion{T}(
+ℂreal(Λ::AbstractQuaternion{Complex{T}}) where {T<:Real} = Quaternion{T}(
     real(Λ[1]), real(Λ[2]), real(Λ[3]), real(Λ[4])
 )
 
@@ -285,7 +285,7 @@ the reverse, rather than the complex-conjugate.  That will just be the quaternio
 part of `Λ`, but may be complex; this function returns a full quaternion, with all
 components real.
 """
-ℂimag(Λ::Lorentz{T}) where {T<:Real} = Quaternion{T}(
+ℂimag(Λ::AbstractQuaternion{Complex{T}}) where {T<:Real} = Quaternion{T}(
     imag(Λ[1]), imag(Λ[2]), imag(Λ[3]), imag(Λ[4])
 )
 
@@ -323,7 +323,8 @@ find `cosh(η/2)` as the magnitude of the complex-real part of `Λ`.  Then, we f
 `sinh(η/2)*n̂` simply by multiplying the complex-imaginary part of `Λ` by `inv(R)`, and
 reconstruct `B` simply by adding the result to `cosh(η/2)`.
 
-See also [`BR`](@ref).
+See also [`BR`](@ref), [`vR`](@ref), and [`Rv`](@ref) for similar forms, and [`KAN`](@ref)
+for the Iwasawa decomposition.
 """
 function RB(Λ::Lorentz{T}) where {T<:Real}
     ℜΛ, ℑΛ = ℂreim(Λ)
@@ -339,6 +340,9 @@ Polar decomposition `Λ = B * R`: pure boost `B` followed by pure rotation `R`.
 
 The algorithm here is the same as for [`RB`](@ref), but with the order of multiplication by
 `inv(R)` reversed.
+
+See also [`vR`](@ref) and [`Rv`](@ref) for similar forms, and [`KAN`](@ref) for the Iwasawa
+decomposition.
 """
 function BR(Λ::Lorentz{T}) where {T<:Real}
     ℜΛ, ℑΛ = ℂreim(Λ)
@@ -370,7 +374,8 @@ where the last equality uses the double-angle identity ``\cosh(η) = 2\cosh^2(η
 The last form is made up of entirely of the scalar component of `B`, does not involve any
 cancellation or division by small numbers, and avoids computing the norm of the vector part.
 
-See also [`vR`](@ref), [`RB`](@ref), and [`BR`](@ref).
+See also [`vR`](@ref), [`RB`](@ref), and [`BR`](@ref) for similar forms, and [`KAN`](@ref)
+for the Iwasawa decomposition.
 """
 function Rv(Λ::Lorentz{T}) where {T<:Real}
     R, B = RB(Λ)
@@ -386,7 +391,8 @@ end
 Return the boost velocity `v⃗` and pure rotation `R` such that `Λ = Boost(η, v̂) * R`.  See
 [`Rv`](@ref) for more details.
 
-See also [`BR`](@ref) and [`RB`](@ref).
+See also [`BR`](@ref) and [`RB`](@ref) for similar forms, and [`KAN`](@ref) for the Iwasawa
+decomposition.
 """
 function vR(Λ::Lorentz{T}) where {T<:Real}
     B, R = BR(Λ)
@@ -400,17 +406,40 @@ end
 # Iwasawa's KAN decomposition
 # ---------------------------------------------------------------------------
 
+@doc raw"""
+    KAN(Λ::Lorentz{T}) → (Rₖ, Rₐ, Rₙ)
+
+Compute the Iwasawa ``KAN`` decomposition of the Lorentz transformation `Λ`, returning the
+three factors such that `Λ = Rₖ * Rₐ * Rₙ`, where
+
+- `Rₖ ∈ K` is a pure rotation (the maximal compact factor),
+- `Rₐ ∈ A` is a boost along the ``𝐳`` axis, `Rₐ = cosh(φₐ/2) + sinh(φₐ/2) 𝐭𝐳`, and
+- `Rₙ ∈ N` is a null rotation fixing the null vector ``ℓ = (𝐭+𝐳)/√2``.
+
+See the [`KAN` decomposition section](@ref iwasawa-kan) of the spacetime-algebra
+documentation for a full discussion and derivation of the method used in this function.
+
+See also [`BR`](@ref), [`RB`](@ref), [`vR`](@ref), and [`Rv`](@ref) for polar
+decompositions.
+"""
 function KAN(Λ::Lorentz{T}) where {T<:Real}
     𝐭𝐳 = im * 𝐤
     u₊ = (1 + 𝐭𝐳) / T(2)
+    # We readily find the rotation factor by projecting with the idempotent, taking the pure
+    # spatial part, and normalizing.
     ℂℜΛu₊ = ℂreal(Λ * u₊)
     Rₖ = rotor(ℂℜΛu₊)
+    # We avoid transcendental functions `ln`, `sinh`, and `cosh` by using the structure of
+    # the following product to read off just the relevant components.
     RₐRₙ = conj(Rₖ) * Λ
     coshφ╱2, sinhφ╱2 = real(RₐRₙ.w), imag(RₐRₙ.z)
     Rₐ = coshφ╱2 + sinhφ╱2 * 𝐭𝐳
+    # Rather than returning the raw `Rₐ⁻¹ * RₐRₙ`, which may have accumulated roundoff
+    # errors, we project that result onto the null-rotation sector by averaging 𝐢 and 𝐣
+    # components, and setting 𝟏 and 𝐤 components to their exact values.
     Rₙraw = conj(Rₐ) * RₐRₙ
-    ξˣ╱sqrt2 = imag(Rₙraw.x) - real(Rₙraw.y)
-    ξʸ╱sqrt2 = imag(Rₙraw.y) + real(Rₙraw.x)
-    Rₙ = Lorentz{T}(1, (im*ξˣ╱sqrt2+ξʸ╱sqrt2)/2, (im*ξʸ╱sqrt2-ξˣ╱sqrt2)/2, 0)
+    ξˣ╱2sqrt2 = (imag(Rₙraw.x) - real(Rₙraw.y)) / 2
+    ξʸ╱2sqrt2 = (imag(Rₙraw.y) + real(Rₙraw.x)) / 2
+    Rₙ = Lorentz{T}(1, ξʸ╱2sqrt2 + im * ξˣ╱2sqrt2, -ξˣ╱2sqrt2 + im * ξʸ╱2sqrt2, 0)
     return Rₖ, Rₐ, Rₙ
 end
