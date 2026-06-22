@@ -258,11 +258,12 @@ subgroups:
 G = {KA\,N}.
 ```
 
-This decomposition is most useful when we have a preferred time axis
-and preferred spatial direction.  We use those to pick out boosts
-along that spatial direction, and null rotations that fix the
-corresponding null vector.  Specifically, we have the following
-subgroups:
+Our implementation of this decomposition relies on a choice of basis
+unit vectors: we specifically use the ``𝐭`` and ``𝐳`` basis vectors,
+and assume that we know how to find the plane corresponding to both.
+We use those to pick out boosts along that spatial direction, and null
+rotations that fix the corresponding null vector.  Specifically, we
+have the following subgroups:
 
 - **``K``** is the maximal compact subgroup, which in the case of the
   Lorentz group is isomorphic to the rotation group
