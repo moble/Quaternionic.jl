@@ -42,8 +42,12 @@
     `Double64` is excluded because neither `GenericLinearAlgebra` nor
     `GenericSchur` provides `eigen` for `Symmetric{Double64,<:SMatrix{4,4}}`, nor
     the `eigen!(::Symmetric{Double64,<:Matrix}, ::UnitRange)` that `align` needs;
-    both raise `MethodError`.  `BigFloat` is excluded because it silently returns
-    the *wrong* rotor — see the `:broken` test item at the bottom of this file.
+    both raise `MethodError`.
+
+    `BigFloat` works for `from_rotation_matrix` and is swept by the dedicated
+    regression item at the bottom of this file (kept separate so the `:fast` tier
+    stays fast).  `align` still has no `BigFloat` method — it needs the partial
+    `eigen!(..., ::UnitRange)`, which is LAPACK-only.
     """
     const EigenFloatTypes = (Float32, Float64)
 
@@ -426,26 +430,29 @@ end
 end
 
 
-@testitem "properties: from_rotation_matrix at extended precision" tags=[:validation, :slow] setup=[PropertyGens] begin
+# ── Regression ────────────────────────────────────────────────────────────────
+
+@testitem "regression: from_rotation_matrix ignores eigenvalue ordering" tags=[:validation, :slow] setup=[PropertyGens] begin
     using Supposition: @check, Data
     using .PropertyGens: CFG, rotors, matrix_roundtrip
 
-    # `dominant_eigenvector` (src/conversion.jl) takes `eigen(M).vectors[:, 4]`,
-    # which assumes `eigen` returns eigenvalues in ascending order.  LAPACK does,
-    # and so does GenericLinearAlgebra on its own — but `GenericSchur` provides a
-    # symmetric path that takes precedence and does *not* sort.  The eigenvalues
-    # of K₃3 are (-1, -1, -1, 3), so column 4 then holds an eigenvector of the
-    # degenerate eigenvalue and `from_rotation_matrix` returns a systematically
-    # wrong rotor: `distance` comes out at exactly π/2 for essentially every
-    # input, not merely a loss of accuracy.
+    # `dominant_eigenvector` (src/conversion.jl) used to take `eigen(M).vectors[:, 4]`,
+    # assuming `eigen` returns eigenvalues in ascending order.  LAPACK does, and so
+    # does GenericLinearAlgebra on its own — but `GenericSchur` provides a symmetric
+    # path that takes precedence and does *not* sort.  The eigenvalues of K₃3 are
+    # (-1, -1, -1, 3), so column 4 then held an eigenvector of the degenerate
+    # eigenvalue and `from_rotation_matrix` returned a systematically wrong rotor:
+    # `distance` came out at exactly π/2 for essentially every input, not merely a
+    # loss of accuracy.
     #
-    # Note the trigger is *loading* GenericSchur, which arrives indirectly with
-    # DoubleFloats.  So `from_rotation_matrix(::Matrix{BigFloat})` is correct in a
-    # bare session and wrong once the user loads an unrelated package — which also
-    # explains the pre-existing BigFloat failures in `conversion.jl`, since the
-    # `@testitem`s run (and load DoubleFloats) before that file is included.
+    # The trigger was *loading* GenericSchur, which arrives indirectly with
+    # DoubleFloats — so the result depended on which unrelated packages a user
+    # happened to have loaded.  It also accounted for the BigFloat failures in
+    # `conversion.jl`, because the `@testitem`s run (and load DoubleFloats) before
+    # that file is included.  Selecting by `argmax` of the eigenvalues rather than
+    # by position fixed it independent of load order.
     #
-    # Selecting by `argmax` of the eigenvalues instead of by position fixes it
-    # regardless of load order; flip this to a plain `@check` once that lands.
-    @check config=CFG broken=true matrix_roundtrip(rotors(BigFloat))
+    # This test item is only meaningful with GenericSchur loaded, which the
+    # `using DoubleFloats` in `PropertyGens` guarantees.
+    @check config=CFG matrix_roundtrip(rotors(BigFloat))
 end

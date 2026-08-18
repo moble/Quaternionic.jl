@@ -327,7 +327,40 @@ end
 from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 
 
-dominant_eigenvector(M::Symmetric{T,SMatrix{4,4,T,16}}) where T = eigen(M).vectors[:, 4]
+"""
+    dominant_eigenvector(M)
+
+The eigenvector of the symmetric matrix `M` belonging to its largest
+eigenvalue.
+
+This function has two method groups, split on whether LAPACK can
+handle the element type:
+
+  * For `Float32`/`Float64`, `eigen(M, 4:4)` asks LAPACK for the
+    largest eigenpair alone, which is both cheaper and unambiguous.
+    That range form is not available for other element types.
+
+  * Otherwise we take the full decomposition and select by `argmax` of
+    the eigenvalues rather than by position.  Selecting `vectors[:,
+    end]` would be wrong: the *only* guarantee `eigen` makes about
+    ordering is what the underlying implementation chooses to provide,
+    and the generic implementations disagree.  `GenericLinearAlgebra`
+    sorts ascending, but `GenericSchur` — which takes precedence for
+    `Symmetric` once it is loaded, and which arrives indirectly with
+    packages such as `DoubleFloats` — does not.  Since the eigenvalues
+    of the Bar-Itzhack matrix are `(-1, -1, -1, 3)`, picking the wrong
+    column does not merely lose accuracy; it returns a rotor a full
+    `π/2` away.  Selecting by value makes the result independent of
+    which packages happen to be loaded.
+
+Scanning four eigenvalues costs nothing beside the eigendecomposition
+itself, so the generic method pays no meaningful price for the
+robustness.
+"""
+function dominant_eigenvector(M::Symmetric{T,SMatrix{4,4,T,16}}) where T
+    λ, V = eigen(M)
+    V[:, argmax(λ)]
+end
 dominant_eigenvector(M::Symmetric{Float64,SMatrix{4,4,Float64,16}}) = eigen(M, 4:4).vectors[:, 1]
 dominant_eigenvector(M::Symmetric{Float32,SMatrix{4,4,Float32,16}}) = eigen(M, 4:4).vectors[:, 1]
 
