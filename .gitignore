@@ -40,3 +40,6 @@ docs/src/local_notes
 # LLM/AI tool configuration
 .claude/
 MEMORY.md
+
+# Supposition.jl failure database (regenerated on demand; see test/property_based.jl)
+test/SuppositionDB/
