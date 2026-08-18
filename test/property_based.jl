@@ -36,13 +36,16 @@
     const FloatTypes = (Float32, Float64, Double64)
 
     """
-    Float types `from_rotation_matrix` supports.  It decomposes a *static* 4×4,
-    and neither `GenericLinearAlgebra` nor `GenericSchur` provides `eigen` for
-    `Symmetric{Double64,<:SMatrix{4,4}}` — that raises `MethodError`.  `BigFloat`
-    does work, and is swept by the regression item at the bottom of this file
-    (kept separate so the `:fast` tier stays fast).
+    Float types `from_rotation_matrix` supports — which is all of
+    them, since `dominant_eigenvector` materializes its *static* 4×4
+    into a dense one before handing it to the generic backends.
+    (Without that, `Double64` raised a `MethodError`: no `eigen` for
+    `Symmetric{Double64,<:SMatrix{4,4}}`.)
+
+    `BigFloat` is swept by the regression item at the bottom of this
+    file rather than here, to keep the `:fast` tier fast.
     """
-    const MatrixFloatTypes = (Float32, Float64)
+    const MatrixFloatTypes = (Float32, Float64, Double64)
 
     """
     Float types `align` supports — which is all of them.  It decomposes a *dense*
