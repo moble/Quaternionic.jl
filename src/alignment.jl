@@ -52,6 +52,13 @@ It is possible for this matrix to have degenerate eigenvalues, corresponding to
 cases where the points do not uniquely determine the rotation, as described
 above.
 
+!!! note
+    This method works with any float type, but for types other than `Float16`,
+    `Float32`, or `Float64` you will need to (install and) import
+    `GenericLinearAlgebra` first — as with [`from_rotation_matrix`](@ref), and
+    for the same reason: the eigen-decomposition of `M` is only available for
+    more generic float types via that package.
+
 """
 function align(a⃗::AbstractArray{<:QuatVec}, b⃗::AbstractArray{<:QuatVec}, w::AbstractArray{<:Real})
     # This is Eq. (5.11) from Markley and Crassidis
@@ -75,10 +82,15 @@ function _align_Wahba(S)
                 S[1,3]-S[3,1]         S[1,2]+S[2,1]      -S[1,1]+S[2,2]-S[3,3]      S[2,3]+S[3,2]
                 S[2,1]-S[1,2]         S[1,3]+S[3,1]         S[2,3]+S[3,2]       -S[1,1]-S[2,2]+S[3,3]
     ])
-    # This extracts the dominant eigenvector, and interprets it as a Rotor.  In
-    # particular, note that the _last_ eigenvector output by `eigen` (the 4th)
-    # has the largest eigenvalue.
-    return rotor(eigen(M, 4:4).vectors[:, 1]...)
+    # This extracts the dominant eigenvector, and interprets it as a Rotor.
+    # Note that `dominant_eigenvector` selects by eigen*value* rather than by
+    # position, because `eigen` guarantees no particular ordering across the
+    # various backends and the generic ones disagree.  Routing through that
+    # helper is also what lets this work for element types LAPACK cannot
+    # handle: it avoids the LAPACK-only `eigen(M, n:n)` range form for those.
+    # `M` is deliberately a dense `Matrix` rather than an `SMatrix` — the
+    # generic `eigen` has no method for `Symmetric{Double64,<:SMatrix}`.
+    return rotor(dominant_eigenvector(M)...)
 end
 
 

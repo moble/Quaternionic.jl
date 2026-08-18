@@ -1,7 +1,9 @@
 @testset verbose=true "Alignment" begin
     Random.seed!(1234)
 
-    @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64]
+    # `align` on `QuatVec`s goes through an eigen-decomposition, so it needs
+    # `GenericLinearAlgebra` (imported in runtests.jl) for non-LAPACK types.
+    @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             a⃗ = randn(QuatVec{T}, N)
             R = randn(Rotor{T})

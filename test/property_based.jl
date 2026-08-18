@@ -36,20 +36,21 @@
     const FloatTypes = (Float32, Float64, Double64)
 
     """
-    Float types for properties that route through `LinearAlgebra.eigen`
-    (`from_rotation_matrix`, `align`).
-
-    `Double64` is excluded because neither `GenericLinearAlgebra` nor
-    `GenericSchur` provides `eigen` for `Symmetric{Double64,<:SMatrix{4,4}}`, nor
-    the `eigen!(::Symmetric{Double64,<:Matrix}, ::UnitRange)` that `align` needs;
-    both raise `MethodError`.
-
-    `BigFloat` works for `from_rotation_matrix` and is swept by the dedicated
-    regression item at the bottom of this file (kept separate so the `:fast` tier
-    stays fast).  `align` still has no `BigFloat` method — it needs the partial
-    `eigen!(..., ::UnitRange)`, which is LAPACK-only.
+    Float types `from_rotation_matrix` supports.  It decomposes a *static* 4×4,
+    and neither `GenericLinearAlgebra` nor `GenericSchur` provides `eigen` for
+    `Symmetric{Double64,<:SMatrix{4,4}}` — that raises `MethodError`.  `BigFloat`
+    does work, and is swept by the regression item at the bottom of this file
+    (kept separate so the `:fast` tier stays fast).
     """
-    const EigenFloatTypes = (Float32, Float64)
+    const MatrixFloatTypes = (Float32, Float64)
+
+    """
+    Float types `align` supports — which is all of them.  It decomposes a *dense*
+    4×4, for which the generic backends do provide `eigen`, and since it selects
+    the dominant eigenvector by value it no longer needs the LAPACK-only
+    `eigen(M, n:n)` range form that used to restrict it to `Float32`/`Float64`.
+    """
+    const AlignFloatTypes = (Float32, Float64, Double64, BigFloat)
 
     """
         CFG
@@ -322,7 +323,7 @@ end
 
 @testitem "properties: conversion round-trips" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, EigenFloatTypes, CFG, quats, rotors,
+    using .PropertyGens: FloatTypes, MatrixFloatTypes, CFG, quats, rotors,
         euler_roundtrip, euler_phase_roundtrip, spherical_roundtrip,
         matrix_roundtrip, floatarray_roundtrip
 
@@ -336,8 +337,8 @@ end
         end
     end
 
-    # `from_rotation_matrix` needs `eigen`; see EigenFloatTypes.
-    for T ∈ EigenFloatTypes
+    # `from_rotation_matrix` needs `eigen`; see MatrixFloatTypes.
+    for T ∈ MatrixFloatTypes
         @testset "$T (via eigen)" begin
             @check config=CFG matrix_roundtrip(rotors(T))
         end
@@ -400,10 +401,10 @@ end
 
 @testitem "properties: align recovers a rotation" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: EigenFloatTypes, CFG, rotors, quatvecs,
+    using .PropertyGens: AlignFloatTypes, CFG, rotors, quatvecs,
         align_recovers_rotation
 
-    for T ∈ EigenFloatTypes
+    for T ∈ AlignFloatTypes
         @testset "$T" begin
             R, V = rotors(T), quatvecs(T)
             @check config=CFG align_recovers_rotation(R, V, V, V)

@@ -333,12 +333,17 @@ from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 The eigenvector of the symmetric matrix `M` belonging to its largest
 eigenvalue.
 
+Used by both [`from_rotation_matrix`](@ref), on a static 4×4, and
+[`align`](@ref), on a dense 4×4.
+
 This function has two method groups, split on whether LAPACK can
 handle the element type:
 
-  * For `Float32`/`Float64`, `eigen(M, 4:4)` asks LAPACK for the
-    largest eigenpair alone, which is both cheaper and unambiguous.
-    That range form is not available for other element types.
+  * For `Float16`, `Float32`, and `Float64`, `eigen(M, n:n)` asks
+    LAPACK for the largest eigenpair alone, which is both cheaper and
+    unambiguous.  That range form has no method for other element
+    types, which is precisely what used to limit `align` to those
+    three.
 
   * Otherwise we take the full decomposition and select by `argmax` of
     the eigenvalues rather than by position.  Selecting `vectors[:,
@@ -357,12 +362,14 @@ Scanning four eigenvalues costs nothing beside the eigendecomposition
 itself, so the generic method pays no meaningful price for the
 robustness.
 """
-function dominant_eigenvector(M::Symmetric{T,SMatrix{4,4,T,16}}) where T
+function dominant_eigenvector(M::Symmetric)
     λ, V = eigen(M)
     V[:, argmax(λ)]
 end
-dominant_eigenvector(M::Symmetric{Float64,SMatrix{4,4,Float64,16}}) = eigen(M, 4:4).vectors[:, 1]
-dominant_eigenvector(M::Symmetric{Float32,SMatrix{4,4,Float32,16}}) = eigen(M, 4:4).vectors[:, 1]
+function dominant_eigenvector(M::Symmetric{<:Union{Float16,Float32,Float64}})
+    n = size(M, 1)
+    eigen(M, n:n).vectors[:, 1]
+end
 
 
 """
