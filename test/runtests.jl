@@ -42,6 +42,7 @@ using Test
 using TestItemRunner
 using Random, StaticArrays, ForwardDiff, GenericLinearAlgebra,
     ChainRulesTestUtils, Zygote, ChainRulesTestUtils, Aqua
+using DoubleFloats: Double64
 import Symbolics, FastDifferentiation, Latexify
 import LinearAlgebra
 using ChainRulesCore

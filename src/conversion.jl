@@ -363,13 +363,28 @@ itself, so the generic method pays no meaningful price for the
 robustness.
 """
 function dominant_eigenvector(M::Symmetric)
-    λ, V = eigen(M)
+    λ, V = eigen(_dense(M))
     V[:, argmax(λ)]
 end
 function dominant_eigenvector(M::Symmetric{<:Union{Float16,Float32,Float64}})
     n = size(M, 1)
     eigen(M, n:n).vectors[:, 1]
 end
+
+# Materialize static storage for the generic `eigen` backends.  This
+# is a separate helper rather than another `dominant_eigenvector`
+# method so that `Symmetric{Float64,<:SMatrix}` — which would match
+# both an element-type method and a storage-type method — cannot
+# become an ambiguity.
+#
+# The generic backends implement `eigen` only against dense storage:
+# `eigen(::Symmetric{Double64,<:SMatrix})` raises a `MethodError`,
+# even though the same matrix decomposes fine once it is dense.  A 4×4
+# copy is negligible beside a generic eigendecomposition, and it is
+# what lets `from_rotation_matrix` — which builds an `SMatrix` —
+# accept the full range of float types.
+_dense(M::Symmetric) = M
+_dense(M::Symmetric{<:Any,<:SMatrix}) = Symmetric(Matrix(M))
 
 
 """

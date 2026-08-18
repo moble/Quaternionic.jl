@@ -3,7 +3,7 @@
 
     # `align` on `QuatVec`s goes through an eigen-decomposition, so it needs
     # `GenericLinearAlgebra` (imported in runtests.jl) for non-LAPACK types.
-    @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64, BigFloat]
+    @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64, Double64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             a⃗ = randn(QuatVec{T}, N)
             R = randn(Rotor{T})
@@ -52,7 +52,10 @@
         end
     end
 
-    @testset verbose=true "Align Rotor{$T}" for T in [Float16, Float32, Float64]
+    # The `Rotor` methods never touch `eigen` — they are a normalized sum — so
+    # they have always been generic.  Swept over the same types as the `QuatVec`
+    # methods so the two stay in step.
+    @testset verbose=true "Align Rotor{$T}" for T in [Float16, Float32, Float64, Double64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             A = randn(Rotor{T}, N)
             R = randn(Rotor{T})
