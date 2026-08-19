@@ -23,6 +23,35 @@
 #     This is not stylistic: `@check function foo(...)` defines a global
 #     method, so it cannot appear inside a `for T ∈ FloatTypes` loop.  The
 #     call syntax can, which is what lets one property sweep every precision.
+#   * Inputs a property cannot meaningfully judge — a quaternion too close to
+#     zero to invert, a frame too degenerate to determine a rotation — are
+#     discarded with `assume!`, never by returning `true`.
+#
+#     Supposition budgets in *valid* test cases: `should_keep_generating`
+#     stops once `valid_test_cases` reaches `max_examples`, while total calls
+#     are capped separately at `10 × max_examples`.  Returning `true` reports
+#     a pass, so it increments `valid_test_cases` and spends one of those
+#     `max_examples` slots on a draw that tested nothing.  `assume!` throws
+#     `Supposition.Invalid`, which `test_function` catches *before* the
+#     increment, so a rejected draw costs only a call and the engine draws a
+#     replacement.
+#
+#     This matters most in the four properties that call `target!`.  That
+#     budget governs the hill-climbing loop as well as random generation —
+#     and `generate!` hands off from one to the other at
+#     `valid_test_cases ≤ max_examples ÷ 2` — so a no-op example does not
+#     merely go to waste, it shortens the targeted search and shifts the
+#     boundary between the two phases.
+#
+#     Note that returning `true` does *not* feed a bogus score to `target!`:
+#     the guard returns before `target!` is ever reached, leaving
+#     `targeting_score` unset, which the engine already ignores.  The cost is
+#     the budget slot, not a corrupted score.
+#
+#     Measured on this suite (seed 42, `max_examples = 250`), the guards
+#     reject almost nothing — the only draw any of them discarded was one of
+#     250 in `align_recovers_rotation` at `Float32`, where the `assume!`
+#     version duly took 251 calls to reach its 250 tested examples.
 
 @testmodule PropertyGens begin
     using Quaternionic
@@ -141,7 +170,7 @@
         isapprox(abs2(p * q), abs2(p) * abs2(q); rtol=tol(p, 100), atol=tol(p, 100))
 
     function inverse_law(q)
-        abs2(q) > sqrt(eps(basetype(q))) || return true   # not invertible in practice
+        assume!(abs2(q) > sqrt(eps(basetype(q))))   # not invertible in practice
         isapprox(q * inv(q), one(q); atol=tol(q, 100)) &&
             isapprox(inv(q) * q, one(q); atol=tol(q, 100))
     end
@@ -177,7 +206,7 @@
     # ── Predicates: exp, log, sqrt, powers ────────────────────────────────────
 
     function explog(q)
-        abs2(q) > sqrt(eps(basetype(q))) || return true
+        assume!(abs2(q) > sqrt(eps(basetype(q))))
         err = distance(exp(log(q)), q) / abs(q)
         target!(Float64(err))          # steer the search toward the worst case
         err ≤ tol(q, 100)
@@ -186,7 +215,7 @@
     logexp_rotor(R) = distance(exp(log(R)), R) ≤ tol(R, 100)
 
     function sqrt_squares(q)
-        abs2(q) > sqrt(eps(basetype(q))) || return true
+        assume!(abs2(q) > sqrt(eps(basetype(q))))
         err = distance(sqrt(q)^2, q) / abs(q)
         target!(Float64(err))
         err ≤ tol(q, 100)
@@ -231,7 +260,7 @@
     """
     function slerp_constant_speed(R, S, τ)
         d = distance(R, S)
-        d > sqrt(eps(basetype(R))) || return true
+        assume!(d > sqrt(eps(basetype(R))))
         err = abs(distance(R, slerp(R, S, τ; unflip=true)) - τ * d)
         target!(Float64(err))
         err ≤ tol(R, 100) * max(d, 1)
@@ -250,7 +279,7 @@
     """
     function slerp_unflip_is_the_short_way(R, S, τ)
         d = distance(R, S)
-        d > sqrt(eps(basetype(R))) || return true
+        assume!(d > sqrt(eps(basetype(R))))
         distance(R, slerp(R, S, τ; unflip=true)) -
             distance(R, slerp(R, S, τ; unflip=false)) ≤ tol(R, 100)
     end
@@ -266,7 +295,7 @@
         ε = sqrt(sqrt(eps(basetype(R))))
         # Reject near-degenerate frames, where the problem is ill-conditioned
         # and no tolerance in ulps is meaningful.
-        (absvec(a × b) > ε && absvec(b × c) > ε && absvec(a × c) > ε) || return true
+        assume!(absvec(a × b) > ε && absvec(b × c) > ε && absvec(a × c) > ε)
         vs = [a, b, c]
         ws = [quatvec(R * v * conj(R)) for v ∈ vs]
         distance(align(ws, vs), R) ≤ sqrt(eps(basetype(R)))
