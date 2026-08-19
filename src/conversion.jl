@@ -362,13 +362,49 @@ Scanning four eigenvalues costs nothing beside the eigendecomposition
 itself, so the generic method pays no meaningful price for the
 robustness.
 """
-function dominant_eigenvector(M::Symmetric)
-    λ, V = eigen(_dense(M))
+function dominant_eigenvector(M::Symmetric{T}) where {T}
+    λ, V = try
+        eigen(_dense(M))
+    catch err
+        _eigen_failed(T, err)
+    end
     V[:, argmax(λ)]
 end
 function dominant_eigenvector(M::Symmetric{<:Union{Float16,Float32,Float64}})
     n = size(M, 1)
     eigen(M, n:n).vectors[:, 1]
+end
+
+# Give a usable error for element types that cannot support an
+# eigen-decomposition at all.  Symbolic types are the realistic case:
+# `Symmetric{Symbolics.Num}` gets several steps into the QR iteration
+# before dying with `TypeError: non-boolean (Num) used in boolean
+# context`, which tells the caller nothing about what they did wrong.
+# `AbstractFloat` and `Integer` are passed through untouched — LAPACK
+# and `GenericLinearAlgebra` between them cover every float, and
+# integers are promoted to floats by `eigen` — so a failure for those
+# is a genuine bug, and more useful seen unfiltered.
+@noinline function _eigen_failed(::Type{T}, err) where {T}
+    (T <: AbstractFloat || T <: Integer) && rethrow(err)
+    # Only the first line of the original error: some of them
+    # (Symbolics') carry several paragraphs of their own advice, which
+    # would bury ours.
+    summary = first(split(sprint(showerror, err), '\n'))
+    throw(ArgumentError("""
+        Cannot compute the eigen-decomposition needed here for element
+        type `$T`.
+
+        Finding a dominant eigenvector is inherently iterative, so it
+        needs a floating-point element type.  Integers are promoted to
+        floats automatically, but symbolic types — and any other type
+        that cannot answer the comparisons the iteration performs —
+        cannot be.
+
+        Convert the inputs to a float type first.  `float.(x)` is
+        usually enough; use `BigFloat` or `Double64` if you need more
+        precision than `Float64` provides.
+
+        The underlying failure was `$summary`."""))
 end
 
 # Materialize static storage for the generic `eigen` backends.  This
@@ -404,13 +440,11 @@ This function returns that quaternion, using Bar-Itzhack's algorithm (version 3)
 for non-orthogonal matrices.  [J. Guidance, Vol. 23, No. 6, p.
 1085](http://dx.doi.org/10.2514/2.4654)
 
-!!! note
-    If you want to use this function for matrices with elements of types other than
-    `Float64` or `Float32`, you will need to (install and) import `GenericLinearAlgebra`
-    first.  The reason is that this function computes the eigen-decomposition of `ℛ`, which
-    is only available for more generic float types via that package.  Note that you will
-    want at least version 0.3.11 of `GenericLinearAlgebra` because previous versions had a
-    bug.
+This works for any float element type.  Note that this function computes the
+eigen-decomposition of `ℛ`, which LAPACK provides only for `Float16`, `Float32`, and
+`Float64`; for anything else we rely on `GenericLinearAlgebra`, which `Quaternionic` now
+depends on directly.  (It used to be your job to install and import that package, and a
+`MethodError` was your only warning.)
 
 """
 function from_rotation_matrix(ℛ::AbstractMatrix)

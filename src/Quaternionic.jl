@@ -1,6 +1,7 @@
 module Quaternionic
 
 import LinearAlgebra: LinearAlgebra, Symmetric, eigen, norm, normalize, (⋅)
+import GenericLinearAlgebra
 import PrecompileTools: PrecompileTools, @compile_workload, @setup_workload
 import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector
 import LaTeXStrings
