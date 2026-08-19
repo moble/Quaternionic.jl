@@ -186,8 +186,11 @@ function Base.log(q::Quaternion{T}) where {T}
     cosv = q[1]
     if cosv ≥ 0  # q[1] ≥ 0
         f = if iszerovalue(vec(q))
-            # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
-            # and similar problems for ReverseDiff and even ForwardDiff
+            # When the vector part vanishes, `absvec` reduces to
+            # `sqrt(0)`, whose infinite derivative poisons the
+            # derivative of the whole expression; use a series in
+            # `sinv²` instead.  As of 2026-08-19 ForwardDiff still
+            # requires this branch.
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
@@ -213,8 +216,11 @@ function Base.log(q::Rotor{T}) where {T}
     cosv = q[1]
     if cosv ≥ 0  # q[1] ≥ 0
         f = if iszerovalue(vec(q))
-            # Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
-            # and similar problems for ReverseDiff and even ForwardDiff
+            # When the vector part vanishes, `absvec` reduces to
+            # `sqrt(0)`, whose infinite derivative poisons the
+            # derivative of the whole expression; use a series in
+            # `sinv²` instead.  As of 2026-08-19 ForwardDiff still
+            # requires this branch.
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
@@ -245,6 +251,7 @@ function Base.log(q::Quaternion{Complex{T}}) where {T<:Real}
     cosv = q[1]
     if real(cosv) ≥ 0
         f = if iszerovalue(vec(q))
+            # Series branch required for AD; see `log(::Quaternion)` above
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
@@ -268,6 +275,7 @@ function Base.log(q::Rotor{Complex{T}}) where {T<:Real}
     cosv = q[1]
     if real(cosv) ≥ 0
         f = if iszerovalue(vec(q))
+            # Series branch required for AD; see `log(::Quaternion)` above
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
             1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
@@ -447,8 +455,12 @@ function Base.sqrt(q::T) where {T<:AbstractQuaternion}
     if q[1] <= 0 && iszerovalue(vec(q))
         return T(false, false, false, √(-q[1]))
     end
-    ## Work around https://github.com/chalk-lab/Mooncake.jl/issues/794
-    # c₁ = ifelse(q[1] ≥ 0, (abs(q) + q[1]), (abs2vec(q) / (abs(q) - q[1])))
+    # `ifelse` (below) would evaluate both arms, and the unused arm is
+    # 0/0 whenever `q` is a positive real; the resulting NaN
+    # contaminates the derivative.  Branch instead, so that arm is
+    # never evaluated.  As of 2026-08-19 Mooncake and ReverseDiff both
+    # still require this.
+    ## c₁ = ifelse(q[1] ≥ 0, (abs(q) + q[1]), (abs2vec(q) / (abs(q) - q[1])))
     c₁ = if q[1] ≥ 0
         (abs(q) + q[1])
     else
