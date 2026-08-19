@@ -1,25 +1,18 @@
 @testitem "Differentiation Interface" begin
     using DifferentiationInterface, DifferentiationInterfaceTest
-    import ADTypes, Enzyme, FastDifferentiation,
+    import Enzyme, FastDifferentiation,
         FiniteDifferences, ForwardDiff, Mooncake,
         ReverseDiff, Zygote, ChainRules, ChainRulesCore
     using Random
     ChainRulesCore.debug_mode() = true
     Random.seed!(42)
 
-    # We have to skip Enzyme and Mooncake on Windows because of
-    # https://github.com/EnzymeAD/Enzyme.jl/issues/2986 and
-    # https://github.com/EnzymeAD/Enzyme.jl/issues/2962 
-    # This could probably test for Julia 1.12 as well, but we'll
-    # see how it goes with Windows support first.  Also note
-    # that `ADTypes` could be removed from this file and
-    # Project.toml once Windows is fixed.
     backends = [
-        Sys.iswindows() ? ADTypes.AbstractADType[] : [AutoEnzyme()];
+        AutoEnzyme();
         # AutoFastDifferentiation();  # see below; has to wait for conditionals support
         AutoFiniteDifferences(fdm=FiniteDifferences.central_fdm(3,1));
         AutoForwardDiff();
-        Sys.iswindows() ? ADTypes.AbstractADType[] : [AutoMooncake(config=nothing)];
+        AutoMooncake(config=nothing);
         AutoReverseDiff();
         AutoZygote();  # Fails with incorrect results when return type is Quaternionic
         AutoChainRules(Zygote.ZygoteRuleConfig());  # Same as above
