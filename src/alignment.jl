@@ -52,12 +52,12 @@ It is possible for this matrix to have degenerate eigenvalues, corresponding to
 cases where the points do not uniquely determine the rotation, as described
 above.
 
-!!! note
-    This method works with any float type, but for types other than `Float16`,
-    `Float32`, or `Float64` you will need to (install and) import
-    `GenericLinearAlgebra` first — as with [`from_rotation_matrix`](@ref), and
-    for the same reason: the eigen-decomposition of `M` is only available for
-    more generic float types via that package.
+This method works with any float type.  It computes the
+eigen-decomposition of `M`, which LAPACK provides only for `Float16`,
+`Float32`, and `Float64`; for anything else we rely on
+`GenericLinearAlgebra`, as [`from_rotation_matrix`](@ref) does, and
+which `Quaternionic` depends on directly so that you do not have to
+load it yourself.
 
 """
 function align(a⃗::AbstractArray{<:QuatVec}, b⃗::AbstractArray{<:QuatVec}, w::AbstractArray{<:Real})

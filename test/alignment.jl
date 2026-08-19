@@ -103,4 +103,23 @@
             end
         end
     end
+    # `align` needs an eigen-decomposition, which is inherently iterative and so
+    # cannot work for symbolic element types.  Check that the caller gets an
+    # actionable message rather than the raw `TypeError: non-boolean (Num) used
+    # in boolean context` thrown from inside a QR sweep.
+    @testset "Informative error for non-float element types" begin
+        a⃗ = [quatvec(a, b, c), quatvec(b, c, d), quatvec(c, d, a)]
+        b⃗ = [quatvec(d, a, b), quatvec(a, c, b), quatvec(b, d, c)]
+        err = try
+            align(a⃗, b⃗)
+            nothing
+        catch e
+            e
+        end
+        @test err isa ArgumentError
+        @test occursin("floating-point element type", err.msg)
+        @test occursin("float.", err.msg)
+        @test occursin("Num", err.msg)
+    end
+
 end

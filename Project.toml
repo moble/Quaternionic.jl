@@ -7,6 +7,7 @@ authors = ["Michael Boyle <michael.oliver.boyle@gmail.com>"]
 projects = ["test", "docs"]
 
 [deps]
+GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
@@ -20,7 +21,6 @@ ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
 StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
