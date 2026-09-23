@@ -6,6 +6,17 @@ import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector
 import LaTeXStrings
 import Random: AbstractRNG, default_rng
 
+# The `public` keyword is a syntax error before Julia 1.11, so we wrap it in a macro that
+# emits `public` where it exists and does nothing otherwise.
+macro public(names)
+    @static if VERSION ≥ v"1.11.0-DEV.469"
+        syms = names isa Symbol ? (names,) : names.args
+        esc(Expr(:public, syms...))
+    else
+        nothing
+    end
+end
+
 export AbstractQuaternion
 export Quaternion, quaternion,
     QuaternionF64, QuaternionF32, QuaternionF16,
@@ -13,7 +24,7 @@ export Quaternion, quaternion,
 export Rotor, rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, quatvec, QuatVecF64, QuatVecF32, QuatVecF16
 export components, basetype
-public value, iszerovalue
+@public value, iszerovalue
 export (⋅), (×), (×̂), normalize, norm
 export abs2vec, absvec
 export from_float_array, to_float_array,
