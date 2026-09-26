@@ -34,7 +34,7 @@ _sincu(x::Float16) = Float16(_sincu(Float32(x)))
 # This function is defined to be continuous at `x == 0`, and is implemented using a Taylor
 # series for small `x`.
 # """
-@inline invsinc(x::T) where {T<:Union{Real,Complex{Real}}} =
+@inline invsinc(x::T) where {T<:Union{Real,Complex{<:Real}}} =
     abs(x) < invsinc_tol(T) ? evalpoly(x^2,
         T.((1, 1//6, 7//360, 31//15120, 127//604800, 73//3421440, 1414477//653837184000))
     ) :
@@ -42,7 +42,7 @@ _sincu(x::Float16) = Float16(_sincu(Float32(x)))
 invsinc(x::Float16) = Float16(invsinc(Float32(x)))
 #invsinc(x::ComplexF16) = ComplexF16(invsinc(ComplexF32(x)))
 invsinc_tol(::Type{T}) where {T} = sqrt(sqrt(sqrt(eps(T))))
-invsinc_tol(::Type{Complex{T}}) where {T<:AbstractFloat} = invsinc_tol(T)
+invsinc_tol(::Type{Complex{T}}) where {T<:Real} = invsinc_tol(T)
 @inline invsinc(x::Complex{T}) where {T<:AbstractFloat} =
     abs(x) < invsinc_tol(T) ? evalpoly(x^2,
         (one(x), one(x)/6, 7one(x)/360, 31one(x)/15120, 127one(x)/604800, 73one(x)/3421440, 1414477one(x)/653837184000)
