@@ -3,7 +3,11 @@ module QuaternionicForwardDiffExt
 using Quaternionic
 isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
 
-Quaternionic.value(x::ForwardDiff.Dual) = ForwardDiff.value(x)
+# Recurse so that nested duals, as in higher-order derivatives, are stripped to the
+# innermost value.  Since ForwardDiff 1.0, `iszero(::Dual)` also checks the partials, so
+# stripping only one level would make `iszerovalue` false whenever an inner partial is
+# nonzero.  See issue #113.
+Quaternionic.value(x::ForwardDiff.Dual) = Quaternionic.value(ForwardDiff.value(x))
 # Then, this will be automatic:
 # Quaternionic.iszerovalue(x::ForwardDiff.Dual) = iszero(Quaternionic.value(x))
 

@@ -193,7 +193,7 @@ function Base.log(q::Quaternion{T}) where {T}
             # requires this branch.
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
-            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+            (1 + x * (1//6 + x * (-11//120 + x * (103//1680)))) / a
         else
             sinv = absvec(q)
             v = atan(sinv, cosv)
@@ -254,7 +254,7 @@ function Base.log(q::Quaternion{Complex{T}}) where {T<:Real}
             # Series branch required for AD; see `log(::Quaternion)` above
             sinv² = abs2vec(q)
             x = sinv² / cosv^2
-            1 + x * (1//6 + x * (-11//120 + x * (103//1680)))
+            (1 + x * (1//6 + x * (-11//120 + x * (103//1680)))) / a
         else
             sinv = absvec(q)
             v = atan(sinv / cosv)
@@ -475,7 +475,11 @@ function Base.sqrt(q::AbstractQuaternion{Float16})
 end
 
 function Base.sqrt(q::QT) where {T<:Real, QT<:AbstractQuaternion{Complex{T}}}
-    if iszerovalue(vec(q))
+    # As in the real case, only a vanishing vector part with `real(q[1]) ≤ 0` needs a
+    # special branch, because the general formula below would divide by zero.  Elsewhere,
+    # the general formula is correct, and taking this branch would lose the derivative with
+    # respect to the vector part.
+    if real(q[1]) ≤ 0 && iszerovalue(vec(q))
         return QT(sqrt(q[1]), false, false, false)
     end
     c₁ = if real(q[1]) ≥ 0

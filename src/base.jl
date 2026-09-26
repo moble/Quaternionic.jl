@@ -38,7 +38,8 @@ Base.isone(q::AbstractQuaternion{T}) where {T<:Number} = isone(q[1]) && iszero(q
 This is essentially the identity function, but intended to be overridden for types like
 `ForwardDiff.Dual`, where the value is the part of the dual number that corresponds to the
 original function value, and the tangent part is the part that corresponds to the
-derivative.
+derivative.  For nested types, such as the nested dual numbers used to compute higher-order
+derivatives, this should strip every level of nesting.
 """
 value(x) = x
 
@@ -55,11 +56,13 @@ frequently need to switch the algorithm based on whether some components are zer
 isolated cases, a Taylor series should be provided that will be exactly zero for, e.g.,
 `Float64`, but will also work correctly for `ForwardDiff.Dual` and other ADs.
 
-Like `Base.iszero`, this function is defined recursively for arrays and quaternions.
+Like `Base.iszero`, this function is defined recursively for arrays, quaternions, and
+complex numbers.
 
 """
 iszerovalue(x) = iszero(value(x))
 iszerovalue(x::AbstractArray) = all(iszerovalue, x)
+iszerovalue(z::Complex) = iszerovalue(real(z)) && iszerovalue(imag(z))
 iszerovalue(q::AbstractQuaternion) = iszerovalue(components(q))
 iszerovalue(q::QuatVec) = iszerovalue(vec(q))
 
