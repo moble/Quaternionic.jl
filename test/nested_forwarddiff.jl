@@ -121,6 +121,57 @@ end
     )
 end
 
+@testitem "nested ForwardDiff: Rotor powers and slerp" tags=[:validation, :fast] setup=[NestedForwardDiff] begin
+    using ForwardDiff
+    using .NestedForwardDiff: compare_derivatives
+
+    n̂ = normalize(quatvec(1.0, -2.0, 3.0))
+    nx, ny, nz = vec(n̂)
+    R₀ = rotor(0.4, -0.2, 0.7, 0.5)
+    # A rotation by `θ` about `n̂`, written without branches, for use in reference results
+    ref(θ) = Quaternion(cos(θ/2), sin(θ/2)*nx, sin(θ/2)*ny, sin(θ/2)*nz)
+
+    # At t = 0, `exp(t * n̂ / 2)` is exactly the identity, where `R ^ s` takes a special branch
+    for s ∈ (0.3, 2.5, -0.7)
+        @test compare_derivatives(
+            t -> components(exp(t * n̂ / 2) ^ s),
+            t -> components(ref(s*t)),
+        )
+    end
+    # slerp(R₀, R, τ) = (R / R₀)^τ R₀, so it reaches the same branch when R = R₀
+    for τ ∈ (0.3, 0.8), Rₐ ∈ (one(RotorF64), R₀)
+        @test compare_derivatives(
+            t -> components(slerp(Rₐ, exp(t * n̂ / 2) * Rₐ, τ)),
+            t -> components(ref(τ*t) * Rₐ),
+        )
+    end
+    # The Jacobian with respect to all four components at the identity: normalization
+    # removes the scalar direction, and the power scales the vector directions by `s`
+    J = ForwardDiff.jacobian(u -> components(rotor(u...) ^ 0.3), [1.0, 0.0, 0.0, 0.0])
+    @test J ≈ [0 0 0 0; 0 0.3 0 0; 0 0 0.3 0; 0 0 0 0.3] atol=1e-14
+end
+
+@testitem "nested ForwardDiff: distance2" tags=[:validation, :fast] setup=[NestedForwardDiff] begin
+    using ForwardDiff
+    using .NestedForwardDiff: compare_derivatives
+
+    n̂ = normalize(quatvec(1.0, -2.0, 3.0))
+    R₀ = rotor(0.4, -0.2, 0.7, 0.5)
+    # Rotors separated by a rotation through `t` are a distance `t/2` apart.  At t = 0 with
+    # Rₐ = 1, the quotient inside `distance2` is exactly the identity.
+    for Rₐ ∈ (one(RotorF64), R₀)
+        @test compare_derivatives(
+            t -> [distance2(exp(t * n̂ / 2) * Rₐ, Rₐ)],
+            t -> [(t/2)^2],
+        )
+    end
+    # The gradient at the minimum is zero
+    for Rₐ ∈ (one(RotorF64), R₀)
+        g = ForwardDiff.gradient(u -> distance2(rotor(u...), Rₐ), collect(components(Rₐ)))
+        @test g ≈ zeros(4) atol=1e-14
+    end
+end
+
 @testitem "nested ForwardDiff: iszerovalue on complex" tags=[:unit, :fast] begin
     using ForwardDiff
     import Quaternionic: iszerovalue
