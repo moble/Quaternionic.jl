@@ -28,15 +28,15 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.12'
+          - '1'
         os:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        # include:
-        #   - version: 'nightly'
-        #     os: ubuntu-latest
-        #     arch: x64
+        include:
+          - version: 'lts'
+            os: ubuntu-latest
+            arch: x64
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
