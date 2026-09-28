@@ -81,6 +81,34 @@ let S = Number
 end
 
 
+# `@fastmath` replaces each arithmetic operator with the corresponding function from
+# `Base.FastMath`, whose fallbacks `promote` mixed arguments before applying the operator.
+# That would lose the careful choice of return types made by `wrapper` above: for example,
+# `@fastmath 1.0 * imz` would return a `Quaternion` rather than a `QuatVec`, and `@fastmath
+# 2.0 * R` would convert `2.0` to a `Rotor` and return a `Rotor` equal to `R`.  (See issue
+# #46.)  So we skip the promotion and apply the ordinary operators directly.
+for (op, op_fast) ∈ ((:+, :add_fast), (:-, :sub_fast), (:*, :mul_fast), (:/, :div_fast))
+    @eval begin
+        Base.FastMath.$op_fast(q::AbstractQuaternion, p::AbstractQuaternion) = $op(q, p)
+        Base.FastMath.$op_fast(q::AbstractQuaternion, s::Number) = $op(q, s)
+        Base.FastMath.$op_fast(s::Number, q::AbstractQuaternion) = $op(s, q)
+    end
+end
+
+# Expressions like `@fastmath a * b * c` become a single call to `mul_fast(a, b, c)`, whose
+# fallback promotes all of its arguments at once.  We catch any such call with a quaternion
+# among its first three arguments, and reduce it to calls with two arguments.  A call with
+# plain numbers in all of the first three positions cannot be caught without type piracy, so
+# it will still promote; for example, `@fastmath 1.0 * 2.0 * 3.0 * imz` is a `Quaternion`.
+for op_fast ∈ (:add_fast, :mul_fast)
+    for (A, B, C) ∈ Iterators.product(ntuple(_ -> (AbstractQuaternion, Number), 3)...)
+        AbstractQuaternion ∈ (A, B, C) || continue
+        @eval Base.FastMath.$op_fast(a::$A, b::$B, c::$C, xs::Number...) =
+            Base.FastMath.$op_fast(Base.FastMath.$op_fast(a, b), c, xs...)
+    end
+end
+
+
 @doc raw"""
     p ⋅ q
 
