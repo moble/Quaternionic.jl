@@ -577,3 +577,10 @@ for QT ∈ [AbstractQuaternion, Quaternion, QuatVec, Rotor]
         end
     end
 end
+
+# As with the arithmetic operators in `algebra.jl`, `@fastmath q ^ s` would otherwise
+# promote `s` to a quaternion, which changes the result for a `Quaternion` and throws an
+# error for a `Rotor`.  (See issue #46.)  The `Integer` method is needed to resolve an
+# ambiguity with `Base.FastMath`.
+Base.FastMath.pow_fast(q::AbstractQuaternion, s::Number) = q ^ s
+Base.FastMath.pow_fast(q::AbstractQuaternion, s::Integer) = q ^ s
