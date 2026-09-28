@@ -550,15 +550,31 @@ function Base.:^(q::Quaternion, s::Number)
 end
 function Base.:^(q::Rotor, s::Number)
     q = float(q)
+    x = abs2vec(q) / q[1]^2
+    if q[1] > 0 && x ≤ eps(typeof(x))^(1//5)
+        # Near the identity, `absvec(q)` is the square root of a tiny number, whose
+        # derivatives are huge and lose all accuracy when they cancel, or are NaN when it is
+        # exactly 0.  Instead, we write log(q) = A 𝐯/q[1], where A = atan(√x)/√x, and q^s =
+        # exp(f 𝐯) with f = s A/q[1], using series in `x` and in y = |f 𝐯|² that are
+        # smooth at the identity.  Five terms suffice for a truncation error below `eps`.
+        A = evalpoly(x, (1, -1//3, 1//5, -1//7, 1//9))
+        f = s * A / q[1]
+        y = f^2 * abs2vec(q)
+        c, sincu = if y ≤ eps(typeof(y))^(1//5)
+            evalpoly(y, (1, -1//2, 1//24, -1//720, 1//40320)),
+            evalpoly(y, (1, -1//6, 1//120, -1//5040, 1//362880))
+        else
+            # Only reached for large `s`, so that √y is not small
+            a = √y
+            cos(a), sin(a) / a
+        end
+        return Rotor{typeof(c)}([c, sincu*f*q[2], sincu*f*q[3], sincu*f*q[4]])
+    end
     absolutevec = absvec(q)
     if absolutevec ≤ eps(typeof(absolutevec))
-        if q[1] < 0
-            # log(q) ≈ π𝐤
-            sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
-            return Rotor{basetype(q)}([cos_πs, 0, 0, sin_πs])
-        end
-        # log(q) ≈ 0
-        return one(q)
+        # log(q) ≈ π𝐤, because q ≈ -1
+        sin_πs, cos_πs = sincospi(oftype(absolutevec, s))
+        return Rotor{basetype(q)}([cos_πs, 0, 0, sin_πs])
     end
     f1 = s * atan(absolutevec, q[1])
     sin_f1, cos_f1 = sincos(f1)

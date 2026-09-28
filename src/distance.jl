@@ -38,5 +38,14 @@ distance2(q₁::Rotor, q₂::Rotor) = _abs2_small_vec_log(q₁ / q₂)
 
 @inline function _abs2_small_vec_log(q::Rotor{T}) where {T}
     # Like `min(abs2(log(q)), abs2(log(-q)))`, but assumes the norm of `q` is 1
-    atan(absvec(q), abs(q[1]))^2
+    x = abs2vec(q) / q[1]^2
+    if x ≤ ∜(eps(typeof(x))) / 2
+        # Near the identity, `absvec` is the square root of a tiny number, whose derivatives
+        # are huge and lose all accuracy when they cancel, or are NaN when it is exactly 0.
+        # This series for `atan(√x)^2` in `x` is smooth instead; its relative truncation
+        # error is about `x⁴/3`, which is below `eps` for this range of `x`.
+        x * evalpoly(x, (1, -2//3, 23//45, -44//105))
+    else
+        atan(absvec(q), abs(q[1]))^2
+    end
 end
