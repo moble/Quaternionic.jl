@@ -60,8 +60,17 @@
         for v ∈ basis
             @test !(quatvec(v) == one(T))
             @test !(one(T) == quatvec(v))
-            @test isequal(quatvec(v), v)
-            @test isequal(v, quatvec(v))
+            if v === u
+                # `quatvec(u)` is the zero vector, which is not equal to `u`, because the
+                # scalar part of `u` is nonzero.
+                @test !(quatvec(v) == v)
+                @test !(v == quatvec(v))
+                @test !isequal(quatvec(v), v)
+                @test !isequal(v, quatvec(v))
+            else
+                @test isequal(quatvec(v), v)
+                @test isequal(v, quatvec(v))
+            end
             @test isequal(quatvec(v), quatvec(v))
             for (i_v,v′) ∈ enumerate(basis)
                 if v !== v′

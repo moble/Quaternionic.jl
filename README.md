@@ -19,7 +19,7 @@ Pkg.add("Quaternionic")
 ```
 
 ## Usage
-See [the documentation](https://moble.github.io/Quaternionic.jl/dev) for details.
+See [the documentation](https://moble.github.io/Quaternionic.jl/stable/) for details.
 
 ## Motivation
 The goal of this project is to build a complete quaternion type in Julia.  There are
@@ -28,11 +28,10 @@ several features that I consider to be fairly basic to a good quaternion package
   * Subtypes for rotors and pure-vector quaternions, with corresponding specialized methods
   * Numerous conversions to and from other representations of things quaternions can
     represent — especially rotations
-  * Smooth interpolation, and differentation of the interpolant
+  * Smooth interpolation, and differentiation of the interpolant
   * Intelligent handling of distance measures
   * Construction of random quaternions of the various special types
   * Enabling efficient integration of angular velocity
-  * Construction of a minimal rotation
   * Documentation
   * Thorough testing
 

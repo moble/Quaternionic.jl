@@ -112,12 +112,14 @@ end
 
     n̂ = normalize(quatvec(1.0, -2.0, 3.0))
     nx, ny, nz = vec(n̂)
-    # Orders beyond 4 would exceed the accuracy of the Taylor series in `Boost`
+    # `Boost(v⃗)` uses a closed form without series, so its derivatives of every order are
+    # accurate at β = 0.
     @test compare_derivatives(
         t -> [f(c) for c ∈ components(Boost(t * n̂)) for f ∈ (real, imag)],
         t -> let ch = cosh(atanh(t)/2), sh = sinh(atanh(t)/2)
             [ch, zero(t), zero(t), sh*nx, zero(t), sh*ny, zero(t), sh*nz]
-        end,
+        end;
+        orders=1:6,
     )
 end
 

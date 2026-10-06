@@ -9,7 +9,7 @@ has a clear geometric justification.
 
 The treatment here focuses on *real* quaternions.  The extension to complex
 quaternions (needed for Lorentz boosts via the spacetime algebra) is covered
-on a separate page.
+on the [spacetime algebra page](spacetime_algebra.md).
 
 
 ## The geometric algebra over ``ℝ³``
@@ -52,10 +52,10 @@ The pseudoscalar ``𝐈 = 𝐱𝐲𝐳`` also squares to ``-1``, so its
 inverse is ``𝐈^{-1} = -𝐈 = 𝐳𝐲𝐱``.
 
 ``𝐈`` has a special property in three dimensions: since moving it
-past any grade-1 vector costs ``(-1)^{n-1} = (-1)^2 = +1`` sign
-changes, it commutes with every element of the algebra.  Left- and
-right-multiplication by ``𝐈`` are therefore identical, and we can
-unambiguously write ``𝐈\,𝐯 = 𝐯\,𝐈``.
+past any grade-1 vector takes ``n-1 = 2`` transpositions, it picks up
+a factor of ``(-1)^{n-1} = +1``, so it commutes with every element of
+the algebra.  Left- and right-multiplication by ``𝐈`` are therefore
+identical, and we can unambiguously write ``𝐈\,𝐯 = 𝐯\,𝐈``.
 
 ### The reverse
 
@@ -119,8 +119,9 @@ For grade-2 bivectors the reverse introduces a sign (e.g.,
     ```
     where the first step uses ``a \wedge c = \langle ac \rangle_n``
     when the grades of ``a`` and ``c`` sum to ``n``, and the third
-    uses the fact that right-multiplication by ``𝐈`` shifts grade by
-    ``n``, so only the scalar part of ``a\widetilde{b}`` contributes.
+    uses the fact that right-multiplication by ``𝐈`` maps grade ``k``
+    to grade ``n-k``, so only the scalar (grade-0) part of
+    ``a\widetilde{b}`` contributes to grade ``n``.
 
 
 ## Reflections and rotations
@@ -178,15 +179,17 @@ R\,𝐱\,\widetilde{R}
 A right-handed rotation by ``\vartheta`` about ``𝐳`` (curling the
 right hand from ``𝐱`` toward ``𝐲``, thumb along ``+𝐳``) maps ``𝐱
 \to \cos\vartheta\,𝐱 + \sin\vartheta\,𝐲``.  The formula above has a
-negative ``\sin`` term: ``\exp(\theta\,𝐱𝐲)`` rotates ``𝐱`` toward
-``-𝐲``, i.e., *clockwise* in the ``𝐱𝐲``-plane (left-handed about
-``𝐳``).  Right-handed rotation by ``\vartheta`` about ``+𝐳``
-requires the opposite sign: ``\exp(\frac{\vartheta}{2}\,𝐲𝐱)``.  The
-same test on the remaining coordinate planes — checking whether
-``\exp(\vartheta\,𝐲𝐳)`` maps ``𝐲`` toward ``+𝐳`` or ``-𝐳``, and
-whether ``\exp(\vartheta\,𝐳𝐱)`` maps ``𝐳`` toward ``+𝐱`` or
-``-𝐱`` — gives in each case the same conclusion: the bivector with
-*reversed* index order is the right-handed one.  The results are:
+negative ``\sin`` term: ``\exp(\frac{\vartheta}{2}\,𝐱𝐲)`` rotates
+``𝐱`` toward ``-𝐲``, i.e., *clockwise* in the ``𝐱𝐲``-plane
+(left-handed about ``𝐳``).  Right-handed rotation by ``\vartheta``
+about ``+𝐳`` requires the opposite sign:
+``\exp(\frac{\vartheta}{2}\,𝐲𝐱)``.  The same test on the remaining
+coordinate planes — checking whether
+``\exp(\frac{\vartheta}{2}\,𝐲𝐳)`` maps ``𝐲`` toward ``+𝐳`` or
+``-𝐳``, and whether ``\exp(\frac{\vartheta}{2}\,𝐳𝐱)`` maps ``𝐳``
+toward ``+𝐱`` or ``-𝐱`` — gives in each case the same conclusion:
+the bivector with *reversed* index order is the right-handed one.  The
+results are:
 ```math
 \begin{array}{ll}
 \text{right-handed rotation about } 𝐱: & \exp\left(\tfrac{\vartheta}{2}\,𝐳𝐲\right), \\[4pt]

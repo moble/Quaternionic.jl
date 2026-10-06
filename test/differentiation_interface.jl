@@ -14,8 +14,8 @@
         AutoForwardDiff();
         AutoMooncake(config=nothing);
         AutoReverseDiff();
-        AutoZygote();  # Fails with incorrect results when return type is Quaternionic
-        AutoChainRules(Zygote.ZygoteRuleConfig());  # Same as above
+        AutoZygote();
+        AutoChainRules(Zygote.ZygoteRuleConfig());
     ]
 
     P = randn(QuaternionF64)
@@ -58,7 +58,9 @@
             # θ->θ[1] * vec(v⃗)[1],
             θ->vec(v⃗)[1]
         ),
-        # # Zygote doesn't work with constant functions
+        # # A constant function: DifferentiationInterface errors for Zygote and
+        # # AutoChainRules (whose gradients are `nothing` or `NoTangent()`), Enzyme (which
+        # # requests runtime activity), and FastDifferentiation.
         # (
         #     θ->Vector(components(Q)),
         #     θ->Vector(components(0.0Q))
@@ -78,10 +80,6 @@
         (
             θ->Vector(components(Q - 1.2θ[1])),
             θ->Vector(components(0.0Q - 1.2))
-        ),
-        (
-            θ -> real(1.2θ[1] + Q),
-            θ -> real(1.2 + 0.0Q)
         ),
         (
             θ->real(1.2θ[1] + Q),
@@ -108,6 +106,9 @@
             θ->Vector(components(1.2 + 0.0v̂))
         ),
     )
+
+    # The scenario of `absvec(θ * v⃗)`, whose kink at θ = 0 is skipped below
+    absvec_index = 6
 
     f∇f_conditionals = (
         (
@@ -160,8 +161,7 @@
     scenarios = [
         Scenario{:derivative,:out}(f, θ; res1=∇f(θ))
         for θ in x
-        for (i,(f, ∇f)) in enumerate(f∇f_conditionals)
-        if i≠6 || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
+        for (f, ∇f) in f∇f_conditionals
     ]
     test_differentiation(
         backends,  # the backends you want to compare
@@ -175,7 +175,7 @@
         Scenario{:derivative,:out}(f, θ; res1=∇f(θ))
         for θ in x
         for (i,(f, ∇f)) in enumerate(f∇f_simple)
-        if i≠6 || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
+        if i≠absvec_index || θ ≠ 0.0  # skip absvec at 0 because it's not differentiable there
     ]
     test_differentiation(
         [backends; AutoFastDifferentiation()],  # the backends you want to compare

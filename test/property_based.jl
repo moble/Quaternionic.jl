@@ -20,6 +20,11 @@
 #     or `BigFloat`.  See `PropertyGens.floats`.
 #   * Properties are written as *named predicate functions* in the
 #     `PropertyGens` test module, and invoked with `@check`'s call syntax.
+#   * Every `@check` is wrapped in `counted`, which records its outcome as an
+#     ordinary `@test`.  Supposition records each check in its own test set, a
+#     `SuppositionReport`, and the test-item runner (TestItemControllers) does
+#     not count the results in that kind of child test set, so without the
+#     wrapper a failing property would let its test item pass.
 #     This is not stylistic: `@check function foo(...)` defines a global
 #     method, so it cannot appear inside a `for T ∈ FloatTypes` loop.  The
 #     call syntax can, which is what lets one property sweep every precision.
@@ -58,6 +63,7 @@
     using Supposition, Supposition.Data
     using DoubleFloats: Double64
     using Random: Xoshiro, RandomDevice
+    using Test: @test
 
     # ── Configuration ─────────────────────────────────────────────────────────
 
@@ -110,6 +116,17 @@
         max_examples = 250,
         db = Supposition.DirectoryDB(mkpath(joinpath(@__DIR__, "SuppositionDB"))),
     )
+
+    """
+        counted(report)
+
+    Record whether the Supposition `report` returned by `@check` passed, as an ordinary
+    `@test`, which every test runner counts.  Under plain `Test`, a failing property is
+    then reported twice: once by Supposition and once by this test.
+    """
+    function counted(report)
+        @test Supposition.results(report).ispass
+    end
 
     # ── Generators ────────────────────────────────────────────────────────────
 
@@ -324,20 +341,20 @@ end
 
 @testitem "properties: normed division algebra" tags=[:unit, :fast, :validation] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, CFG, quats, wildfloats,
+    using .PropertyGens: counted, FloatTypes, CFG, quats, wildfloats,
         associativity, left_distributivity, right_distributivity,
         conj_involution, conj_antiautomorphism, norm_composition, inverse_law
 
     for T ∈ FloatTypes
         @testset "$T" begin
             Q = quats(T)
-            @check config=CFG associativity(Q, Q, Q)
-            @check config=CFG left_distributivity(Q, Q, Q)
-            @check config=CFG right_distributivity(Q, Q, Q)
-            @check config=CFG conj_involution(Q)
-            @check config=CFG conj_antiautomorphism(Q, Q)
-            @check config=CFG norm_composition(Q, Q)
-            @check config=CFG inverse_law(Q)
+            counted(@check config=CFG associativity(Q, Q, Q))
+            counted(@check config=CFG left_distributivity(Q, Q, Q))
+            counted(@check config=CFG right_distributivity(Q, Q, Q))
+            counted(@check config=CFG conj_involution(Q))
+            counted(@check config=CFG conj_antiautomorphism(Q, Q))
+            counted(@check config=CFG norm_composition(Q, Q))
+            counted(@check config=CFG inverse_law(Q))
         end
     end
 
@@ -346,8 +363,8 @@ end
     for T ∈ (Float32, Float64)
         @testset "$T (bit-pattern inputs)" begin
             W = quats(wildfloats(T))
-            @check config=CFG conj_involution(W)
-            @check config=CFG norm_composition(W, W)
+            counted(@check config=CFG conj_involution(W))
+            counted(@check config=CFG norm_composition(W, W))
         end
     end
 end
@@ -355,24 +372,24 @@ end
 
 @testitem "properties: conversion round-trips" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, MatrixFloatTypes, CFG, quats, rotors,
+    using .PropertyGens: counted, FloatTypes, MatrixFloatTypes, CFG, quats, rotors,
         euler_roundtrip, euler_phase_roundtrip, spherical_roundtrip,
         matrix_roundtrip, floatarray_roundtrip
 
     for T ∈ FloatTypes
         @testset "$T" begin
             R, Q = rotors(T), quats(T)
-            @check config=CFG euler_roundtrip(R)
-            @check config=CFG euler_phase_roundtrip(R)
-            @check config=CFG spherical_roundtrip(R)
-            @check config=CFG floatarray_roundtrip(Q)
+            counted(@check config=CFG euler_roundtrip(R))
+            counted(@check config=CFG euler_phase_roundtrip(R))
+            counted(@check config=CFG spherical_roundtrip(R))
+            counted(@check config=CFG floatarray_roundtrip(Q))
         end
     end
 
     # `from_rotation_matrix` needs `eigen`; see MatrixFloatTypes.
     for T ∈ MatrixFloatTypes
         @testset "$T (via eigen)" begin
-            @check config=CFG matrix_roundtrip(rotors(T))
+            counted(@check config=CFG matrix_roundtrip(rotors(T)))
         end
     end
 end
@@ -380,17 +397,17 @@ end
 
 @testitem "properties: exp, log, sqrt, powers" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, CFG, quats, rotors,
+    using .PropertyGens: counted, FloatTypes, CFG, quats, rotors,
         explog, logexp_rotor, sqrt_squares, pow_addition
 
     for T ∈ FloatTypes
         @testset "$T" begin
             Q, R = quats(T), rotors(T)
-            @check config=CFG explog(Q)
-            @check config=CFG logexp_rotor(R)
-            @check config=CFG sqrt_squares(Q)
-            @check config=CFG pow_addition(
-                R, Data.Integers(-4, 4), Data.Integers(-4, 4))
+            counted(@check config=CFG explog(Q))
+            counted(@check config=CFG logexp_rotor(R))
+            counted(@check config=CFG sqrt_squares(Q))
+            counted(@check config=CFG pow_addition(
+                R, Data.Integers(-4, 4), Data.Integers(-4, 4)))
         end
     end
 end
@@ -398,16 +415,16 @@ end
 
 @testitem "properties: rotation semantics" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, CFG, rotors, quatvecs,
+    using .PropertyGens: counted, FloatTypes, CFG, rotors, quatvecs,
         sandwich_matches_matrix, rotation_is_isometry, matrix_homomorphism, double_cover
 
     for T ∈ FloatTypes
         @testset "$T" begin
             R, V = rotors(T), quatvecs(T)
-            @check config=CFG sandwich_matches_matrix(R, V)
-            @check config=CFG rotation_is_isometry(R, V)
-            @check config=CFG matrix_homomorphism(R, R)
-            @check config=CFG double_cover(R, V)
+            counted(@check config=CFG sandwich_matches_matrix(R, V))
+            counted(@check config=CFG rotation_is_isometry(R, V))
+            counted(@check config=CFG matrix_homomorphism(R, R))
+            counted(@check config=CFG double_cover(R, V))
         end
     end
 end
@@ -415,17 +432,17 @@ end
 
 @testitem "properties: slerp" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, CFG, rotors, unitinterval,
+    using .PropertyGens: counted, FloatTypes, CFG, rotors, unitinterval,
         slerp_endpoints, slerp_stays_unit, slerp_constant_speed,
         slerp_unflip_is_the_short_way
 
     for T ∈ FloatTypes
         @testset "$T" begin
             R, τ = rotors(T), unitinterval(T)
-            @check config=CFG slerp_endpoints(R, R)
-            @check config=CFG slerp_stays_unit(R, R, τ)
-            @check config=CFG slerp_constant_speed(R, R, τ)
-            @check config=CFG slerp_unflip_is_the_short_way(R, R, τ)
+            counted(@check config=CFG slerp_endpoints(R, R))
+            counted(@check config=CFG slerp_stays_unit(R, R, τ))
+            counted(@check config=CFG slerp_constant_speed(R, R, τ))
+            counted(@check config=CFG slerp_unflip_is_the_short_way(R, R, τ))
         end
     end
 end
@@ -433,13 +450,13 @@ end
 
 @testitem "properties: align recovers a rotation" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: AlignFloatTypes, CFG, rotors, quatvecs,
+    using .PropertyGens: counted, AlignFloatTypes, CFG, rotors, quatvecs,
         align_recovers_rotation
 
     for T ∈ AlignFloatTypes
         @testset "$T" begin
             R, V = rotors(T), quatvecs(T)
-            @check config=CFG align_recovers_rotation(R, V, V, V)
+            counted(@check config=CFG align_recovers_rotation(R, V, V, V))
         end
     end
 end
@@ -447,17 +464,17 @@ end
 
 @testitem "properties: distance is a bi-invariant metric" tags=[:validation, :fast] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: FloatTypes, CFG, rotors,
+    using .PropertyGens: counted, FloatTypes, CFG, rotors,
         distance_symmetric, distance_left_invariant, distance_right_invariant,
         distance_triangle
 
     for T ∈ FloatTypes
         @testset "$T" begin
             R = rotors(T)
-            @check config=CFG distance_symmetric(R, R)
-            @check config=CFG distance_left_invariant(R, R, R)
-            @check config=CFG distance_right_invariant(R, R, R)
-            @check config=CFG distance_triangle(R, R, R)
+            counted(@check config=CFG distance_symmetric(R, R))
+            counted(@check config=CFG distance_left_invariant(R, R, R))
+            counted(@check config=CFG distance_right_invariant(R, R, R))
+            counted(@check config=CFG distance_triangle(R, R, R))
         end
     end
 end
@@ -467,7 +484,7 @@ end
 
 @testitem "regression: from_rotation_matrix ignores eigenvalue ordering" tags=[:validation, :slow] setup=[PropertyGens] begin
     using Supposition: @check, Data
-    using .PropertyGens: CFG, rotors, matrix_roundtrip
+    using .PropertyGens: counted, CFG, rotors, matrix_roundtrip
 
     # `dominant_eigenvector` (src/conversion.jl) used to take `eigen(M).vectors[:, 4]`,
     # assuming `eigen` returns eigenvalues in ascending order.  LAPACK does, and so
@@ -487,5 +504,5 @@ end
     #
     # This test item is only meaningful with GenericSchur loaded, which the
     # `using DoubleFloats` in `PropertyGens` guarantees.
-    @check config=CFG matrix_roundtrip(rotors(BigFloat))
+    counted(@check config=CFG matrix_roundtrip(rotors(BigFloat)))
 end

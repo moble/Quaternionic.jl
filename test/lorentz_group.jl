@@ -4,44 +4,44 @@
 # predicate functions, then called for many random inputs.
 
 """Minkowski inner product with signature −+++."""
-_minkowski(v, w) = -v[1]*w[1] + v[2]*w[2] + v[3]*w[3] + v[4]*w[4]
+minkowski_inner(v, w) = -v[1]*w[1] + v[2]*w[2] + v[3]*w[3] + v[4]*w[4]
 
 """Minkowski norm squared (signed; negative for timelike vectors)."""
-_minkowski_norm²(v) = _minkowski(v, v)
+minkowski_norm²(v) = minkowski_inner(v, v)
 
-_metric_preserved(Λ, v, w; atol=1e-12) =
-    abs(_minkowski(Λ(v), Λ(w)) - _minkowski(v, w)) ≤ atol
+metric_preserved(Λ, v, w; atol=1e-12) =
+    abs(minkowski_inner(Λ(v), Λ(w)) - minkowski_inner(v, w)) ≤ atol
 
-_composition_consistent(Λ₁, Λ₂, v; atol=1e-12) =
+composition_consistent(Λ₁, Λ₂, v; atol=1e-12) =
     norm((Λ₁ * Λ₂)(v) - Λ₁(Λ₂(v))) ≤ atol
 
-_inverse_law(Λ, v; atol=1e-12) =
+inverse_law(Λ, v; atol=1e-12) =
     norm((Λ * inv(Λ))(v) - v) ≤ atol && norm((inv(Λ) * Λ)(v) - v) ≤ atol
 
-_identity_law(Λ, v; atol=1e-12) = norm(one(Λ)(v) - v) ≤ atol
+identity_law(Λ, v; atol=1e-12) = norm(one(Λ)(v) - v) ≤ atol
 
-_associativity_law(Λ₁, Λ₂, Λ₃, v; atol=1e-12) =
+associativity_law(Λ₁, Λ₂, Λ₃, v; atol=1e-12) =
     norm(((Λ₁ * Λ₂) * Λ₃)(v) - (Λ₁ * (Λ₂ * Λ₃))(v)) ≤ atol
 
-_preserves_time(Λ, v; atol=1e-12) = abs(Λ(v)[1] - v[1]) ≤ atol
+preserves_time(Λ, v; atol=1e-12) = abs(Λ(v)[1] - v[1]) ≤ atol
 
-_preserves_spatial_norm(Λ, v; atol=1e-12) =
+preserves_spatial_norm(Λ, v; atol=1e-12) =
     abs(norm(Λ(v)[2:4]) - norm(v[2:4])) ≤ atol
 
-_double_cover(Λ_pos, Λ_neg, v; atol=1e-12) =
+double_cover(Λ_pos, Λ_neg, v; atol=1e-12) =
     norm(Λ_pos(v) - Λ_neg(v)) ≤ atol
 
-_rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v; atol=1e-12) =
+rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v; atol=1e-12) =
     norm(Λ₁₂(v) - (Λ₁ * Λ₂)(v)) ≤ atol
 
-function _ga_norm_conditions(Λ; atol=1e-12)
+function ga_norm_conditions(Λ; atol=1e-12)
     R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = ga_components(Λ)
     quad  = R¹^2 + Rᶻʸ^2 + Rˣᶻ^2 + Rʸˣ^2 - Rᵗˣ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rᵗˣʸᶻ^2
     cross = R¹ * Rᵗˣʸᶻ + Rᶻʸ * Rᵗˣ + Rˣᶻ * Rᵗʸ + Rʸˣ * Rᵗᶻ
     return abs(quad - 1) ≤ atol && abs(cross) ≤ atol
 end
 
-function _ga_reverse_components(Λ; atol=1e-12)
+function ga_reverse_components(Λ; atol=1e-12)
     c  = ga_components(Λ)
     ci = ga_components(inv(Λ))
     abs(ci[1] - c[1]) ≤ atol &&   # R¹     unchanged  (grade 0)
@@ -57,99 +57,99 @@ end
 # ─── Shared random data ────────────────────────────────────────────────────────
 
 Random.seed!(42)
-const _lT = Float64
-const _ln = 20
+const lg_T = Float64
+const lg_n = 20
 
-_rot_rotors  = [randn(Rotor{_lT}) for _ ∈ 1:_ln]
-_rot_Λs      = [Lorentz{_lT}(R) for R ∈ _rot_rotors]
-_gen_vecs    = [randn(_lT, 4) for _ ∈ 1:_ln]
-_spatial_vecs = [[zero(_lT); randn(_lT, 3)] for _ ∈ 1:_ln]
+lg_rot_rotors  = [randn(Rotor{lg_T}) for _ ∈ 1:lg_n]
+lg_rot_Λs      = [Lorentz{lg_T}(R) for R ∈ lg_rot_rotors]
+lg_gen_vecs    = [randn(lg_T, 4) for _ ∈ 1:lg_n]
+lg_spatial_vecs = [[zero(lg_T); randn(lg_T, 3)] for _ ∈ 1:lg_n]
 
 Random.seed!(123)
-_boost_rapidities  = abs.(randn(_lT, _ln)) .+ _lT(0.1)
-_boost_directions  = [QuatVec(normalize(randn(_lT, 3))) for _ ∈ 1:_ln]
-_boost_Λs          = [Boost(η, n̂) for (η, n̂) ∈ zip(_boost_rapidities, _boost_directions)]
+lg_boost_rapidities  = abs.(randn(lg_T, lg_n)) .+ lg_T(0.1)
+lg_boost_directions  = [QuatVec(normalize(randn(lg_T, 3))) for _ ∈ 1:lg_n]
+lg_boost_Λs          = [Boost(η, n̂) for (η, n̂) ∈ zip(lg_boost_rapidities, lg_boost_directions)]
 
-_mixed_seq  = [x for pair ∈ zip(_rot_Λs, _boost_Λs) for x ∈ pair]
-_composed   = accumulate(*, _mixed_seq)
+lg_mixed_seq  = [x for pair ∈ zip(lg_rot_Λs, lg_boost_Λs) for x ∈ pair]
+lg_composed   = accumulate(*, lg_mixed_seq)
 
 @testset "Lorentz group" begin
 
     # ── Group structure: rotations ─────────────────────────────────────────────
 
     @testset "Rotation: identity element" begin
-        for v ∈ _gen_vecs, Λ ∈ _rot_Λs
-            @test _identity_law(Λ, v)
+        for v ∈ lg_gen_vecs, Λ ∈ lg_rot_Λs
+            @test identity_law(Λ, v)
         end
     end
 
     @testset "Rotation: composition" begin
-        for i ∈ 1:(_ln-1), v ∈ _gen_vecs
-            @test _composition_consistent(_rot_Λs[i], _rot_Λs[i+1], v)
+        for i ∈ 1:(lg_n-1), v ∈ lg_gen_vecs
+            @test composition_consistent(lg_rot_Λs[i], lg_rot_Λs[i+1], v)
         end
     end
 
     @testset "Rotation: inverse" begin
-        for Λ ∈ _rot_Λs, v ∈ _gen_vecs
-            @test _inverse_law(Λ, v)
+        for Λ ∈ lg_rot_Λs, v ∈ lg_gen_vecs
+            @test inverse_law(Λ, v)
         end
     end
 
     @testset "Rotation: associativity" begin
-        for i ∈ 1:(_ln-2), v ∈ _gen_vecs
-            @test _associativity_law(_rot_Λs[i], _rot_Λs[i+1], _rot_Λs[i+2], v)
+        for i ∈ 1:(lg_n-2), v ∈ lg_gen_vecs
+            @test associativity_law(lg_rot_Λs[i], lg_rot_Λs[i+1], lg_rot_Λs[i+2], v)
         end
     end
 
     # ── Minkowski isometry: rotations ──────────────────────────────────────────
 
     @testset "Rotation: preserves Minkowski metric" begin
-        for Λ ∈ _rot_Λs, i ∈ 1:(_ln-1)
-            @test _metric_preserved(Λ, _gen_vecs[i], _gen_vecs[i+1])
+        for Λ ∈ lg_rot_Λs, i ∈ 1:(lg_n-1)
+            @test metric_preserved(Λ, lg_gen_vecs[i], lg_gen_vecs[i+1])
         end
     end
 
     @testset "Rotation: null vectors remain null" begin
-        for Λ ∈ _rot_Λs, v ∈ _spatial_vecs
+        for Λ ∈ lg_rot_Λs, v ∈ lg_spatial_vecs
             v_sp = v[2:4]
             ℓ = [norm(v_sp); v_sp]
             ℓ′ = Λ(ℓ)
-            @test abs(_minkowski_norm²(ℓ′)) ≤ 1e-12
+            @test abs(minkowski_norm²(ℓ′)) ≤ 1e-12
         end
     end
 
     # ── Rotation-specific invariants ───────────────────────────────────────────
 
     @testset "Rotation: preserves time component" begin
-        for Λ ∈ _rot_Λs, v ∈ _gen_vecs
-            @test _preserves_time(Λ, v)
+        for Λ ∈ lg_rot_Λs, v ∈ lg_gen_vecs
+            @test preserves_time(Λ, v)
         end
     end
 
     @testset "Rotation: preserves spatial norm" begin
-        for Λ ∈ _rot_Λs, v ∈ _spatial_vecs
-            @test _preserves_spatial_norm(Λ, v)
+        for Λ ∈ lg_rot_Λs, v ∈ lg_spatial_vecs
+            @test preserves_spatial_norm(Λ, v)
         end
     end
 
     # ── Double cover ───────────────────────────────────────────────────────────
 
     @testset "Rotation: double cover — R and −R give the same transformation" begin
-        for (R, v) ∈ zip(_rot_rotors, _gen_vecs)
-            @test _double_cover(Lorentz{_lT}(R), Lorentz{_lT}(-R), v)
+        for (R, v) ∈ zip(lg_rot_rotors, lg_gen_vecs)
+            @test double_cover(Lorentz{lg_T}(R), Lorentz{lg_T}(-R), v)
         end
     end
 
     # ── Spin(3) → Lorentz homomorphism ────────────────────────────────────────
 
     @testset "Rotation: Spin(3) → Lorentz is a group homomorphism" begin
-        for i ∈ 1:(_ln-1)
-            R₁, R₂ = _rot_rotors[i], _rot_rotors[i+1]
-            Λ₁₂ = Lorentz{_lT}(R₁ * R₂)
-            Λ₁  = Lorentz{_lT}(R₁)
-            Λ₂  = Lorentz{_lT}(R₂)
-            for v ∈ _gen_vecs
-                @test _rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v)
+        for i ∈ 1:(lg_n-1)
+            R₁, R₂ = lg_rot_rotors[i], lg_rot_rotors[i+1]
+            Λ₁₂ = Lorentz{lg_T}(R₁ * R₂)
+            Λ₁  = Lorentz{lg_T}(R₁)
+            Λ₂  = Lorentz{lg_T}(R₂)
+            for v ∈ lg_gen_vecs
+                @test rotor_homomorphism(Λ₁₂, Λ₁, Λ₂, v)
             end
         end
     end
@@ -242,7 +242,7 @@ _composed   = accumulate(*, _mixed_seq)
         for (vx, vy, vz) ∈ [(0.5, 0.0, 0.0), (0.0, 0.3, 0.0), (0.0, 0.0, 0.4), (0.2, 0.2, 0.2)]
             v⃗ = QuatVec(vx, vy, vz)
             β = abs(v⃗)
-            @test Boost(v⃗) == Boost(atanh(β), v⃗ / β)
+            @test Boost(v⃗) ≈ Boost(atanh(β), v⃗ / β)
             @test Boost([vx, vy, vz]) == Boost(v⃗)
         end
         # zero velocity → identity
@@ -337,49 +337,49 @@ _composed   = accumulate(*, _mixed_seq)
     # ── GA norm conditions ─────────────────────────────────────────────────────
 
     @testset "GA norm conditions hold for pure transformations" begin
-        for Λ ∈ _rot_Λs
-            @test _ga_norm_conditions(Λ)
+        for Λ ∈ lg_rot_Λs
+            @test ga_norm_conditions(Λ)
         end
-        for Λ ∈ _boost_Λs
-            @test _ga_norm_conditions(Λ)
+        for Λ ∈ lg_boost_Λs
+            @test ga_norm_conditions(Λ)
         end
     end
 
     @testset "GA norm conditions preserved under composition" begin
-        for Λ ∈ _composed
-            @test _ga_norm_conditions(Λ)
+        for Λ ∈ lg_composed
+            @test ga_norm_conditions(Λ)
         end
     end
 
     @testset "GA reverse is the group inverse (component test)" begin
-        for Λ ∈ _rot_Λs
-            @test _ga_reverse_components(Λ)
+        for Λ ∈ lg_rot_Λs
+            @test ga_reverse_components(Λ)
         end
-        for Λ ∈ _boost_Λs
-            @test _ga_reverse_components(Λ)
+        for Λ ∈ lg_boost_Λs
+            @test ga_reverse_components(Λ)
         end
-        for Λ ∈ _composed
-            @test _ga_reverse_components(Λ)
+        for Λ ∈ lg_composed
+            @test ga_reverse_components(Λ)
         end
     end
 
     # ── Group structure: boosts ────────────────────────────────────────────────
 
     @testset "Boost: group properties" begin
-        for Λ ∈ _boost_Λs, v ∈ _gen_vecs
-            @test _identity_law(Λ, v)
+        for Λ ∈ lg_boost_Λs, v ∈ lg_gen_vecs
+            @test identity_law(Λ, v)
         end
-        for i ∈ 1:(_ln-1), v ∈ _gen_vecs
-            @test _composition_consistent(_boost_Λs[i], _boost_Λs[i+1], v)
+        for i ∈ 1:(lg_n-1), v ∈ lg_gen_vecs
+            @test composition_consistent(lg_boost_Λs[i], lg_boost_Λs[i+1], v)
         end
-        for Λ ∈ _boost_Λs, v ∈ _gen_vecs
-            @test _inverse_law(Λ, v)
+        for Λ ∈ lg_boost_Λs, v ∈ lg_gen_vecs
+            @test inverse_law(Λ, v)
         end
-        for i ∈ 1:(_ln-2), v ∈ _gen_vecs
-            @test _associativity_law(_boost_Λs[i], _boost_Λs[i+1], _boost_Λs[i+2], v)
+        for i ∈ 1:(lg_n-2), v ∈ lg_gen_vecs
+            @test associativity_law(lg_boost_Λs[i], lg_boost_Λs[i+1], lg_boost_Λs[i+2], v)
         end
-        for Λ ∈ _boost_Λs, i ∈ 1:(_ln-1)
-            @test _metric_preserved(Λ, _gen_vecs[i], _gen_vecs[i+1])
+        for Λ ∈ lg_boost_Λs, i ∈ 1:(lg_n-1)
+            @test metric_preserved(Λ, lg_gen_vecs[i], lg_gen_vecs[i+1])
         end
     end
 

@@ -85,10 +85,13 @@ end
             end
             f = getproperty(FundamentalTests, n)
             if !isempty(methods(f)) && startswith(string(f), "test_")
-                types = methods(f).ms[1].sig.parameters[2:end]
-                args = Base.Iterators.product([type===Any ? scalars : quaternions for type in types]...)
-                for arg in args
-                    f(arg...)
+                # Some test functions have more than one method, so every method is run.
+                for m in methods(f)
+                    types = m.sig.parameters[2:end]
+                    args = Base.Iterators.product([type===Any ? scalars : quaternions for type in types]...)
+                    for arg in args
+                        f(arg...)
+                    end
                 end
             end
         end
@@ -113,9 +116,12 @@ end
             if !isempty(methods(f)) && startswith(string(f), "test_")
                 # ≈ with atol/rtol uses <= internally, which doesn't work for Symbolics.Num
                 n === :test_involution_norm_imag && continue
-                types = methods(f).ms[1].sig.parameters[2:end]
-                args = [type===Any ? next_scalar!(chars) : next_quaternion!(chars) for type in types]
-                f(args...)
+                # Some test functions have more than one method, so every method is run.
+                for m in methods(f)
+                    types = m.sig.parameters[2:end]
+                    args = [type===Any ? next_scalar!(chars) : next_quaternion!(chars) for type in types]
+                    f(args...)
+                end
             end
         end
     end

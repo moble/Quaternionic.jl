@@ -1,10 +1,9 @@
 module Quaternionic
 
-import LinearAlgebra: LinearAlgebra, Symmetric, eigen, norm, normalize, (⋅)
+import LinearAlgebra: LinearAlgebra, Symmetric, eigen, norm, normalize, (⋅), (×)
 import GenericLinearAlgebra
 import PrecompileTools: PrecompileTools, @compile_workload, @setup_workload
 import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector
-import LaTeXStrings
 import Random: AbstractRNG, default_rng
 
 # The `public` keyword is a syntax error before Julia 1.11, so we wrap it in a macro that
@@ -26,6 +25,7 @@ export Rotor, rotor, RotorF64, RotorF32, RotorF16
 export QuatVec, quatvec, QuatVecF64, QuatVecF32, QuatVecF16
 export components, basetype
 @public value, iszerovalue
+@public dominant_eigenvector
 @public ℂconj, ℂreal, ℂimag, ℂreim
 @public RB, BR, Rv, vR, KAN
 export (⋅), (×), (×̂), normalize, norm
@@ -38,7 +38,7 @@ export from_float_array, to_float_array,
 export distance, distance2
 export align
 export Lorentz, Boost, ga_components
-export unflip, unflip!, slerp, squad
+export unflip, unflip!, slerp, squad, squad!
 export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
 
@@ -70,14 +70,16 @@ end
 @static if !isdefined(Base, :get_extension)
     # COV_EXCL_START
 
+    # Julia 1.6 through 1.8 do not support package extensions, so Requires loads them.
+    # Zygote 0.7, Enzyme 0.13, and Mooncake need Julia 1.10 or later, so their extensions
+    # are not listed here, and neither is the ReverseDiff extension, which is written to be
+    # loaded only as a package extension.
     function __init__()
-        @require ChainRules="082447d4-558c-5d27-93f4-14fc19e9eca2" include("../ext/QuaternionicChainRulesExt.jl")
-        @require ChainRulesCore="d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include("../ext/QuaternionicChainRulesCoreExt.jl")
+        @require ChainRulesCore="d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include("../ext/QuaternionicChainRulesCoreExt/QuaternionicChainRulesCoreExt.jl")
         @require FastDifferentiation="eb9bf01b-bf85-4b60-bf87-ee5de06c00be" include("../ext/QuaternionicFastDifferentiationExt.jl")
         @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
         @require Symbolics="0c5d862f-8b57-4792-8d23-62f2024744c7" include("../ext/QuaternionicSymbolicsExt.jl")
         @require Latexify="23fbe1c1-3f47-55db-b15f-69d7ec21a316" include("../ext/QuaternionicLatexifyExt.jl")
-        @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" include("../ext/QuaternionicZygoteExt.jl")
     end
 
     # COV_EXCL_STOP

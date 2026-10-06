@@ -38,7 +38,7 @@
         @testset "Euler angles" begin
             N = 5_000
 
-            random_angles = [2π .* rand(T, 3) .- π for _ in 1:5000]
+            random_angles = [2π .* rand(T, 3) .- π for _ in 1:N]
             for i in 1:N
                 α, β, γ = random_angles[i]
                 q1 = from_euler_angles(α, β, γ)
@@ -66,7 +66,7 @@
 
             dumb_to_euler_phases(α, β, γ) = [exp(α*im), exp(β*im), exp(γ*im)]
 
-            random_angles = [[3(π*rand(T))-π, π*rand(T), 3(π*rand(T))-π] for _ in 1:5000]
+            random_angles = [[3(π*rand(T))-π, π*rand(T), 3(π*rand(T))-π] for _ in 1:N]
             for i in 1:N
                 α, β, γ = random_angles[i]
                 z1 = dumb_to_euler_phases(α, β, γ)
@@ -135,7 +135,7 @@
         @testset "Spherical coordinates" begin
             N = 5_000
 
-            random_angles = [2π .* rand(T, 3) .- π for _ in 1:5000]
+            random_angles = [2π .* rand(T, 3) .- π for _ in 1:N]
             for i in 1:N
                 α, β, γ = random_angles[i]
                 q1 = from_spherical_coordinates(β, α)

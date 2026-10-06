@@ -45,8 +45,11 @@
                         continue
                     end
                     @test promote_rule(T1, T2) === T1
-                    if Q === QuatVec
+                    if Q === QuatVec || Q === Rotor
+                        # Neither a `QuatVec` nor a `Rotor` can represent a general number
                         @test promote_rule(Q{T1}, T2) === Quaternion{T1}
+                        @test promote_type(Q{T1}, T2) === Quaternion{T1}
+                        @test promote_type(Q{T1}, Complex{T2}) === Quaternion{Complex{T1}}
                     else
                         @test promote_rule(Q{T1}, T2) === Q{T1}
                     end

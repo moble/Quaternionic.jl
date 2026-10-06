@@ -18,9 +18,23 @@ absvec(q::AbstractQuaternion{Node}) = √sum(x->x^2, vec(q))
 
 
 ### Functions that used to appear in quaternion.jl
-quaternion(w::Node) = quaternion(SVector{4}(w, false, false, false))
-rotor(w::Node) = rotor(SVector{4}(one(w), false, false, false))
-quatvec(w::Node) = quatvec(SVector{4,typeof(w)}(false, false, false, false))
+# The other components are filled with `zero(w)` rather than `false`, because `Node(false)`
+# prints as `false`.
+quaternion(w::Node) = quaternion(SVector{4}(w, zero(w), zero(w), zero(w)))
+function rotor(w::Node)
+    # When `w` is a constant, the components are those of src's `rotor(v)` for that
+    # constant, so that the result is `±1` for a finite nonzero constant and a NaN rotor for a
+    # zero, NaN, or infinite constant.  The sign of a variable or any other expression is
+    # unknown, so the identity rotor is returned without symbolic normalization.
+    v = FastDifferentiation.is_constant(w) ? FastDifferentiation.value(w) : nothing
+    c = if v isa Real
+        SVector{4,Node}(components(rotor(v)))
+    else
+        SVector{4,Node}(one(w), zero(w), zero(w), zero(w))
+    end
+    Rotor{Node}(c)
+end
+quatvec(w::Node) = quatvec(SVector{4}(zero(w), zero(w), zero(w), zero(w)))
 for QT1 ∈ (AbstractQuaternion, Quaternion, QuatVec, Rotor)
     @eval begin
         wrapper(::Type{<:$QT1}, ::Val{OP}, ::Type{<:Node}) where {OP} = quaternion
@@ -47,22 +61,20 @@ let NT = Node
 end
 let T = Node
     for OP ∈ (Val{+}, Val{-}, Val{*}, Val{/})
-        @eval wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = quaternion
-        if T !== Quaternion
-            @eval wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = quaternion
+        @eval begin
+            wrapper(::Type{<:Quaternion}, ::$OP, ::Type{<:$T}) = quaternion
+            wrapper(::Type{<:$T}, ::$OP, ::Type{<:Quaternion}) = quaternion
         end
     end
 end
 Base.promote_rule(::Type{Q}, ::Type{S}) where {Q<:AbstractQuaternion,S<:Node} =
     wrapper(Q){promote_type(basetype(Q), S)}
-
-
-# # Broadcast-like operations from FastDifferentiation
-# # (d::FastDifferentiation.Operator)(q::QT) where {QT<:AbstractQuaternion} = QT(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-# # (d::FastDifferentiation.Operator)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
-# (d::FastDifferentiation.Differential)(q::Quaternion) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-# (d::FastDifferentiation.Differential)(q::Rotor) = quaternion(d(q[1]), d(q[2]), d(q[3]), d(q[4]))
-# (d::FastDifferentiation.Differential)(q::QuatVec) = quatvec(d(q[2]), d(q[3]), d(q[4]))
+# As in src/quaternion.jl, a `QuatVec` or a `Rotor` promoted with a scalar becomes a
+# `Quaternion`.  These methods also resolve ambiguities with the rules in src.
+for QT ∈ (QuatVec, Rotor)
+    @eval Base.promote_rule(::Type{$QT{T}}, ::Type{S}) where {T<:Number,S<:Node} =
+        Quaternion{promote_type(T, S)}
+end
 
 
 ### Functions that used to appear in algebra.jl
@@ -88,35 +100,59 @@ let S = Node
     end
 end
 
-# Here, we disable FastDifferentiation support for functions that rely on conditionals;
-# otherwise, they will fail with errors like
+# Here, we disable FastDifferentiation support for functions that cannot yet be used with FD
+# variables, so that they raise an explanatory error.  There are two obstacles.  First, most
+# of these functions choose an algorithm with Julia `if` statements that depend on the
+# values of the components, which fail for FD variables with errors like
 #
 #    TypeError: non-boolean (Node) used in boolean context
 #
-# This could be removed once FastDifferentiation supports conditionals, and these functions
-# are tested.
-for method ∈ (
-    :(Quaternionic.to_euler_phases(::AbstractQuaternion{Node})),
-    :(Quaternionic.from_euler_phases(::Complex{Node}, ::Complex{Node}, ::Complex{Node})),
-    :(Base.log(::Quaternion{Node})),
-    :(Base.log(::Rotor{Node})),
-    :(Base.exp(::Quaternion{Node})),
-    :(Base.exp(::QuatVec{Node})),
-    :(Base.sqrt(::Quaternion{Node})),
-    :(Base.sqrt(::QuatVec{Node})),
-    :(Base.sqrt(::Rotor{Node})),
-    :(Base.:^(::Rotor{Node}, ::Number)),
-    :(Base.:^(::Quaternion{Node}, ::Integer)),
-    :(Base.:^(::QuatVec{Node}, ::Integer)),
-    :(Base.:^(::Rotor{Node}, ::Integer)),
-)
-    func = first(split(string(method), '('))
-    @eval begin
-        $(method) = error(
-            """FastDifferentiation does not yet support conditionals involving FD variables,
-            which are needed to implement its derivative of `$(func)` involving quaternions.
-            """
-        )
+# FastDifferentiation provides `if_else` for such conditionals, but these functions would
+# have to be rewritten to use it.  Second, the integer powers do not branch on the
+# components, but FastDifferentiation itself returns incorrect Jacobians for some of them
+# (such as `q^3`), and throws a `KeyError` for others (such as `rotor(q)^2`).  The same
+# upstream problem also affects explicit products like `q*q*q`, and expressions involving
+# the normalization of a `Rotor`, which are not disabled here.  Non-integer powers of a
+# `Quaternion` are not listed, because they call `log`, which raises its own error.  These
+# stubs can be removed once both problems are solved, and these functions are tested.
+let conditionals = "it chooses an algorithm with conditionals on the values of the " *
+        "components, which FastDifferentiation does not support",
+    upstream = "FastDifferentiation computes incorrect derivatives for some integer powers"
+    stubs = [
+        (:(Quaternionic.to_euler_phases(::AbstractQuaternion{Node})), conditionals),
+        (:(Base.log(::Quaternion{Node})), conditionals),
+        (:(Base.log(::Rotor{Node})), conditionals),
+        (:(Base.exp(::Quaternion{Node})), conditionals),
+        (:(Base.exp(::QuatVec{Node})), conditionals),
+        (:(Base.sqrt(::Quaternion{Node})), conditionals),
+        (:(Base.sqrt(::QuatVec{Node})), conditionals),
+        (:(Base.sqrt(::Rotor{Node})), conditionals),
+        # The exponent types are listed separately, rather than as `Number`, to avoid
+        # ambiguities with Base's `^(::Number, ::Rational)` and with methods in src that
+        # take a quaternion exponent.
+        (:(Base.:^(::Rotor{Node}, ::Real)), conditionals),
+        (:(Base.:^(::Rotor{Node}, ::Rational)), conditionals),
+        (:(Base.:^(::Rotor{Node}, ::Complex)), conditionals),
+        (:(Base.:^(::Quaternion{Node}, ::Integer)), upstream),
+        (:(Base.:^(::QuatVec{Node}, ::Integer)), upstream),
+        (:(Base.:^(::Rotor{Node}, ::Integer)), upstream),
+    ]
+    # `Complex{Node}` is a valid type only when `Node <: Real`, which is true in
+    # FastDifferentiation 0.4 but not in 0.3.
+    if Node <: Real
+        push!(stubs, (
+            :(Quaternionic.from_euler_phases(::Complex{Node}, ::Complex{Node}, ::Complex{Node})),
+            conditionals
+        ))
+    end
+    for (method, reason) ∈ stubs
+        # The message is built here, outside the quoted expression, so that it is complete
+        # when the stub is defined.  Interpolating `func` inside the string in the quoted
+        # expression would instead look up a global `func` when the stub is called.
+        func = first(split(string(method), '('))
+        msg = "`$(func)` cannot yet be used with FastDifferentiation variables, because " *
+            "$(reason)."
+        @eval $(method) = error($msg)
     end
 end
 
@@ -141,11 +177,13 @@ end
         # this package or not (on Julia 1.8 and higher)
         r(v)
         𝓇(𝓋)
-        for a ∈ [s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆]
+        # Tuples, unlike vectors, keep the type of each element, so that mixed operations
+        # are compiled too.
+        for a ∈ (s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆)
             conj(a)
-            for b ∈ [s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆]
+            for b ∈ (s, v, r, q, 𝓈, 𝓋, 𝓇, 𝓆)
                 a * b
-                # a / b  # TODO: Uncomment when https://github.com/brianguenter/FastDifferentiation.jl/issues/98 is fixed
+                a / b
                 a + b
                 a - b
             end

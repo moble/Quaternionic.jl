@@ -1,24 +1,26 @@
 """
-    randn([rng=default_rng()], T=Quaternion{Float64}, [dims...])
+    randn([rng=default_rng()], QT, [dims...])
 
-Generate a normally distributed random quaternion of type `T` with mean 0 and standard
-deviation of norm 1.  Optionally generate an *array* of such quaternions.  This module
-currently provides an implementation for the types `QuaternionF16`, `QuaternionF32`, and
-`QuaternionF64` (the default).  The values are drawn from the spherically symmetric
-quaternionic normal distribution of variance 1 (corresponding to each component having
-independent normal distribution with mean zero and variance 1/4).
+Generate a normally distributed random quaternion of type `QT`, or an *array* of such
+quaternions with dimensions `dims`.  The type `QT` must specify the element type, which can
+be any `AbstractFloat`, as in `QuaternionF64`, `Rotor{Float32}`, or `QuatVec{BigFloat}`.
+(There is no default type; `randn()` with no type argument still returns a `Float64`.)
 
-Note that this function works with `Quaternion{BigFloat}`, even though `Base.randn` does
-not work with `BigFloat` on Julia <1.9; for earlier versions, we just use the [Box-Muller
-transform](https://en.wikipedia.org/wiki/Box–Muller_transform) to obtain the desired
-result.
+If `QT` is a `Quaternion` type, the values are drawn from the spherically symmetric
+quaternionic normal distribution with mean 0 and variance 1, so that the expected value of
+`abs2(q)` is 1.  This corresponds to each of the four components having an independent
+normal distribution with mean 0 and variance 1/4.
 
-If the quaternion type passed in is `Rotor`, the result will be normalized correctly.
-Because the distribution is spherically symmetric, the result is a truly random
-rotation.
+If `QT` is a `Rotor` type, the result is normalized.  Because the distribution is
+spherically symmetric, the result is a uniformly distributed random rotation.
 
-If the quaternion type is `QuatVec`, the result will have a 0 scalar component, and the
-vector will have mean 0 standard deviation of norm 1.
+If `QT` is a `QuatVec` type, the result has zero scalar part, and its vector part has mean 0
+and variance 1, corresponding to each of the three vector components having an independent
+normal distribution with mean 0 and variance 1/3.
+
+Note that this function works with `BigFloat` elements, even though `Base.randn` does not
+work with `BigFloat` on Julia versions before 1.9; for those versions, the [Box–Muller
+transform](https://en.wikipedia.org/wiki/Box–Muller_transform) is used instead.
 
 # Examples
 ```julia

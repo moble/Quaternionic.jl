@@ -27,9 +27,9 @@ this more general algebra.
 
 One crucial new feature is the *spinor norm*: for complex quaternions,
 the GA reverse gives ``𝐐𝐐̃ = w² + x² + y² + z²``, which is a
-*complex* scalar, distinct from the Euclidean norm ``|w|² + |x|² +
-|y|² + |z|²`` which will always be real.  The surprising point is that
-the normalization condition ``𝐐𝐐̃ = 1`` is now *two real*
+*complex* scalar, distinct from the squared Euclidean norm ``|w|² +
+|x|² + |y|² + |z|²``, which is always real.  The surprising point is
+that the normalization condition ``𝐐𝐐̃ = 1`` is now *two real*
 conditions, because this says that the "imaginary" part is zero.  This
 reduces the eight real degrees of freedom in a complex quaternion down
 to six, which is the correct number for a Lorentz transformation in
@@ -44,8 +44,9 @@ four-dimensional Minkowski space, and we use the metric signature
 ```math
 𝐭^2 = -1, \qquad 𝐱^2 = 𝐲^2 = 𝐳^2 = +1,
 ```
-and all other products anticommute.  The full algebra has dimension
-``2^4 = 16``, with basis elements grouped by grade:
+and all other products between distinct basis vectors anticommute.
+The full algebra has dimension ``2^4 = 16``, with basis elements
+grouped by grade:
 
 ```math
 \begin{array}{lll}
@@ -168,19 +169,24 @@ exactly as for real quaternions.
 
 Now, we have to be careful to distinguish between two different
 notions of "norm" for complex quaternions: the *spinor norm* and the
-*Euclidean norm*.  The spinor norm,
+*Euclidean norm*.  The (squared) spinor norm,
 ```math
 𝐐\,\widetilde{𝐐} = w^2 + x^2 + y^2 + z^2,
 ```
 is the one that arises from the GA reverse, and it is the physically
 meaningful notion of "unit" for Lorentz transformations.  Notably, the
-result is a *complex* number.  On the other hand, the Euclidean norm,
+result is a *complex* number.  On the other hand, the squared
+Euclidean norm, which treats the four complex components as a vector
+in ``ℂ⁴``,
 ```math
-𝐐\,𝐐^\dagger = |w|^2 + |x|^2 + |y|^2 + |z|^2,
+|w|^2 + |x|^2 + |y|^2 + |z|^2,
 ```
-is always a positive real number, and does not have a direct geometric
-meaning in this context.  The relevant condition that defines a spinor
-(in this case, a Lorentz rotor) is that the *spinor* norm equals 1:
+is always a nonnegative real number, and does not have a direct
+geometric meaning in this context.  (It equals the scalar part of the
+product of ``𝐐`` with its reverse after complex conjugation of the
+components, but the other parts of that product are generally
+nonzero.)  The relevant condition that defines a spinor (in this case,
+a Lorentz rotor) is that the *spinor* norm equals 1:
 ```math
 𝐐\,\widetilde{𝐐} = 1 + 0i.
 ```
@@ -195,15 +201,14 @@ is
 ```
 which is not equal to ``1`` in general.  Phase factors therefore do *not*
 belong to the Lorentz rotor group, even though they are unit elements under
-the Euclidean norm (``|\exp(i\varphi)| = 1``).
+the Euclidean norm (``|\exp(i\alpha)| = 1``).
 
 !!! note "Real vs. complex quaternions"
-
-    For real quaternions, ``𝐐\,\widetilde{𝐐} = \sum r_i^2 = \sum |r_i|^2``,
-    so the spinor and Euclidean norms coincide.  This is why the distinction
-    never arises on the GA page.  For complex quaternions they diverge, and
-    only the spinor norm has the correct geometric meaning for Lorentz
-    transformations.
+    For real quaternions, ``𝐐\,\widetilde{𝐐} = \sum r_i^2 = \sum
+    |r_i|^2``, so the spinor and Euclidean norms coincide.  This is
+    why the distinction never arises on the GA page.  For complex
+    quaternions they diverge, and only the spinor norm has the correct
+    geometric meaning for Lorentz transformations.
 
 
 ## Rotors in the STA
@@ -215,10 +220,10 @@ three-dimensional case:
 R = \exp\!\left(\frac{\vartheta}{2}\,\hat{B}\right)
   = \cos\frac{\vartheta}{2} + \sin\frac{\vartheta}{2}\,\hat{B},
 ```
-where ``\hat{B} \in \{𝐳𝐲, 𝐱𝐳, 𝐲𝐱\}`` is a unit spatial bivector.
-The components are real, and the spinor norm happens to equal the
-Euclidean norm: ``R\widetilde{R} = \cos^2(\vartheta/2) +
-\sin^2(\vartheta/2) = 1``.
+where ``\hat{B}`` is any unit spatial bivector, such as ``𝐳𝐲``,
+``𝐱𝐳``, ``𝐲𝐱``, or unit-norm combinations of them.  The components
+are real, and the spinor norm happens to equal the Euclidean norm:
+``R\widetilde{R} = \cos^2(\vartheta/2) + \sin^2(\vartheta/2) = 1``.
 
 A boost in the ``𝐯``-direction by rapidity ``\varphi`` uses the boost
 bivector ``𝐭𝐯``:
@@ -235,15 +240,26 @@ B\,\widetilde{B}
 = \cosh^2\!\frac{\varphi}{2} - \sinh^2\!\frac{\varphi}{2}
 = 1,
 ```
-while the Euclidean norm is ``\cosh^2(\varphi/2) + \sinh^2(\varphi/2)
-= \cosh\varphi \neq 1`` for ``\varphi \neq 0``.  This concretely shows
-why the spinor norm is the physically correct notion of "unit" for
-Lorentz transformations.
+while the squared Euclidean norm is ``\cosh^2(\varphi/2) +
+\sinh^2(\varphi/2) = \cosh\varphi \neq 1`` for ``\varphi \neq 0``.
+This concretely shows why the spinor norm is the physically correct
+notion of "unit" for Lorentz transformations.
 
-[^boost]: The sign can be verified by expanding the Lorentz transformation
-    ``\Lambda\,𝐯\,\widetilde{\Lambda}`` on the 4-vector ``𝐯 = t\,𝐭 + x\,𝐱``
-    and confirming that a positive rapidity boosts ``t \to \cosh\varphi\,t +
-    \sinh\varphi\,x`` and ``x \to \sinh\varphi\,t + \cosh\varphi\,x``.
+The transformations are *active*: ``B\,𝐰\,\widetilde{B}`` is the
+boosted vector ``𝐰``, expressed in the original frame.  For example,
+the boost with velocity ``\vec{v}`` maps the 4-velocity ``𝐭`` of a
+particle at rest to the 4-velocity ``\gamma\,(𝐭 + \vec{v})`` of a
+particle moving with velocity ``\vec{v}``.  The components of a fixed
+vector as seen by an observer moving with velocity ``\vec{v}`` are
+instead given by the inverse boost.  Products act from right to left:
+``(Λ_1 Λ_2)\, 𝐰\, \widetilde{(Λ_1 Λ_2)} = Λ_1 \bigl(Λ_2\, 𝐰\,
+\widetilde{Λ_2}\bigr) \widetilde{Λ_1}``.
+
+[^boost]: The sign can be verified by taking ``𝐯 = 𝐱``, expanding
+    ``B\,𝐰\,\widetilde{B}`` for the 4-vector ``𝐰 = t\,𝐭 + x\,𝐱``,
+    and confirming that a positive rapidity boosts ``t \to
+    \cosh\varphi\,t + \sinh\varphi\,x`` and ``x \to \sinh\varphi\,t +
+    \cosh\varphi\,x``.
 
 
 ## [Iwasawa's ``KA\,N`` decomposition](@id iwasawa-kan)
@@ -260,14 +276,14 @@ G = {KA\,N}.
 
 Our implementation of this decomposition relies on a choice of basis
 unit vectors: we specifically use the ``𝐭`` and ``𝐳`` basis vectors,
-and assume that we know how to find the plane corresponding to both.
-We use those to pick out boosts along that spatial direction, and null
-rotations that fix the corresponding null vector.  Specifically, we
-have the following subgroups:
+and the boost plane ``𝐭𝐳`` that they span.  We use those to pick out
+boosts along that spatial direction, and null rotations that fix the
+corresponding null vector.  Specifically, we have the following
+subgroups:
 
 - **``K``** is the maximal compact subgroup, which in the case of the
   Lorentz group is isomorphic to the rotation group
-  ``\mathrm{SO}(3)``, and in the case of ``\mathrm{Spin}(3,1)`` is
+  ``\mathrm{SO}(3)``, and in the case of ``\mathrm{Spin}^+(3,1)`` is
   isomorphic to ``\mathrm{Spin}(3)``.
 - **``A``** is the abelian subgroup of boosts in a fixed direction.
   We take this direction to be the z-axis, so that we have ``A =
@@ -337,7 +353,7 @@ and the fact that ``𝐭𝐳u₊ = u₊``, we have
 ```math
 \begin{aligned}
 Rₐ u₊
-&= \left[\cosh\left(\frac{φₐ}{2}\right) + \sinh\left(\frac{φₐ}{2}\right)\right] u₊
+&= \left[\cosh\left(\frac{φₐ}{2}\right) + \sinh\left(\frac{φₐ}{2}\right)\right] u₊ \\
 &= e^{φₐ/2} u₊.
 \end{aligned}
 ```
@@ -397,27 +413,8 @@ Rₙ = Rₐ^{-1} Rₖ^{-1} Λ.
 This decomposition is implemented in the [`Quaternionic.KAN`](@ref)
 function.
 
-## API reference
-
-```@meta
-CurrentModule = Quaternionic
-```
-
-```@docs
-Lorentz
-Lorentz(::AbstractVector)
-Boost
-ga_components
-RB
-BR
-Rv
-vR
-KAN
-ℂreal
-ℂimag
-ℂreim
-ℂconj
-```
+The functions that implement these constructions are described on the
+[Lorentz transformations](@ref) page.
 
 ## Further reading
 
