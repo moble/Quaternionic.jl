@@ -386,10 +386,10 @@ end
 
     # At a zero result, the gradients are zero, as at batch width 1.
     for (g, x) in ((y -> abs(Q(y)), zeros(4)), (y -> absvec(Q(y)), [1.0, 0.0, 0.0, 0.0]))
-        dx = (zeros(4), zeros(4))
-        Enzyme.autodiff(Enzyme.Reverse, g, Enzyme.Active, Enzyme.BatchDuplicated(x, dx))
-        @test dx[1] == zeros(4)
-        @test dx[2] == zeros(4)
+        shadows = (zeros(4), zeros(4))
+        Enzyme.autodiff(Enzyme.Reverse, g, Enzyme.Active, Enzyme.BatchDuplicated(x, shadows))
+        @test shadows[1] == zeros(4)
+        @test shadows[2] == zeros(4)
         @test DI.jacobian(y -> [g(y)], backend, x) == zeros(1, 4)
     end
 end
