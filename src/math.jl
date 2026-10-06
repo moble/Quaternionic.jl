@@ -28,6 +28,17 @@ Base.abs2(q::QuatVec{T}) where {T<:Real} = sum(x->x^2, vec(q))
 Base.abs2(q::QuatVec{Complex{T}}) where {T<:Real} = q[2]*q[2] + q[3]*q[3] + q[4]*q[4]
 Base.abs2(::Rotor{T}) where {T<:Number} = one(real(T))
 
+# WORKAROUND for Enzyme bugs (EnzymeAD/Enzyme.jl#ISSUE_AVX).  `hypotenuse` is just `hypot`
+# of three or four numbers.  Except for complex components, `abs` and `absvec` call this
+# function rather than `hypot` itself, only so that `QuaternionicEnzymeExt` can give it
+# rules whose arguments are the components, which are numbers.  Rules on `abs` and `absvec`
+# themselves would take a quaternion argument, and Enzyme's handling of such rules crashes
+# on x86_64 processors with AVX; see the extension.  Once that bug and the bug in Enzyme's
+# own rule for `hypot` (also described in the extension) are fixed, `abs` and `absvec`
+# should call `hypot` directly again, and this function and its rules should be removed.
+hypotenuse(x, y, z) = hypot(x, y, z)
+hypotenuse(w, x, y, z) = hypot(w, x, y, z)
+
 """
     abs(q)
 
@@ -49,9 +60,9 @@ julia> abs(quaternion(1,2,4,10))
 11.0
 ```
 """
-Base.abs(q::AbstractQuaternion) = hypot(components(q)...)
+Base.abs(q::AbstractQuaternion) = hypotenuse(components(q)...)
 Base.abs(q::AbstractQuaternion{Complex{T}}) where {T<:Real} = _hypot(components(q))
-Base.abs(q::QuatVec) = hypot(vec(q)...)
+Base.abs(q::QuatVec) = hypotenuse(vec(q)...)
 # See the comment on `absvec` below.
 Base.abs(q::QuatVec{Complex{T}}) where {T<:Real} = _hypot(SVector{3}(q[2], q[3], q[4]))
 Base.abs(::Rotor{T}) where {T<:Number} = one(real(T))
@@ -91,7 +102,7 @@ julia> absvec(quaternion(1,2,3,6))
 7.0
 ```
 """
-absvec(q::AbstractQuaternion) = hypot(vec(q)...)
+absvec(q::AbstractQuaternion) = hypotenuse(vec(q)...)
 # For complex components, the vector part is passed to `_hypot` as an `SVector` rather than
 # as the view that `vec` returns, because Enzyme 0.13.209 aborts in reverse mode on
 # reductions over that view of complex numbers (an upstream bug).  The value is the same.
@@ -664,9 +675,9 @@ function Base.sqrt(q::Union{Quaternion{T},Rotor{T}}) where {T<:Real}
         # Here the vector part is nonzero.  Its direction q⃗/|q⃗| is computed after dividing
         # q⃗ by its largest component `m`, so that |q⃗|/m = `s` neither overflows nor loses
         # precision to underflow, even when the vector part is tiny or subnormal.  The norm
-        # `s` is computed as `abs` of a `QuatVec`, which equals `hypot` of the components,
-        # so that Enzyme uses the rule for `abs` in QuaternionicEnzymeExt: Enzyme's own
-        # reverse rule for `hypot` with three arguments fails at batch widths above 1.
+        # `s` is computed as `abs` of a `QuatVec`, which is `hypotenuse` of the components,
+        # so that Enzyme uses the rule for `hypotenuse` in QuaternionicEnzymeExt: Enzyme's
+        # own reverse rule for `hypot` with three arguments fails at batch widths above 1.
         m = maximum(abs, vec(q))
         u = vec(q) / m
         s = abs(quatvec(u...))

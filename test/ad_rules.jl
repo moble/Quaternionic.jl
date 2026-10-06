@@ -734,7 +734,12 @@ end
         A = T.(baritzhack(R) + 0.01 * randn(rng′, 4, 4))
         f(A) = Quaternionic.dominant_eigenvector_lapack(A, uplo)
         # The finite differences of ChainRulesTestUtils are too coarse in Float32 for LAPACK.
-        T === Float64 && crtu(Quaternionic.dominant_eigenvector_lapack, A, uplo ⊢ NoTangent())
+        # Julia 1.10 cannot infer the type of the cotangent of `A` (the values are correct),
+        # so the inference check runs only on later versions.
+        T === Float64 && crtu(
+            Quaternionic.dominant_eigenvector_lapack, A, uplo ⊢ NoTangent();
+            check_inferred=VERSION ≥ v"1.11"
+        )
         # The eigenvector is defined up to its sign, so the reference uses the eigenvector
         # with the sign of the primal.
         v = f(A)
