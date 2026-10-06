@@ -1,4 +1,4 @@
-@testitem "Differentiation Interface" begin
+@testitem "Differentiation Interface" tags=[:ad] begin
     using DifferentiationInterface, DifferentiationInterfaceTest
     import Enzyme, FastDifferentiation,
         FiniteDifferences, ForwardDiff, Mooncake,

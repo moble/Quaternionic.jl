@@ -195,7 +195,7 @@ end
     @test [complex(numeric(real(z)), numeric(imag(z))) for z ∈ w] ≈ components(Boost(v)) rtol=4eps()
 end
 
-@testitem "Lorentz regressions: Zygote through the action" tags=[:unit] setup=[LorentzReference] begin
+@testitem "Lorentz regressions: Zygote through the action" tags=[:unit, :ad] setup=[LorentzReference] begin
     using Zygote
     using .LorentzReference: boost_matrix, boost_matrix_derivative
 

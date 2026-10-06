@@ -19,8 +19,10 @@ concurrency:
 jobs:
   # The test items tagged `slow` (the AD cross-check harness and the exp/log AD tests) take
   # most of the suite's CPU time, so the OS matrix skips them, and the `slow` job below runs
-  # them once, on Ubuntu with the latest Julia.  Coverage is uploaded only from these two
-  # jobs, which together run the whole suite.
+  # them once, on Ubuntu with the latest Julia.  The other test items tagged `ad`, which
+  # spend most of their time compiling the AD packages, run only on Ubuntu, because the AD
+  # code paths do not depend on the operating system.  Coverage is uploaded only from the
+  # Ubuntu job with the latest Julia and the `slow` job, which together run the whole suite.
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
@@ -50,7 +52,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
-          test_args: '--exclude slow'
+          test_args: ${{ matrix.os == 'ubuntu-latest' && '--exclude slow' || '--exclude slow,ad' }}
       - uses: julia-actions/julia-processcoverage@v1
         if: matrix.os == 'ubuntu-latest' && matrix.version == '1'
       - uses: codecov/codecov-action@v7
