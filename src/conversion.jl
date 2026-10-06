@@ -63,7 +63,11 @@ function to_float_array(::Val{false}, A::AbstractArray{<:AbstractQuaternion{T}})
     end
     F
 end
-to_float_array(q::AbstractQuaternion) = collect(components(float(q)))
+# WORKAROUND for an Enzyme bug (EnzymeAD/Enzyme.jl#ISSUE_LTS).  The components are copied
+# with `Vector` rather than `collect`, because Enzyme (as of 0.13.211, on Julia 1.10)
+# crashes in reverse mode on `collect` of an `SVector` inside a closure called by another
+# closure.  The result is the same.  Once that bug is fixed, this can be `collect` again.
+to_float_array(q::AbstractQuaternion) = Vector(components(float(q)))
 
 
 @doc raw"""

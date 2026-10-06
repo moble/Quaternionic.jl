@@ -11,8 +11,9 @@
 #     differentiate the LAPACK call inside it, which `from_rotation_matrix` and `align`
 #     reach (these rules are first-order only, so Enzyme cannot compute second
 #     derivatives through those two functions);
-#   * rules for `abs` and `absvec` of real quaternions, which work around a bug in Enzyme's
-#     own reverse rule for `hypot` with three or more arguments.
+#   * rules that work around a bug in Enzyme's own reverse rule for `hypot` with three or
+#     more arguments, on `Quaternionic.hypotenuse`, through which `abs` and `absvec` of
+#     real quaternions call `hypot`.
 #
 # This file is loaded only as a package extension (Julia 1.9 and later); Requires never
 # loads it.
@@ -21,7 +22,7 @@ module QuaternionicEnzymeExt
 import Enzyme
 import Enzyme: EnzymeRules
 using Enzyme: Annotation, Active, Const, Duplicated, BatchDuplicated
-using Quaternionic: Quaternionic, AbstractQuaternion, Quaternion, QuatVec, components, vec
+using Quaternionic: Quaternionic, AbstractQuaternion, QuatVec
 import StaticArrays
 
 
@@ -196,58 +197,56 @@ end
 
 
 ############################################################################################
-# Rules for `abs` and `absvec`
+# Rules for `hypotenuse`
 #
-# For real components, `abs(q)` is `hypot(components(q)...)` and `absvec(q)` is
-# `hypot(vec(q)...)`, and `rotor` normalizes with `abs`.  Enzyme's own reverse rule for
-# `hypot` with three or more arguments (`_hypotreverse` in Enzyme's
-# `src/internal_rules/math.jl`, as of Enzyme 0.13.209) reads the cotangent as `dret.val[i]`
-# when the batch width is greater than 1, but Enzyme passes a tuple of `Active` values
-# there, so it throws `FieldError: type Tuple has no field val`.  Batched reverse mode,
-# which DifferentiationInterface uses for Jacobians, therefore failed for nearly every
-# function that builds a `Rotor`.  These rules compute the same derivatives as Enzyme's
-# rules for `hypot`: the gradient is `x / h` for each component `x`, with `h` the result,
-# or zero where `h` is zero, and they handle any batch width.  Forward mode has no such
-# bug, but a function with reverse rules needs a forward rule as well, because Enzyme calls
-# it when it differentiates the reverse pass in forward mode (forward-over-reverse
-# Hessians).  These rules can be removed once Enzyme's reverse rule is fixed.
+# WORKAROUND for two Enzyme bugs, one of which crashes the process
+# (EnzymeAD/Enzyme.jl#ISSUE_AVX).  These rules, and the function `hypotenuse` in
+# `src/math.jl`, exist only to avoid those bugs, and should be removed once both are fixed.
+#
+# For real components, `abs(q)` is `hypotenuse(components(q)...)` and `absvec(q)` is
+# `hypotenuse(vec(q)...)`, where `Quaternionic.hypotenuse` is `hypot` of three or four
+# numbers, and `rotor` normalizes with `abs`.  Enzyme's own reverse rule for `hypot` with
+# three or more arguments (`_hypotreverse` in Enzyme's `src/internal_rules/math.jl`, as of
+# Enzyme 0.13.211) reads the cotangent as `dret.val[i]` when the batch width is greater than
+# 1, but Enzyme passes a tuple of `Active` values there, so it throws `FieldError: type
+# Tuple has no field val`.  Batched reverse mode, which DifferentiationInterface uses for
+# Jacobians, therefore failed for nearly every function that builds a `Rotor`.  These rules
+# compute the same derivatives as Enzyme's rules for `hypot`: the derivative with respect to
+# each argument `x` is `x / h`, with `h` the result, or zero where `h` is zero, and they
+# handle any batch width.  Forward mode has no such bug, but a function with reverse rules
+# needs a forward rule as well, because Enzyme calls it when it differentiates the reverse
+# pass in forward mode (forward-over-reverse Hessians).  These rules can be removed once
+# Enzyme's reverse rule is fixed.
+#
+# The rules are defined on `hypotenuse`, whose arguments are numbers, rather than on `abs`
+# and `absvec`, whose argument is a quaternion.  Enzyme (as of 0.13.211) adds the cotangent
+# that a reverse rule returns for an `Active` struct argument into the shadow of that
+# argument with a vector load and store that claim the alignment of a vector of all the
+# components (32 bytes for four `Float64`s), but the shadow is aligned only to 8 bytes.  On
+# x86_64 processors with AVX, that store crashes the process (with a segmentation fault or
+# an access violation) whenever the shadow happens not to be 32-byte aligned.  A number is
+# passed by value, so its cotangent needs no such store.
 #
 # The workaround helps only with recent releases of Enzyme (it was verified with 0.13.205
-# and 0.13.209).  Older releases of Enzyme 0.13 (at least up to 0.13.85) refuse every
-# custom reverse rule with an active result at a batch width greater than 1 ("Not yet
-# supported: Enzyme custom rule of batch size ..."), which includes these rules as well as
-# Enzyme's own rule for `hypot`, so batched reverse mode through `abs` fails there either
-# way.
+# and 0.13.209).  Older releases of Enzyme 0.13 (at least up to 0.13.85) refuse every custom
+# reverse rule with an active result at a batch width greater than 1 ("Not yet supported:
+# Enzyme custom rule of batch size ..."), which includes these rules as well as Enzyme's own
+# rule for `hypot`, so batched reverse mode through `abs` fails there either way.
 
 const HypotFloat = Base.IEEEFloat
-
-# The components of `q` whose `hypot` is `f(q)`, laid out as `components(q)`, with zero in
-# place of the scalar part for `absvec`.  (The scalar part of a `QuatVec` is zero anyway.)
-hypotcomponents(::typeof(abs), q::Union{Quaternion,QuatVec}) = components(q)
-hypotcomponents(::typeof(Quaternionic.absvec), q::AbstractQuaternion{T}) where {T} =
-    (zero(T), vec(q)...)
 
 # The divisor in the derivatives of `h = hypot(xs...)`, which is `h` itself, or 1 where `h`
 # is zero, as in Enzyme's rules for `hypot`.
 hypotdivisor(h) = iszero(h) ? one(h) : h
 
-# The tangent of `h = f(q.val)` along the `k`th of the `N` shadows of the argument `q`.  The
-# scalar component of the shadow is multiplied by zero for `absvec` and for a `QuatVec`, so
-# a nonzero value stored in the hidden scalar slot of a `QuatVec` shadow has no effect.
-function hypottangent(f, q::Annotation, h, k, N)
-    xs = hypotcomponents(f, q.val)
-    ẋs = components(N == 1 ? q.dval : q.dval[k])
-    (xs[1] * ẋs[1] + xs[2] * ẋs[2] + xs[3] * ẋs[3] + xs[4] * ẋs[4]) / hypotdivisor(h)
-end
-hypottangent(f, ::Const, h, k, N) = zero(h)
+# The `k`th of the `N` tangents of the argument `x`, which is zero for a constant.
+argumenttangent(x::Const, k, N) = zero(x.val)
+argumenttangent(x::Annotation, k, N) = N == 1 ? x.dval : x.dval[k]
 
-# The cotangent of `q` in `h = f(q)`, given the cotangent `d` of `h`, as a quaternion of the
-# same type as `q`.  The type's own constructor stores the components as given, so the
-# cotangent of a `Rotor` is not normalized.
-function hypotcotangent(f, q, h, d)
-    n = hypotdivisor(h)
-    typeof(q)(map(x -> x * d / n, hypotcomponents(f, q))...)
-end
+# The tangent of `h = hypotenuse(xs...)` along the `k`th of the `N` tangents of the
+# arguments `xs`.
+hypottangent(xs, h, k, N) =
+    +(map(x -> x.val * argumenttangent(x, k, N), xs)...) / hypotdivisor(h)
 
 # The cotangent of the result in reverse mode: a single `Active` value, or a tuple of them
 # for a batch width greater than 1, or the type of an inactive result, whose cotangent is
@@ -256,56 +255,59 @@ resultcotangent(dret::Active, h, k) = dret.val
 resultcotangent(dret::Tuple, h, k) = dret[k].val
 resultcotangent(::Type, h, k) = zero(h)
 
-for (f, Q) in ((:(Base.abs), :(Union{Quaternion{T},QuatVec{T}})),
-               (:(Quaternionic.absvec), :(AbstractQuaternion{T})))
-    @eval begin
-        function EnzymeRules.forward(
-            config::EnzymeRules.FwdConfig, func::Const{typeof($f)}, ::Type{RT},
-            q::Annotation{<:$Q}
-        ) where {RT,T<:HypotFloat}
-            h = func.val(q.val)
-            N = EnzymeRules.width(config)
-            if EnzymeRules.needs_shadow(config)
-                dh = if N == 1
-                    hypottangent(func.val, q, h, 1, N)
-                else
-                    ntuple(k -> hypottangent(func.val, q, h, k, N), Val(N))
-                end
-                if EnzymeRules.needs_primal(config)
-                    return N == 1 ? Duplicated(h, dh) : BatchDuplicated(h, dh)
-                else
-                    return dh
-                end
-            elseif EnzymeRules.needs_primal(config)
-                return h
-            else
-                return nothing
-            end
+# The cotangent of the argument `x` of `h = hypotenuse(xs...)`, given the cotangent `d` of
+# `h` (a tuple of them for a batch width greater than 1): nothing for a constant argument.
+argumentcotangent(::Const, h, d) = nothing
+argumentcotangent(x::Active, h, d::Number) = x.val * d / hypotdivisor(h)
+argumentcotangent(x::Active, h, d::Tuple) = map(dₖ -> argumentcotangent(x, h, dₖ), d)
+
+# The first argument `x` of each rule is separate from the others, `xs`, only so that the
+# type parameter `T` is bound.
+function EnzymeRules.forward(
+    config::EnzymeRules.FwdConfig, func::Const{typeof(Quaternionic.hypotenuse)},
+    ::Type{RT}, x::Annotation{T}, xs::Annotation{T}...
+) where {RT,T<:HypotFloat}
+    args = (x, xs...)
+    h = func.val(map(a -> a.val, args)...)
+    N = EnzymeRules.width(config)
+    if EnzymeRules.needs_shadow(config)
+        dh = if N == 1
+            hypottangent(args, h, 1, N)
+        else
+            ntuple(k -> hypottangent(args, h, k, N), Val(N))
         end
-        function EnzymeRules.augmented_primal(
-            config::EnzymeRules.RevConfig, func::Const{typeof($f)}, ::Type{RT},
-            q::Union{Const{<:$Q},Active{<:$Q}}
-        ) where {RT,T<:HypotFloat}
-            h = func.val(q.val)
-            primal = EnzymeRules.needs_primal(config) ? h : nothing
-            return EnzymeRules.AugmentedReturn(primal, nothing, h)
+        if EnzymeRules.needs_primal(config)
+            return N == 1 ? Duplicated(h, dh) : BatchDuplicated(h, dh)
+        else
+            return dh
         end
-        function EnzymeRules.reverse(
-            config::EnzymeRules.RevConfig, func::Const{typeof($f)}, dret, h,
-            q::Union{Const{<:$Q},Active{<:$Q}}
-        ) where {T<:HypotFloat}
-            q isa Const && return (nothing,)
-            N = EnzymeRules.width(config)
-            if N == 1
-                return (hypotcotangent(func.val, q.val, h, resultcotangent(dret, h, 1)),)
-            else
-                return (ntuple(
-                    k -> hypotcotangent(func.val, q.val, h, resultcotangent(dret, h, k)),
-                    Val(N)
-                ),)
-            end
-        end
+    elseif EnzymeRules.needs_primal(config)
+        return h
+    else
+        return nothing
     end
+end
+
+function EnzymeRules.augmented_primal(
+    config::EnzymeRules.RevConfig, func::Const{typeof(Quaternionic.hypotenuse)},
+    ::Type{RT}, x::Union{Const{T},Active{T}}, xs::Union{Const{T},Active{T}}...
+) where {RT,T<:HypotFloat}
+    h = func.val(x.val, map(a -> a.val, xs)...)
+    primal = EnzymeRules.needs_primal(config) ? h : nothing
+    return EnzymeRules.AugmentedReturn(primal, nothing, h)
+end
+
+function EnzymeRules.reverse(
+    config::EnzymeRules.RevConfig, func::Const{typeof(Quaternionic.hypotenuse)}, dret, h,
+    x::Union{Const{T},Active{T}}, xs::Union{Const{T},Active{T}}...
+) where {T<:HypotFloat}
+    N = EnzymeRules.width(config)
+    d = if N == 1
+        resultcotangent(dret, h, 1)
+    else
+        ntuple(k -> resultcotangent(dret, h, k), Val(N))
+    end
+    return map(a -> argumentcotangent(a, h, d), (x, xs...))
 end
 
 end # module
