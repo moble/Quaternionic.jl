@@ -200,7 +200,7 @@ end
 # Rules for `hypotenuse`
 #
 # WORKAROUND for two Enzyme bugs, one of which crashes the process
-# (EnzymeAD/Enzyme.jl#ISSUE_AVX).  These rules, and the function `hypotenuse` in
+# (EnzymeAD/Enzyme.jl#3775).  These rules, and the function `hypotenuse` in
 # `src/math.jl`, exist only to avoid those bugs, and should be removed once both are fixed.
 #
 # For real components, `abs(q)` is `hypotenuse(components(q)...)` and `absvec(q)` is
