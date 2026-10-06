@@ -21,12 +21,23 @@
     using ChainRulesCore: rrule, frule, unthunk
     using ChainRulesTestUtils
     import ChainRules
-    using Random: MersenneTwister
+    using Random: Random, MersenneTwister
     using LinearAlgebra: LinearAlgebra, dot, norm, normalize
     using StaticArrays: SVector, @SVector
     using .ADTestUtils
 
     rng = MersenneTwister(20261002)
+
+    # Reseed both sources of random tangents: `rng`, from which this module draws the
+    # tangents it chooses, and the global generator, from which ChainRulesTestUtils draws
+    # the rest.  `checkrule` and `crtu` call this first, so that each check uses the same
+    # tangents however the test items are filtered or ordered, and a failure can be
+    # reproduced by running its item alone.
+    function reseed!()
+        Random.seed!(rng, 20261002)
+        Random.seed!(20261002)
+        nothing
+    end
 
     # A random tangent or cotangent of `x`.  Arguments that are not numbers or arrays of
     # numbers (functions, `Val`s, and characters) get `NoTangent()`, as do integers and
@@ -75,6 +86,7 @@
     """
     function checkrule(f, args...; ȳ=nothing, ẋs=nothing, ref=f, rtol=1e-10,
                        pullback=true, pushforward=true)
+        reseed!()
         selfdiff = f isa Rotor
         g = selfdiff ? ((h, a...) -> h(a...)) : ref
         gargs = selfdiff ? (f, args...) : args
@@ -148,6 +160,7 @@
     for arguments with complex components.
     """
     function crtu(f, args...; check_inferred=true, frule=true, kwargs...)
+        reseed!()
         tol = crtutol(realtypeof(args))
         targs = map(withtangent, args)
         test_rrule(f, targs...; check_inferred=check_inferred, tol..., kwargs...)
