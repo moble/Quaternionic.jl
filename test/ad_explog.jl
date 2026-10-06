@@ -139,6 +139,7 @@ end
     using ChainRulesCore: frule, rrule, NoTangent, unthunk
     using ChainRulesTestUtils: test_frule, test_rrule
     using LinearAlgebra: I
+    import Random
 
     # The functions with rules, applied to their primal arguments, which are built from a
     # point by `args`.  A `Rotor` argument is normalized, and its tangents are `Quaternion`s.
@@ -216,6 +217,9 @@ end
         pname ∈ ("near the negative real axis", "norm 1e-3") && continue
         a = args(x)
         a[1] isa Rotor && iszero(a[1][1]) && continue
+        # ChainRulesTestUtils draws its random tangents from the global generator, which is
+        # reseeded so that each check is reproducible on its own.
+        Random.seed!(20261002)
         test_frule(f, a...; rtol=1e-8, atol=1e-8)
         test_rrule(f, a...; rtol=1e-8, atol=1e-8)
     end
