@@ -123,6 +123,15 @@ const TAGS_DATA = Dict(
     # Complexity (How resource-intensive?)
     :fast => "Quick tests suitable for frequent execution",
     :slow => "Resource-intensive tests requiring significant time or memory",
+
+    # Automatic differentiation (Which rules or backend?)
+    :ad => "Automatic-differentiation tests",
+    :chainrules => "ChainRules rules, projections, and opt-outs",
+    :zygote => "Zygote tests",
+    :forwarddiff => "ForwardDiff and AutoForwardDiff tests",
+    :enzyme => "Enzyme tests",
+    :mooncake => "Mooncake tests",
+    :reversediff => "ReverseDiff tests",
 )
 
 """
@@ -275,10 +284,13 @@ elseif args.list
 else
     filter_func = _create_filter(args)
 
-    # Run a file-based test module if its name matches the --file filter
+    # Run a file-based test module if its name matches the --file filter.  These files are
+    # not test items and have no tags or names, so the filters for test items (--tags,
+    # --name, and --pattern) exclude them.
     function addtests(fname)
         key = lowercase(splitext(fname)[1])
-        if isnothing(args.file) || contains(key, args.file)
+        itemfilter = !isnothing(args.tags) || !isnothing(args.name) || !isnothing(args.pattern)
+        if !itemfilter && (isnothing(args.file) || contains(key, args.file))
             println("Running $fname")
             Random.seed!(42)
             include(joinpath(@__DIR__, fname))
@@ -310,7 +322,6 @@ else
         addtests("alignment.jl")
         addtests("interpolation.jl")
         addtests("gradients.jl")
-        addtests("auto_differentiation.jl")
         addtests("doctests.jl")
     end
 end

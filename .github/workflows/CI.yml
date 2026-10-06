@@ -17,6 +17,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
+  # The test items tagged `slow` (the AD cross-check harness and the exp/log AD tests) take
+  # most of the suite's CPU time, so the OS matrix skips them, and the `slow` job below runs
+  # them once, on Ubuntu with the latest Julia.  Coverage is uploaded only from these two
+  # jobs, which together run the whole suite.
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
@@ -36,7 +40,6 @@ jobs:
         include:
           - version: 'lts'
             os: ubuntu-latest
-            arch: x64
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
@@ -46,20 +49,73 @@ jobs:
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+        with:
+          test_args: '--exclude slow'
       - uses: julia-actions/julia-processcoverage@v1
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '1'
       - uses: codecov/codecov-action@v7
-        if: "matrix.os == 'ubuntu-latest'"
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '1'
         with:
           files: lcov.info
+          flags: fast
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  slow:
+    name: Slow tests - Julia 1 - ubuntu-latest - ${{ github.event_name }}
+    runs-on: ubuntu-latest
+    if: >-
+        !contains(github.ref, 'refs/tags/')
+        && !contains(github.event.head_commit.message, '[skip ci]')
+        && !contains(github.event.head_commit.message, '[skip tests]')
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          test_args: '--tags slow'
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v7
+        with:
+          files: lcov.info
+          flags: slow
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # The workspace test environment cannot be instantiated before Julia 1.9, so the oldest
+  # supported Julia runs a few smoke tests in a fresh environment instead.
+  compat16:
+    name: Smoke tests - Julia 1.6 - ubuntu-latest - ${{ github.event_name }}
+    runs-on: ubuntu-latest
+    if: >-
+        !contains(github.ref, 'refs/tags/')
+        && !contains(github.event.head_commit.message, '[skip ci]')
+        && !contains(github.event.head_commit.message, '[skip tests]')
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.6'
+      - uses: julia-actions/cache@v3
+      - run: julia --project=compat16 -e 'using Pkg; Pkg.develop(path="."); Pkg.add(["ChainRulesCore", "ForwardDiff", "StaticArrays"])'
+      - run: julia --project=compat16 test/compat16_smoke.jl
+
+  # The docs job waits for the tests, so that failing code is never deployed.  On tags the
+  # test jobs are skipped, and the docs must still deploy, so a skipped test job counts as
+  # a success here.
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    needs: [test, slow, compat16]
     if: >-
-        !contains(github.event.head_commit.message, '[skip ci]')
+        !cancelled()
+        && !contains(needs.*.result, 'failure')
+        && !contains(github.event.head_commit.message, '[skip ci]')
         && !contains(github.event.head_commit.message, '[skip docs]')
     permissions:
+      actions: write
       contents: write
       statuses: write
       pull-requests: write
@@ -68,19 +124,24 @@ jobs:
       - uses: julia-actions/setup-julia@v3
         with:
           version: '1'
+      - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using Quaternionic
             DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
             doctest(Quaternionic)'
+      - uses: julia-actions/julia-docdeploy@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      # A pull request from a fork has a read-only token, so it can neither comment nor
+      # deploy a preview.
       - uses: marocchino/sticky-pull-request-comment@v3
-        if: github.event_name == 'pull_request'
+        if: >-
+            github.event_name == 'pull_request'
+            && github.event.pull_request.head.repo.full_name == github.repository
         with:
           message: |
             [Documentation preview](https://moble.github.io/Quaternionic.jl/previews/PR${{ github.event.pull_request.number }}/)

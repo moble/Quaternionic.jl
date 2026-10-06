@@ -44,16 +44,24 @@
 
         # Addition/subtraction
         for Q in [Quaternion, QuatVec]
-            # Define basis elements
+            # Define basis elements.  A `QuatVec` has no scalar basis element, so
+            # `QuatVec{T}(1)` is the zero vector, and only the vector basis elements are used
+            # for `QuatVec` below.
             u = Q{T}(1)
             i = Q{T}(𝐢)
             j = Q{T}(𝐣)
             k = Q{T}(𝐤)
             basis = [u, i, j, k]
+            indices = Q === QuatVec ? (2:4) : (1:4)
+            if Q === QuatVec
+                @test iszero(u)
+            end
 
             # Basic self-addition/subtraction
-            @test u + u == 2u
-            @test u - u == 0u
+            if Q === Quaternion
+                @test u + u == 2u
+                @test u - u == 0u
+            end
             @test i + i == 2i
             @test i - i == 0i
             @test j + j == 2j
@@ -62,8 +70,8 @@
             @test k - k == 0k
 
             # Full addition/subtraction table
-            for i1 in 1:4
-                for i2 in 1:4
+            for i1 in indices
+                for i2 in indices
                     a = zeros(T, 4)
                     s = zeros(T, 4)
                     a[i1] += one(T)
@@ -79,12 +87,9 @@
             # Symbolics.Num: normalize(q) returns e.g. 1/sqrt(1) which doesn't simplify
             # to 1 symbolically, so == comparisons fail for symbolic types.
             if !(T in SymbolicTypes)
-            for q in basis
+            for q in basis[indices]
                 n = normalize(q)
                 @test typeof(n) === Q{float(T)}
-                if Q === QuatVec && q == u
-                    continue
-                end
                 @test q == n
                 @test q == normalize(2n)
             end

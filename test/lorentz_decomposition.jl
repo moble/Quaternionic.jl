@@ -4,7 +4,7 @@
 #   - Round-trip:   Lorentz(R) * B ≈ ±Λ  (and B * Lorentz(R) ≈ ±Λ for BR)
 #   - Structural:   R has zero imaginary components; B has zero real vector components
 #   - Special cases: identity, pure rotation, pure boost, minus-identity
-#   - Multi-precision: error shrinks as precision increases
+#   - Multi-precision: checks run at several precisions with tolerances scaled by eps(T)
 
 @testmodule LorentzDecompData begin
     using Random: Xoshiro
@@ -74,7 +74,7 @@
     ℓ_vec(::Type{T}) where {T} = T[1, 0, 0, 1] / sqrt(T(2))
 
     # Structural predicate for A: pure z-boost (w real, x=y=0, z pure imaginary).
-    # Accepts any AbstractQuaternion (KAN returns Rₐ as a bare `Quaternion`).
+    # Accepts any AbstractQuaternion, although KAN returns Rₐ as a `Lorentz` rotor.
     function is_z_boost(R; atol)
         w, x, y, z = components(R)
         abs(imag(w)) < atol && abs(x) < atol && abs(y) < atol && abs(real(z)) < atol

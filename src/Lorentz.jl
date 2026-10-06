@@ -8,7 +8,7 @@ We work in the spacetime algebra ``Cl(3,1)`` with metric signature ``{−}{+}{+}
 basis vectors `𝐭, 𝐱, 𝐲, 𝐳` satisfying `𝐭² = −1`, `𝐱² = 𝐲² = 𝐳² = +1`, all mutually
 anticommuting.  The pseudoscalar ``𝐈 = 𝐭𝐱𝐲𝐳`` satisfies ``𝐈² = −𝟏``.
 
-Elements of ``𝐑 ∈ \mathrm{Spin}⁺(3,1)`` live in the even subalgebra (grades 0, 2, 4) and
+Elements ``𝐑 ∈ \mathrm{Spin}⁺(3,1)`` live in the even subalgebra (grades 0, 2, 4) and
 satisfy ``𝐑 𝐑̃ = 𝟏``, where ``𝐑̃`` is the GA reverse.  In particular, note that that
 product *could* include a term proportional to the pseudoscalar; it is zero: ``𝐑 𝐑̃ = 𝟏 +
 0 𝐈``.  This subalgebra splits into two parts:
@@ -32,19 +32,67 @@ usual, you can get the plain (complex) coefficients with [`components`](@ref).
 
 ## Operations
 
-Compose with `*`, invert with `inv`, obtain the identity with `one`.
-Apply to a Minkowski 4-vector `v = [vᵗ, vˣ, vʸ, vᶻ]` by calling `Λ(v)`.
-Access the GA components via [`ga_components`](@ref).
+Compose with `*`, invert with `inv`, and obtain the identity with `one`.  Apply `Λ` to a
+Minkowski 4-vector `v = [vᵗ, vˣ, vʸ, vᶻ]` by calling `Λ(v)`, and access the GA components
+via [`ga_components`](@ref).
+
+The action is *active*: `Λ(v)` is the transformed vector, expressed in the original frame.
+For example, `Boost(v⃗)([1, 0, 0, 0])` is `γ .* [1; v⃗]`, the 4-velocity of a particle moving
+with velocity `v⃗`.  The components of a fixed vector as seen by an observer moving with
+velocity `v⃗` are given by the passive transformation `inv(Boost(v⃗))`.  Composition acts
+from right to left, so that `(Λ₁ * Λ₂)(v) ≈ Λ₁(Λ₂(v))`.
+
+Calling `Λ` on a 4-vector given as an `AbstractVector` is different from calling it on a
+`QuatVec`.  `Λ(v::QuatVec)` is the generic rotor sandwich `Λ * v * conj(Λ)`, which, in this
+encoding, transforms a spatial *bivector* (such as an electromagnetic field) rather than a
+spatial vector, and it returns a complex `QuatVec` even for real input.
+
+Many generic quaternion functions, such as `exp`, `log`, `sqrt`, and integer powers, also
+accept complex quaternions.  Functions that are specific to rotations in three dimensions,
+such as `distance`, `to_euler_angles`, and `from_rotation_matrix`, do not support `Lorentz`
+input.
 
 ## Constructors
 
-Use the named constructor [`Boost`](@ref).  For a pure rotation, use `Lorentz(R)`.
+Use the named constructor [`Boost`](@ref) for a pure boost, and `Lorentz(R)` for the pure
+rotation given by a real `Rotor` `R`.  More generally, the forms
+
+    Lorentz(q::AbstractQuaternion)
+    Lorentz(w, x, y, z)
+    Lorentz(v::AbstractVector)
+    Lorentz(w::Number)
+
+convert the given (possibly complex) components to complex numbers and normalize the result
+by the complex spinor norm `√(w² + x² + y² + z²)`, so that `w² + x² + y² + z² = 1` in
+complex arithmetic.  The vector form accepts 1, 3, or 4 components, like [`rotor`](@ref).
+Note that this normalization is not the same as normalization by the Euclidean norm.  For
+example, `Lorentz(QuatVec(0, im, 0, 0))` (the bivector `𝐭𝐱`, whose spinor norm is `im`)
+returns the rotation `𝐢`.  For a boost with large rapidity, the spinor norm is computed as
+a difference of large numbers, so the normalization itself loses accuracy.  The type
+constructors `Lorentz{T}(w, x, y, z)` and `Lorentz{T}(q::AbstractQuaternion)` do not
+normalize, and are the better choice when the input is already known to have unit spinor
+norm.  Finally, `Lorentz(T)` returns the type `Lorentz{T}` for a real number type `T`.
 """
 const Lorentz{T<:Real} = Rotor{Complex{T}}
 
-Lorentz(q::AbstractQuaternion) = Rotor(complex.(components(q))...)
-Lorentz(w) = Rotor(complex(w))
-Lorentz(w, x, y, z) = Rotor(complex(w), complex(x), complex(y), complex(z))
+# The components are converted one at a time, rather than by broadcasting `complex` over
+# `components(q)` and splatting the result, because Zygote cannot differentiate that splat.
+Lorentz(q::AbstractQuaternion) =
+    Rotor(complex(q[1]), complex(q[2]), complex(q[3]), complex(q[4]))
+function Lorentz(v::AbstractVector)
+    if length(v) == 4
+        Lorentz(v[begin], v[begin+1], v[begin+2], v[begin+3])
+    elseif length(v) == 3
+        Lorentz(false, v[begin], v[begin+1], v[begin+2])
+    elseif length(v) == 1
+        Lorentz(v[begin])
+    else
+        throw(DimensionMismatch("Lorentz rotor must have 1, 3, or 4 inputs"))
+    end
+end
+Lorentz(w::Number) = Lorentz(w, false, false, false)
+Lorentz(w::Number, x::Number, y::Number, z::Number) =
+    Rotor(complex(w), complex(x), complex(y), complex(z))
 
 @doc raw"""
     ga_components(Λ::Lorentz{T}) → SVector{8, T}
@@ -53,7 +101,7 @@ Return the eight real geometric-algebra components of `Λ` in Cl(3,1), ordered
 as in the even-subalgebra expansion of a Spin⁺(3,1) rotor:
 
 ```math
-𝐑 = R^1 + R^𝐢\,𝐢 + R^𝐣\,𝐣 + R^𝐤\,𝐤 + R^{𝐭𝐱}\,𝐭𝐱 + R^{𝐭𝐲}\,𝐭𝐲 + R^{𝐭𝐳}\,𝐭𝐳 + R^𝐈\,𝐈
+𝐑 = R^1 + R^{𝐳𝐲}\,𝐳𝐲 + R^{𝐱𝐳}\,𝐱𝐳 + R^{𝐲𝐱}\,𝐲𝐱 + R^{𝐭𝐱}\,𝐭𝐱 + R^{𝐭𝐲}\,𝐭𝐲 + R^{𝐭𝐳}\,𝐭𝐳 + R^{𝐭𝐱𝐲𝐳}\,𝐈
 ```
 
 where ``𝐈 = 𝐭𝐱𝐲𝐳`` is the pseudoscalar of ``\mathrm{Cl}(3,1)``.
@@ -103,27 +151,41 @@ R¹ Rᵗˣʸᶻ + Rᶻʸ Rᵗˣ + Rˣᶻ Rᵗʸ + Rʸˣ Rᵗᶻ = 0.
 ```
 """
 function ga_components(Λ::Lorentz{T}) where {T<:Real}
-    w, x, y, z = getfield(Λ, :components)
-    @SVector [real(w), real(x), real(y), real(z), imag(x), imag(y), imag(z), imag(w)]
+    w, x, y, z = components(Λ)
+    # The varargs constructor is used rather than `@SVector [...]`, which builds the
+    # SVector from a tuple, because Zygote cannot differentiate that tuple form.
+    SVector(real(w), real(x), real(y), real(z), imag(x), imag(y), imag(z), imag(w))
 end
 
 # ---------------------------------------------------------------------------
 # Named constructors
 # ---------------------------------------------------------------------------
 """
-    Boost(η::T, n̂::AbstractVector) → Lorentz{T}
-    Boost(η::T, n̂::QuatVec) → Lorentz{T}
-    Boost(v⃗::QuatVec) → Lorentz{T}
-    Boost(v⃗::AbstractVector) → Lorentz{T}
+    Boost(η, n̂::AbstractVector) → Lorentz{S}
+    Boost(η, n̂::QuatVec) → Lorentz{S}
+    Boost(v⃗::QuatVec) → Lorentz{S}
+    Boost(v⃗::AbstractVector) → Lorentz{S}
 
 Construct the pure boost with rapidity `η` along the unit direction `n̂`, or
 equivalently from a velocity vector `v⃗` whose magnitude `β = norm(v⃗)` encodes the
 boost speed (in units where c = 1) and whose direction gives `n̂`.
 
-The first two forms take an explicit rapidity and unit direction.  The last two forms
-accept a velocity vector `v⃗` and compute `η = atanh(β)` and `n̂ = v⃗ / β` internally.
-The direction `n̂` may be either a 3-element `AbstractVector` `[nˣ, nʸ, nᶻ]` or a
-`QuatVec` (whose `x`, `y`, `z` components are used as the direction).
+The first two forms take an explicit rapidity and unit direction.  The last two forms accept
+a velocity vector `v⃗`, which must satisfy `β < 1`, and are equivalent to `Boost(atanh(β),
+v⃗ / β)`.  The direction `n̂` may be either a 3-element `AbstractVector` `[nˣ, nʸ, nᶻ]` or a
+`QuatVec` (whose `x`, `y`, `z` components are used as the direction), and the velocity `v⃗`
+may likewise be a 3-element `AbstractVector` or a `QuatVec`.
+
+The element type `S` of the result is the floating-point type obtained by promoting the
+types of all the inputs, so that, for example, an integer rapidity, a `Float32` rapidity
+with a `Float64` direction, and automatic differentiation with respect to the direction all
+work as expected.
+
+The direction `n̂` is neither checked nor normalized; if it is not a unit vector, the result
+does not have unit spinor norm, and is not a Lorentz transformation.  The velocity forms
+throw a `DomainError` if `β ≥ 1`.  Note that the velocity parametrization cannot represent
+large rapidities accurately, because `β = tanh(η)` rounds to 1 for `η ≳ 19` in `Float64`;
+the rapidity forms have no such limitation.
 
 In the even subalgebra of Cl(3,1) the rotor is
 
@@ -131,108 +193,139 @@ In the even subalgebra of Cl(3,1) the rotor is
 𝐑 = \\cosh(η/2)·𝟏 + \\sinh(η/2)·(nˣ\\,𝐭𝐱 + nʸ\\,𝐭𝐲 + nᶻ\\,𝐭𝐳).
 ```
 
+This is an active transformation: `Boost(v⃗)` maps the 4-velocity `[1, 0, 0, 0]` of a
+particle at rest to `γ .* [1; v⃗]`, the 4-velocity of a particle moving with velocity `v⃗`.
+
 See [`ga_components(::Lorentz)`](@ref) for the correspondence between
 this GA form and the quaternion storage.
 """
-function Boost(η::T, n̂::AbstractVector) where {T<:Real}
+function Boost(η::Real, n̂::AbstractVector)
     length(n̂) == 3 || throw(DimensionMismatch(
         "boost direction must be a 3-vector; got length $(length(n̂))"
     ))
     Base.require_one_based_indexing(n̂)
-    ch, sh = cosh(η / 2), sinh(η / 2)
-    return Rotor{Complex{T}}(
+    S = float(promote_type(typeof(η), eltype(n̂)))
+    # Converting η first makes the result as precise as its element type claims.
+    ηS = convert(S, η)
+    ch, sh = cosh(ηS / 2), sinh(ηS / 2)
+    return Rotor{Complex{S}}(
         complex(ch),
-        complex(zero(T), sh * n̂[1]),
-        complex(zero(T), sh * n̂[2]),
-        complex(zero(T), sh * n̂[3]),
+        complex(zero(S), sh * n̂[1]),
+        complex(zero(S), sh * n̂[2]),
+        complex(zero(S), sh * n̂[3]),
     )
 end
 
-function Boost(η::T, n̂::QuatVec) where {T<:Real}
-    ch, sh = cosh(η / 2), sinh(η / 2)
+function Boost(η::Real, n̂::QuatVec)
+    S = float(promote_type(typeof(η), basetype(n̂)))
+    # Converting η first makes the result as precise as its element type claims.
+    ηS = convert(S, η)
+    ch, sh = cosh(ηS / 2), sinh(ηS / 2)
     _, nx, ny, nz = components(n̂)
-    return Rotor{Complex{T}}(
+    return Rotor{Complex{S}}(
         complex(ch),
-        complex(zero(T), sh * nx),
-        complex(zero(T), sh * ny),
-        complex(zero(T), sh * nz),
+        complex(zero(S), sh * nx),
+        complex(zero(S), sh * ny),
+        complex(zero(S), sh * nz),
     )
 end
 
 function Boost(v⃗::QuatVec{T}) where {T<:Real}
+    S = float(T)
     β² = abs2vec(v⃗)
-    ch, shc = if iszerovalue(v⃗)
-        # Taylor series for cosh(atanh(β)/2) and sinh(atanh(β)/2)/β in β²,
-        # correct through 4th order so that AD derivatives at β=0 are accurate.
-        1 + β²*(1 + 11β²/16)/8,
-        (1 + β²*(3 + 31β²/16)/8) / 2
-    else
-        β = sqrt(β²)
-        η = atanh(β)
-        cosh(η/2), sinh(η/2) / β
-    end
+    # The check throws only for a definite `false`, so that symbolic input, for which the
+    # comparison returns an expression rather than a `Bool`, is accepted.
+    (value(β²) < 1) === false &&
+        throw(DomainError(v⃗, "a boost velocity must have norm less than 1"))
+    # With s = √(1-β²) = 1/γ, the half-angle formulas give cosh(η/2) = √((1+s)/(2s)) and
+    # sinh(η/2)/β = 1/√(2s(1+s)).  Unlike `atanh` and division by β, these expressions are
+    # smooth in β² near zero and involve no cancellation, so no special case is needed
+    # there, even for derivatives of any order.
+    s = sqrt(1 - β²)
+    shc = inv(sqrt(2s * (1 + s)))  # sinh(η/2) / β
+    ch = (1 + s) * shc  # cosh(η/2)
     vˣ, vʸ, vᶻ = vec(v⃗)
-    return Rotor{Complex{T}}(
+    return Rotor{Complex{S}}(
         complex(ch),
-        complex(zero(T), shc * vˣ),
-        complex(zero(T), shc * vʸ),
-        complex(zero(T), shc * vᶻ),
+        complex(zero(S), shc * vˣ),
+        complex(zero(S), shc * vʸ),
+        complex(zero(S), shc * vᶻ),
     )
 end
 
-Boost(v⃗::AbstractVector{T}) where {T<:Real} = Boost(QuatVec(v⃗))
+function Boost(v⃗::AbstractVector{T}) where {T<:Real}
+    length(v⃗) == 3 || throw(DimensionMismatch(
+        "boost velocity must be a 3-vector; got length $(length(v⃗))"
+    ))
+    return Boost(QuatVec(v⃗))
+end
 
 # ---------------------------------------------------------------------------
 # Action on Minkowski 4-vectors
 # ---------------------------------------------------------------------------
 
 """
-    (Λ::Lorentz)(v::AbstractVector) → similar(v)
+    (Λ::Lorentz{T})(v::AbstractVector) → AbstractVector{S}
 
 Apply `Λ` to the Minkowski 4-vector `v = [vᵗ, vˣ, vʸ, vᶻ]` (signature −+++)
-and return the transformed vector in a fresh container of the same type with
-element type `T`.
+and return the transformed vector.
 
-The action is the Spin⁺(3,1) sandwich `V′ = R·V·R̃` in Cl(3,1), where `R̃` is
-the GA reverse.  The eight real GA components `(R¹, Rᶻʸ, …, Rᵗˣʸᶻ)` are
-extracted via [`ga_components(::Lorentz)`](@ref), and the bilinear
-expansion of the grade-1 projection of `R·V·R̃` is applied directly.
+The element type `S` of the result is obtained by promoting `T` and `eltype(v)` through the
+arithmetic, so that `Lorentz{Float64}` acting on a vector of `Int` or `Float32` returns
+`Float64` elements, and dual numbers from automatic differentiation propagate.  An
+`SVector{4}` input returns an `SVector{4, S}`; any other input returns a new container
+`similar(v, S)`, which, for example, is a `Vector{S}` for a `Vector` or a view.
+
+The action is the Spin⁺(3,1) sandwich `V′ = R·V·R̃` in Cl(3,1), where `R̃` is the GA
+reverse.  This is an active transformation, and `(Λ₁ * Λ₂)(v) ≈ Λ₁(Λ₂(v))`.  The eight real
+GA components `(R¹, Rᶻʸ, …, Rᵗˣʸᶻ)` are extracted via [`ga_components(::Lorentz)`](@ref),
+and the bilinear expansion of the grade-1 projection of `R·V·R̃` is applied directly.
 """
 function (Λ::Lorentz)(v::AbstractVector)
-    return typeof(v)(Λ(SVector{4}(v)))
+    length(v) == 4 || throw(DimensionMismatch(
+        "a Minkowski 4-vector must have length 4; got length $(length(v))"
+    ))
+    v′ = Λ(SVector{4}(v[begin], v[begin+1], v[begin+2], v[begin+3]))
+    # For the common containers, whose `similar` is a `Vector`, the result is built without
+    # mutation, so that reverse-mode AD such as Zygote can differentiate through it.
+    if v isa Union{Array, AbstractRange, SubArray{<:Any, 1, <:Array}}
+        return Vector(v′)
+    else
+        return copyto!(similar(v, eltype(v′)), v′)
+    end
 end
 function (Λ::Lorentz{T1})(v::SVector{4, T2}) where {T1<:Real, T2<:Real}
     R¹, Rᶻʸ, Rˣᶻ, Rʸˣ, Rᵗˣ, Rᵗʸ, Rᵗᶻ, Rᵗˣʸᶻ = ga_components(Λ)
 
-    v′ᵗ = v ⋅ @SVector [
+    v′ᵗ = v ⋅ SVector(
         R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 + Rˣᶻ^2 + Rᶻʸ^2,
         2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ + 2Rᵗʸ * Rʸˣ - 2Rᵗᶻ * Rˣᶻ,
         2R¹ * Rᵗʸ - 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ + 2Rᵗᶻ * Rᶻʸ,
         2R¹ * Rᵗᶻ + 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ - 2Rᵗʸ * Rᶻʸ
-    ]
+    )
 
-    v′ˣ = v ⋅ @SVector [
+    v′ˣ = v ⋅ SVector(
         2R¹ * Rᵗˣ - 2Rᵗˣʸᶻ * Rᶻʸ - 2Rᵗʸ * Rʸˣ + 2Rᵗᶻ * Rˣᶻ,
         R¹^2 + Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 - Rˣᶻ^2 + Rᶻʸ^2,
         -2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ - 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ,
         2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ + 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ
-    ]
+    )
 
-    v′ʸ = v ⋅ @SVector [
+    v′ʸ = v ⋅ SVector(
         2R¹ * Rᵗʸ + 2Rᵗˣ * Rʸˣ - 2Rᵗˣʸᶻ * Rˣᶻ - 2Rᵗᶻ * Rᶻʸ,
         2R¹ * Rʸˣ + 2Rᵗˣ * Rᵗʸ + 2Rᵗˣʸᶻ * Rᵗᶻ + 2Rˣᶻ * Rᶻʸ,
         R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 + Rᵗʸ^2 - Rᵗᶻ^2 - Rʸˣ^2 + Rˣᶻ^2 - Rᶻʸ^2,
         -2R¹ * Rᶻʸ - 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ
-    ]
+    )
 
-    v′ᶻ = v ⋅ @SVector [
+    v′ᶻ = v ⋅ SVector(
         2R¹ * Rᵗᶻ - 2Rᵗˣ * Rˣᶻ - 2Rᵗˣʸᶻ * Rʸˣ + 2Rᵗʸ * Rᶻʸ,
         -2R¹ * Rˣᶻ + 2Rᵗˣ * Rᵗᶻ - 2Rᵗˣʸᶻ * Rᵗʸ + 2Rʸˣ * Rᶻʸ,
         2R¹ * Rᶻʸ + 2Rᵗˣ * Rᵗˣʸᶻ + 2Rᵗʸ * Rᵗᶻ + 2Rʸˣ * Rˣᶻ,
         R¹^2 - Rᵗˣ^2 + Rᵗˣʸᶻ^2 - Rᵗʸ^2 + Rᵗᶻ^2 + Rʸˣ^2 - Rˣᶻ^2 - Rᶻʸ^2
-    ]
-    
-    v′ = @SVector [v′ᵗ, v′ˣ, v′ʸ, v′ᶻ]
+    )
+
+    v′ = SVector(v′ᵗ, v′ˣ, v′ʸ, v′ᶻ)
 
     return v′
 end
@@ -244,20 +337,22 @@ end
 
 """
     ℂconj(Λ::Lorentz{T}) → Lorentz{T}
+    ℂconj(q::AbstractQuaternion{Complex{T}}) → typeof(q)
 
 Component-wise complex conjugate of `Λ`: conjugate each complex coefficient `(w, x, y, z) →
-(w̄, x̄, ȳ, z̄)`.
+(w̄, x̄, ȳ, z̄)`.  The result has the same type as the input, and is not renormalized.
 
 This is distinct from the GA reverse, which is `conj(Λ)` and just negates the quaternion
 "vector" part.  For `Λ = R*B` with `R` a pure rotation and `B` a pure boost, `ℂconj(Λ) = R *
 B⁻¹`, since `ℂconj(B) = B⁻¹` for pure boosts and `ℂconj(R) = R` for real rotors.
 """
-ℂconj(Λ::Lorentz{T}) where {T<:Real} = Rotor{Complex{T}}(
+ℂconj(Λ::AbstractQuaternion{Complex{T}}) where {T<:Real} = typeof(Λ)(
     conj(Λ[1]), conj(Λ[2]), conj(Λ[3]), conj(Λ[4])
 )
 
 """
     ℂreal(Λ::Lorentz{T}) → Quaternion{T}
+    ℂreal(q::AbstractQuaternion{Complex{T}}) → Quaternion{T}
 
 Complex-real part of `Λ`: `Quaternion(real(Λ[1]), real(Λ[2]), real(Λ[3]), real(Λ[4]))`.
 
@@ -274,8 +369,9 @@ may be complex; this function returns a full quaternion, with all components rea
 
 """
     ℂimag(Λ::Lorentz{T}) → Quaternion{T}
+    ℂimag(q::AbstractQuaternion{Complex{T}}) → Quaternion{T}
 
-Imaginary-part of `Λ`: `Quaternion(imag(Λ[1]), imag(Λ[2]), imag(Λ[3]), imag(Λ[4]))`.
+Complex-imaginary part of `Λ`: `Quaternion(imag(Λ[1]), imag(Λ[2]), imag(Λ[3]), imag(Λ[4]))`.
 
 For `Λ = R*B` where `R` is a pure rotation and `B` is a pure boost with rapidity `η` in
 direction `n̂`, this equals `sinh(η/2)*R*n̂`.
@@ -291,10 +387,11 @@ components real.
 
 """
     ℂreim(Λ::Lorentz{T}) → (Quaternion{T}, Quaternion{T})
+    ℂreim(q::AbstractQuaternion{Complex{T}}) → (Quaternion{T}, Quaternion{T})
 
 Return `(ℂreal(Λ), ℂimag(Λ))` as a single call.
 """
-ℂreim(Λ::Lorentz{T}) where {T<:Real} = (ℂreal(Λ), ℂimag(Λ))
+ℂreim(Λ::AbstractQuaternion{Complex{T}}) where {T<:Real} = (ℂreal(Λ), ℂimag(Λ))
 
 # ---------------------------------------------------------------------------
 # Polar decomposition
@@ -303,7 +400,9 @@ Return `(ℂreal(Λ), ℂimag(Λ))` as a single call.
 """
     RB(Λ::Lorentz{T}) → (R::Rotor{T}, B::Lorentz{T})
 
-Polar decomposition `Λ = R * B`: pure rotation `R` followed by pure boost `B`.
+Polar decomposition `Λ = R * B` into a pure rotation `R` and a pure boost `B`.  When `Λ`
+acts on a vector, the boost `B` is applied first, and then the rotation `R`, so that `Λ(v) ≈
+Lorentz(R)(B(v))`.
 
 !!! note "Double cover"
     Since `Spin⁺(3,1)` is a double cover of `SO⁺(3,1)`, both `(R, B)` and `(-R, -B)`
@@ -321,7 +420,9 @@ Since `cosh(η/2)` is 1 for no boost, and grows smoothly with `η`, we can find 
 simply by normalizing the complex-real part of `Λ`.  And since the norm of `R` is 1, we can
 find `cosh(η/2)` as the magnitude of the complex-real part of `Λ`.  Then, we find
 `sinh(η/2)*n̂` simply by multiplying the complex-imaginary part of `Λ` by `inv(R)`, and
-reconstruct `B` simply by adding the result to `cosh(η/2)`.
+reconstruct `B` simply by adding the result to `cosh(η/2)`.  The boost `B` is constructed
+directly from these components, without renormalization by the spinor norm, which would
+introduce relative errors of order `eps(T) * cosh(η)` at large rapidity.
 
 See also [`BR`](@ref), [`vR`](@ref), and [`Rv`](@ref) for similar forms, and [`KAN`](@ref)
 for the Iwasawa decomposition.
@@ -329,14 +430,16 @@ for the Iwasawa decomposition.
 function RB(Λ::Lorentz{T}) where {T<:Real}
     ℜΛ, ℑΛ = ℂreim(Λ)
     R = rotor(ℜΛ)
-    B = Lorentz(abs(ℜΛ) + im * (conj(R) * ℑΛ))
+    B = Lorentz{T}(abs(ℜΛ) + im * (conj(R) * ℑΛ))
     return R, B
 end
 
 """
     BR(Λ::Lorentz{T}) → (B::Lorentz{T}, R::Rotor{T})
 
-Polar decomposition `Λ = B * R`: pure boost `B` followed by pure rotation `R`.
+Polar decomposition `Λ = B * R` into a pure boost `B` and a pure rotation `R`.  When `Λ`
+acts on a vector, the rotation `R` is applied first, and then the boost `B`, so that `Λ(v) ≈
+B(Lorentz(R)(v))`.
 
 The algorithm here is the same as for [`RB`](@ref), but with the order of multiplication by
 `inv(R)` reversed.
@@ -347,7 +450,7 @@ decomposition.
 function BR(Λ::Lorentz{T}) where {T<:Real}
     ℜΛ, ℑΛ = ℂreim(Λ)
     R = rotor(ℜΛ)
-    B = Lorentz(abs(ℜΛ) + im * (ℑΛ * conj(R)))
+    B = Lorentz{T}(abs(ℜΛ) + im * (ℑΛ * conj(R)))
     return B, R
 end
 
@@ -356,7 +459,7 @@ end
 
 Return the pure rotation `R` and (vectorial) boost velocity `v⃗` such that `Λ = R * Boost(η,
 v̂)` where `η = atanh(β)` is the associated rapidity with `β = norm(v⃗)` as the boost
-parameter.
+parameter.  When `Λ` acts on a vector, the boost is applied first, and then the rotation.
 
 The boost spinor is `B = cosh(η/2) + im*v̂*sinh(η/2)` in the quaternionic encoding.  Note
 that `v̂` is the unit vector in the direction of `v⃗`.  We can immediately obtain the values
@@ -371,8 +474,15 @@ use half-angle formulas to show that
 = \frac{2 \cosh(η/2)}{2\cosh^2(η/2) - 1},
 ```
 where the last equality uses the double-angle identity ``\cosh(η) = 2\cosh^2(η/2) - 1``.
-The last form is made up of entirely of the scalar component of `B`, does not involve any
+The last form is made up entirely of the scalar component of `B`, does not involve any
 cancellation or division by small numbers, and avoids computing the norm of the vector part.
+
+!!! note "Large rapidities"
+    The velocity cannot represent large rapidities accurately, because `β = tanh(η)`
+    approaches 1 exponentially quickly.  The rapidity reconstructed from `v⃗` loses relative
+    accuracy roughly like `eps(T) * exp(2η)`, and in `Float64`, `β` rounds to `1` for `η ≳
+    19`, so that `Boost(v⃗)` is inaccurate or throws.  For large boosts, use [`RB`](@ref) or
+    [`BR`](@ref), which return the boost as a `Lorentz` rotor.
 
 See also [`vR`](@ref), [`RB`](@ref), and [`BR`](@ref) for similar forms, and [`KAN`](@ref)
 for the Iwasawa decomposition.
@@ -380,7 +490,7 @@ for the Iwasawa decomposition.
 function Rv(Λ::Lorentz{T}) where {T<:Real}
     R, B = RB(Λ)
     v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
-    coshη╱2 = real(real(B))  # inner `real`` gets scalar part, outer takes ℂreal
+    coshη╱2 = real(real(B))  # inner `real` gets scalar part, outer takes ℂreal
     v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return R, v⃗
 end
@@ -388,8 +498,9 @@ end
 """
     vR(Λ::Lorentz{T}) → (v⃗::QuatVec{T}, R::Rotor{T})
 
-Return the boost velocity `v⃗` and pure rotation `R` such that `Λ = Boost(η, v̂) * R`.  See
-[`Rv`](@ref) for more details.
+Return the boost velocity `v⃗` and pure rotation `R` such that `Λ = Boost(η, v̂) * R`.  When
+`Λ` acts on a vector, the rotation is applied first, and then the boost.  See [`Rv`](@ref)
+for more details, including the loss of accuracy at large rapidities.
 
 See also [`BR`](@ref) and [`RB`](@ref) for similar forms, and [`KAN`](@ref) for the Iwasawa
 decomposition.
@@ -397,7 +508,7 @@ decomposition.
 function vR(Λ::Lorentz{T}) where {T<:Real}
     B, R = BR(Λ)
     v̂sinhη╱2 = QuatVec(ℂimag(B))  # equal to v̂ * sinh(η/2)
-    coshη╱2 = real(real(B))  # inner `real`` gets scalar part, outer takes ℂreal
+    coshη╱2 = real(real(B))  # inner `real` gets scalar part, outer takes ℂreal
     v⃗ = v̂sinhη╱2 * (2coshη╱2 / (2coshη╱2^2 - 1))
     return v⃗, R
 end
@@ -407,7 +518,7 @@ end
 # ---------------------------------------------------------------------------
 
 @doc raw"""
-    KAN(Λ::Lorentz{T}) → (Rₖ, Rₐ, Rₙ)
+    KAN(Λ::Lorentz{T}) → (Rₖ::Rotor{T}, Rₐ::Lorentz{T}, Rₙ::Lorentz{T})
 
 Compute the Iwasawa ``KAN`` decomposition of the Lorentz transformation `Λ`, returning the
 three factors such that `Λ = Rₖ * Rₐ * Rₙ`, where
@@ -415,6 +526,20 @@ three factors such that `Λ = Rₖ * Rₐ * Rₙ`, where
 - `Rₖ ∈ K` is a pure rotation (the maximal compact factor),
 - `Rₐ ∈ A` is a boost along the ``𝐳`` axis, `Rₐ = cosh(φₐ/2) + sinh(φₐ/2) 𝐭𝐳`, and
 - `Rₙ ∈ N` is a null rotation fixing the null vector ``ℓ = (𝐭+𝐳)/√2``.
+
+As with [`RB`](@ref) and [`BR`](@ref), the rotation `Rₖ` is returned as a real `Rotor{T}`,
+and can be converted with `Lorentz(Rₖ)`, while `Rₐ` and `Rₙ` are returned as `Lorentz{T}`
+rotors.  When `Λ` acts on a vector, `Rₙ` is applied first, then `Rₐ`, and then `Rₖ`.
+
+!!! note "Conditioning"
+    The decomposition is intrinsically ill-conditioned when the rapidity ``φₐ`` of the ``A``
+    factor is large and negative (a large boost toward ``-𝐳``).  In that case, the errors
+    in `Rₖ` grow roughly like `eps(T) * exp(|φₐ|)`, and those in `Rₙ` like `eps(T) *
+    exp(2|φₐ|)`.  This sensitivity is a property of the decomposition itself, rather than of
+    the algorithm used here.  More generally, when the total rapidity `η` of `Λ` is large,
+    rounding its components to `T` leaves a spinor norm that differs from 1 by about `eps(T)
+    * exp(η)`.  No exact factorization of such a `Λ` exists, so the product `Rₖ * Rₐ * Rₙ`
+    can differ from `Λ` by a relative error of that order.
 
 See the [`KAN` decomposition section](@ref iwasawa-kan) of the spacetime-algebra
 documentation for a full discussion and derivation of the method used in this function.
@@ -430,14 +555,16 @@ function KAN(Λ::Lorentz{T}) where {T<:Real}
     ℂℜΛu₊ = ℂreal(Λ * u₊)
     Rₖ = rotor(ℂℜΛu₊)
     # We avoid transcendental functions `ln`, `sinh`, and `cosh` by using the structure of
-    # the following product to read off just the relevant components.
-    RₐRₙ = conj(Rₖ) * Λ
+    # the following product to read off just the relevant components.  The products are
+    # formed in plain `Quaternion` arithmetic, so that they are not renormalized, which
+    # would lose accuracy at large rapidity.
+    RₐRₙ = Quaternion(conj(Rₖ)) * Quaternion(Λ)
     coshφ╱2, sinhφ╱2 = real(RₐRₙ.w), imag(RₐRₙ.z)
-    Rₐ = coshφ╱2 + sinhφ╱2 * 𝐭𝐳
+    Rₐ = Lorentz{T}(coshφ╱2, 0, 0, im * sinhφ╱2)
     # Rather than returning the raw `Rₐ⁻¹ * RₐRₙ`, which may have accumulated roundoff
     # errors, we project that result onto the null-rotation sector by averaging 𝐢 and 𝐣
     # components, and setting 𝟏 and 𝐤 components to their exact values.
-    Rₙraw = conj(Rₐ) * RₐRₙ
+    Rₙraw = Quaternion(conj(Rₐ)) * RₐRₙ
     ξˣ╱2sqrt2 = (imag(Rₙraw.x) - real(Rₙraw.y)) / 2
     ξʸ╱2sqrt2 = (imag(Rₙraw.y) + real(Rₙraw.x)) / 2
     Rₙ = Lorentz{T}(1, ξʸ╱2sqrt2 + im * ξˣ╱2sqrt2, -ξˣ╱2sqrt2 + im * ξʸ╱2sqrt2, 0)

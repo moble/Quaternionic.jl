@@ -32,7 +32,10 @@
     """
     unit_norm(R) = isapprox(sum(abs2, components(R)), 1; rtol=10eps(Float32))
 
-    const scalars = (2.0, 3, 1.5f0)
+    # The signed zeros, and the complex and rational scalars, make sure that the binary
+    # `add_fast` and `sub_fast` methods are needed: the promoting fallbacks in
+    # `Base.FastMath` give the same nonzero values, but can change the signs of zeros.
+    const scalars = (2.0, 3, 1.5f0, -0.0, 2.0 - 1.0im, 3//2, true)
     const quaternions = (
         quaternion(1.0, 2.0, 3.0, 4.0),
         rotor(1.0, 2.0, 3.0, 4.0),
@@ -40,6 +43,9 @@
         quaternion(1.0f0, -2.0f0, 3.0f0, 0.5f0),
         rotor(-1.0f0, 2.0f0, 0.5f0, 4.0f0),
         quatvec(-1.0f0, 2.0f0, 0.5f0),
+        quaternion(-0.0, 0.0, -0.0, 0.0),
+        quatvec(-0.0, 0.0, -0.0),
+        Quaternion(1.0+1im, 2.0im, 0.0im, 1.0+0im),
     )
     const values = (scalars..., quaternions...)
 end
@@ -114,10 +120,8 @@ end
         @test matches(@fastmath(abs(q)), abs(q))
         @test matches(@fastmath(abs2(q)), abs2(q))
         @test matches(@fastmath(sqrt(q)), sqrt(q))
-        # `exp` is not defined for a `Rotor`, nor `log` for a `QuatVec`.
-        if !(q isa Rotor)
-            @test matches(@fastmath(exp(q)), exp(q))
-        end
+        @test matches(@fastmath(exp(q)), exp(q))
+        # `log` is not defined for a `QuatVec`.
         if !(q isa QuatVec)
             @test matches(@fastmath(log(q)), log(q))
         end

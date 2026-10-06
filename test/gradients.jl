@@ -20,13 +20,14 @@
                 @test ∂3[i] ≈ ∂2[i] rtol=ϵ
             end
         end
+        # At the identity, log(1 + δ) ≈ δ, so the gradient is [1, 𝐢, 𝐣, 𝐤].
         ∂1 = ∂log(rotor(1))
-        ∂2 = QuaternionF64[1, 0, 0, imz]
+        ∂2 = QuaternionF64[1, imx, imy, imz]
         for i in 1:4
             @test ∂1[i] ≈ ∂2[i] rtol=ϵ
         end
         l, ∂1 = log∂log(rotor(1))
-        ∂2 = QuaternionF64[1, 0, 0, imz]
+        ∂2 = QuaternionF64[1, imx, imy, imz]
         @test l ≈ QuaternionF64(0) rtol=4eps() atol=10eps()
         for i in 1:4
             @test ∂1[i] ≈ ∂2[i] rtol=ϵ

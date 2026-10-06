@@ -191,10 +191,12 @@
             )
             Δ = s*f*v
 
-            # log(1) + Δ = Δ
+            # log(1 + Δ) ≈ log|1 + Δ| + Δ.  The scalar part is log(1 + f²)/2, which
+            # `log(abs(q))` would round to zero.
             q = quaternion(one(T)) + Δ
-            @test q ≈ exp(quaternion(log(abs(q))) + Δ) rtol=ϵ nans=true
-            @test log(q) ≈ quaternion(log(abs(q))) + Δ rtol=ϵ nans=true
+            @test q ≈ exp(quaternion(log1p(f^2)/2) + Δ) rtol=ϵ nans=true
+            @test log(q) ≈ quaternion(log1p(f^2)/2) + Δ rtol=ϵ nans=true
+            @test log(q)[1] ≈ log1p(f^2)/2 rtol=ϵ
             r = rotor(q)
             @test r ≈ exp(Δ) rtol=ϵ nans=true
             @test log(r) ≈ Δ rtol=ϵ nans=true

@@ -1,8 +1,8 @@
 @testset verbose=true "Alignment" begin
     Random.seed!(1234)
 
-    # `align` on `QuatVec`s goes through an eigen-decomposition, so it needs
-    # `GenericLinearAlgebra` (imported in runtests.jl) for non-LAPACK types.
+    # `align` on `QuatVec`s goes through an eigen-decomposition, which uses
+    # `GenericLinearAlgebra` (a dependency of Quaternionic) for non-LAPACK types.
     @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64, Double64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             a⃗ = randn(QuatVec{T}, N)

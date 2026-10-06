@@ -32,14 +32,26 @@ makedocs(;
     remotes=notes_remotes,
     pages=[
         "Introduction" => "index.md",
-        "Basics" => "manual.md",
+        "Manual" => [
+            "Types and construction" => "types.md",
+            "Algebra and mathematical functions" => "math.md",
+            "Rotations and conversions" => "conversions.md",
+            "Distances and alignment" => "distances.md",
+            "Lorentz transformations" => "lorentz.md",
+        ],
         "Functions of time" => "functions_of_time.md",
-        "Differentiating by quaternions" => "differentiation.md",
-        "All functions" => "functions.md",
-        "Geometric Algebra" => "geometric_algebra.md",
-        "Spacetime Algebra" => "spacetime_algebra.md",
+        "Differentiating by quaternionic arguments" => "differentiation.md",
+        "Theory" => [
+            "Geometric algebra" => "geometric_algebra.md",
+            "Spacetime algebra" => "spacetime_algebra.md",
+        ],
+        "References" => "references.md",
         notes_pages...,
+        "API index" => "api.md",
     ],
+    # Every exported or public name must be documented.  Internal helpers, such as
+    # `squad_control_points`, may have docstrings that are deliberately left out.
+    checkdocs=:public,
     # doctest = false,
     doctestfilters = [
         # Drop any digit after the 12th digit after a decimal, throughout the docs

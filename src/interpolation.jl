@@ -7,29 +7,42 @@
 const Rotator = Union{Quaternion, Rotor}
 
 
-function _unflip!(q, Rpre, R, Rpost)
+# The sign test uses the real part of the inner product, so that complex quaternions are
+# also supported.  For a Lorentz rotor, the real part of the scalar part of the relative
+# transformation is cos(θ/2) cosh(η/2), which selects the hemisphere just as in the real
+# case.
+
+# In-place worker: `I` is the axis along the dimension being unflipped, and `Rpre` and
+# `Rpost` are the Cartesian indices before and after that dimension.
+function unflip!(q::AbstractArray, Rpre::CartesianIndices, I::AbstractUnitRange, Rpost::CartesianIndices)
     @inbounds for Ipost in Rpost
-        for i in R
+        for i in first(I)+1:last(I)
             for Ipre in Rpre
-                if q[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost] < 0
-                    q[Ipre, i, Ipost] *= -1
+                if real(q[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost]) < 0
+                    # Unary minus is exact and keeps the element type; multiplying a
+                    # `Rotor` by -1 would give a `Quaternion`, which is renormalized when
+                    # it is stored back.
+                    q[Ipre, i, Ipost] = -q[Ipre, i, Ipost]
                 end
             end
         end
     end
+    q
 end
 
 
-function _unflip!(q, p, Rpre, R, Rpost)
+# Copying worker: the unflipped values of `q` are written into `p`, which has the same axes.
+function unflip!(p::AbstractArray, q::AbstractArray, Rpre::CartesianIndices, I::AbstractUnitRange, Rpost::CartesianIndices)
+    isempty(I) && return p
     @inbounds for Ipost in Rpost
-        let i = 1
+        let i = first(I)
             for Ipre in Rpre
                 p[Ipre, i, Ipost] = q[Ipre, i, Ipost]
             end
         end
-        for i in R
+        for i in first(I)+1:last(I)
             for Ipre in Rpre
-                if p[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost] < 0
+                if real(p[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost]) < 0
                     p[Ipre, i, Ipost] = -q[Ipre, i, Ipost]
                 else
                     p[Ipre, i, Ipost] = q[Ipre, i, Ipost]
@@ -37,28 +50,25 @@ function _unflip!(q, p, Rpre, R, Rpost)
             end
         end
     end
-end
-
-
-function unflip!(q::AbstractArray{<:AbstractQuaternion}; dim::Integer=1)
-    Rpre = CartesianIndices(size(q)[1:dim-1])
-    R = 2:size(q, dim)
-    Rpost = CartesianIndices(size(q)[dim+1:end])
-    _unflip!(q, Rpre, R, Rpost)
+    p
 end
 
 
 """
-    unflip(q, [dim=1])
-    unflip!(q, [dim=1])
+    unflip(q; dim=1)
+    unflip!(q; dim=1)
 
-Flip the signs of successive quaternions along dimension `dim` so that they are
-as continuous as possible.
+Flip the signs of successive quaternions along dimension `dim` so that they are as
+continuous as possible.
 
-If `q` represents a series of rotations, the sign of each element is arbitrary.
-However, for certain purposes — such as interpolation and differentiation — the
-continuity of the quaternions matters, and so we want the *quaternions* to be
-as continuous as possible without changing the *rotations* that they represent.
+If `q` represents a series of rotations, the sign of each element is arbitrary.  However,
+for certain purposes — such as interpolation and differentiation — the continuity of the
+quaternions matters, and so we want the *quaternions* to be as continuous as possible
+without changing the *rotations* that they represent.
+
+The first element along `dim` is never changed.  Each subsequent element is negated if the
+real part of its inner product with the (possibly negated) preceding element is negative.
+`unflip` returns a new array, while `unflip!` modifies `q` in place and returns it.
 
 # Examples
 ```jldoctest
@@ -73,12 +83,24 @@ julia> unflip(q)
 ```
 """
 function unflip(q::AbstractArray{<:AbstractQuaternion}; dim::Integer=1)
-    p = similar(q)
-    Rpre = CartesianIndices(size(q)[1:dim-1])
-    R = 2:size(q, dim)
-    Rpost = CartesianIndices(size(q)[dim+1:end])
-    _unflip!(q, p, Rpre, R, Rpost)
-    p
+    Rpre = CartesianIndices(axes(q)[1:dim-1])
+    I = axes(q, dim)
+    Rpost = CartesianIndices(axes(q)[dim+1:end])
+    unflip!(similar(q), q, Rpre, I, Rpost)
+end
+
+
+"""
+    unflip!(q; dim=1)
+
+Flip the signs of successive quaternions along dimension `dim` of `q` in place, and return
+`q`.  See [`unflip`](@ref) for details.
+"""
+function unflip!(q::AbstractArray{<:AbstractQuaternion}; dim::Integer=1)
+    Rpre = CartesianIndices(axes(q)[1:dim-1])
+    I = axes(q, dim)
+    Rpost = CartesianIndices(axes(q)[dim+1:end])
+    unflip!(q, Rpre, I, Rpost)
 end
 
 
@@ -109,7 +131,7 @@ function and its derivative with respect to each parameter of the input.
 
 """
 function slerp(q₁::R1, q₂::R2, τ::Real; unflip::Bool=false) where {R1<:Rotator, R2<:Rotator}
-    if unflip && q₁⋅q₂ < 0
+    if unflip && real(q₁⋅q₂) < 0
         return (-q₂ / q₁)^τ * q₁
     end
     (q₂ / q₁)^τ * q₁
@@ -117,10 +139,11 @@ end
 
 
 @doc raw"""
-    squad_control_points(R::AbstractVector{Rotor}, t::AbstractVector{<:AbstractFloat}, i::Int)
+    squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:Real}, i::Int)
 
-This is a helper function for the `squad` routines, returning the control
-points between one pair of input rotors.
+This is a helper function for the `squad` routines, returning the control points between one
+pair of input rotors.  Both control points are returned as `Rotor`s of the same type, which
+is promoted from the types of `R` and `t`.
 
 The expressions for ``A`` and ``B`` (assuming all indices are valid) are
 ```math
@@ -156,11 +179,15 @@ B_{\mathrm{end}} &= R_{\mathrm{end}}\, \bar{R}_{\mathrm{end-1}}\, R_{\mathrm{end
 \end{aligned}
 ```
 """
-function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:AbstractFloat}, i::Int)
+function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:Real}, i::Int)
+    # Both control points are converted to one type, so that the return type does not depend
+    # on `i`.
+    RT = Rotor{promote_type(basetype(eltype(R)), typeof(float(one(eltype(t)))))}
+    n = length(R)
     if i==1
         A = R[1]
-    elseif i==length(R)
-        A = R[end]  # COV_EXCL_LINE
+    elseif i==n
+        A = R[n]  # COV_EXCL_LINE
     else
         A = R[i] * exp(
             (
@@ -169,19 +196,19 @@ function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:Ab
             ) / 4
         )
     end
-    if i<length(R)-1
+    if i<n-1
         B = R[i+1] * exp(
             (
                 log(conj(R[i+1]) * R[i+2]) * ((t[i+1] - t[i]) / (t[i+2] - t[i+1]))
                 - log(conj(R[i]) * R[i+1])
             ) / -4
         )
-    elseif i==length(R)-1
-        B = R[i+1]
-    else # i==length(R)
-        B = normalize(Rotor{eltype(R)}((2*(R[i] ⋅ R[i-1]) * R[i] - R[i-1]).components...))  # COV_EXCL_LINE
+    elseif i==n-1
+        B = R[n]
+    else # i==n
+        B = R[n] * conj(R[n-1]) * R[n]  # COV_EXCL_LINE
     end
-    A, B
+    RT(A), RT(B)
 end
 
 
@@ -192,14 +219,16 @@ const unflip_func = unflip  # `unflip` will be used as a local variable in
     squad!(Rout, Ω⃗out, Ṙout, Rin, tin, tout; [unflip=false], [validate=false])
     squad!(Rout, Rin, tin, tout; [unflip=false], [validate=false])
 
-In-place evaluation of "Spherical QUADrangular interpolation".  Note that this
-is intended mostly as a utility function; the [`squad`](@ref) is more
-user-friendly.  However, for efficiency, this function may be preferable.
+In-place evaluation of "Spherical QUADrangle interpolation".  Note that this is intended
+mostly as a utility function; [`squad`](@ref) is more user-friendly.  However, for
+efficiency, this function may be preferable.
 
-The first three arrays will be modified in place, and must have the same length
-as `tout`.  Their elements must be `Rotor`, `QuatVec`, and `Quaternion`,
-respectively.  Optionally, either or both of `Ω⃗out` and `Ṙout` maybe `nothing`,
-in which case they will not be computed.
+The output arrays `Rout`, `Ω⃗out`, and `Ṙout` will be modified in place, and must have the
+same length as `tout`.  Their elements must be `Rotor`, `QuatVec`, and `Quaternion`,
+respectively.  Optionally, either or both of `Ω⃗out` and `Ṙout` may be `nothing`, in which
+case they will not be computed.  The second form computes only `Rout`.
+
+The times `tout` must lie within the range of `tin`; otherwise an error is thrown.
 
 See also [`squad`](@ref).
 
@@ -211,61 +240,60 @@ function squad!(
     if length(tout) == 0
         return
     end
+    Base.require_one_based_indexing(Rout, Rin, tin, tout)
+    # These checks of the input use `ArgumentError` rather than `@assert`, which may be
+    # disabled at some optimization levels.
     t_begin, t_end = extrema(tin)
-    @assert t_begin < t_end  # Proves that there are at least 2 tin
-    @assert length(Rin) == length(tin)  # Proves that there are at least 2 Rin
-    @assert length(Rout) == length(tout)
+    t_begin < t_end ||  # Proves that there are at least 2 tin
+        throw(ArgumentError("`tin` must contain at least two distinct times"))
+    length(Rin) == length(tin) ||  # Proves that there are at least 2 Rin
+        throw(ArgumentError("`Rin` and `tin` must have the same length"))
+    length(Rout) == length(tout) ||
+        throw(ArgumentError("`Rout` and `tout` must have the same length"))
     evaluate_Ω⃗ = (Ω⃗out !== nothing)
     evaluate_Ṙ = (Ṙout !== nothing)
     if evaluate_Ω⃗
-        @assert length(Ω⃗out) == length(tout)
+        length(Ω⃗out) == length(tout) ||
+            throw(ArgumentError("`Ω⃗out` and `tout` must have the same length"))
     end
     if evaluate_Ṙ
-        @assert length(Ṙout) == length(tout)
+        length(Ṙout) == length(tout) ||
+            throw(ArgumentError("`Ṙout` and `tout` must have the same length"))
     end
     if validate
-        @assert minimum(diff(tin)) > 0
+        minimum(diff(tin)) > 0 ||
+            throw(ArgumentError("`tin` must be strictly increasing"))
         if length(tout) > 1
-            @assert minimum(diff(tout)) > 0
-            tout_begin, tout_end = extrema(tout)
-            @assert t_begin ≤ tout_begin
-            @assert tout_end ≤ t_end
-        elseif length(tout) == 1
-            @assert t_begin ≤ tout[1] ≤ t_end
+            minimum(diff(tout)) > 0 ||
+                throw(ArgumentError("`tout` must be strictly increasing"))
         end
+        tout_begin, tout_end = extrema(tout)
+        t_begin ≤ tout_begin && tout_end ≤ t_end ||
+            throw(ArgumentError("`tout` must lie within [$t_begin, $t_end]"))
     end
     if unflip
         Rin = unflip_func(Rin)
     end
+    n = length(tin)
     j = 1
-    toutj = tout[j]
-    if toutj == tin[1]
-        if evaluate_Ω⃗ || evaluate_Ṙ
-            i = 1
-            A, B = squad_control_points(Rin, tin, i)
-            ta, tb = tin[i], tin[i+1]
-            qᵢ, qᵢ₊₁ = Rin[i], Rin[i+1]
-            s, ∂s∂t = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
-            if evaluate_Ω⃗
-                Ω⃗out[j] = 2 * eltype(Ω⃗out)(∂s∂t / s)
-            end
-            if evaluate_Ṙ
-                Ṙout[j] = ∂s∂t
-            end
-        end
-        Rout[1] = Rin[1]
-        j += 1
-    end
     while j ≤ length(Rout)
-        toutj = tout[j]
-        i = searchsortedfirst(tin, toutj) - 1
-        if i == length(tin)
-            error("Searching for $toutj went out of range [$t_begin, $t_end]")  # COV_EXCL_LINE
+        # The segment is located by value.  AD types such as `ForwardDiff.Dual` may also
+        # compare their partials when their values are equal, which would push a time equal
+        # to a knot into a neighboring segment, or out of range at either end.
+        toutj = value(tout[j])
+        i = searchsortedfirst(tin, toutj; by=value) - 1
+        if i == 0 && toutj == value(tin[1])
+            i = 1
+        end
+        if i < 1 || i ≥ n
+            error("Searching for $(tout[j]) went out of range [$t_begin, $t_end]")
         end
         A, B = squad_control_points(Rin, tin, i)
         ta, tb = tin[i], tin[i+1]
         qᵢ, qᵢ₊₁ = Rin[i], Rin[i+1]
-        while j ≤ length(Rout) && tb ≥ tout[j]
+        # Both ends of the segment are checked, so that an out-of-order time goes back to
+        # the segment search instead of being extrapolated from the current segment.
+        while j ≤ length(Rout) && value(ta) ≤ value(tout[j]) ≤ value(tb)
             if evaluate_Ω⃗ || evaluate_Ṙ
                 s, ∂s∂t = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
                 Rout[j] = s
@@ -276,7 +304,8 @@ function squad!(
                     Ṙout[j] = ∂s∂t
                 end
             else
-                τ = (tout[j] - ta) / (tb - ta)
+                # `float` keeps rational times away from `^(::Rotor, ::Rational)`.
+                τ = float((tout[j] - ta) / (tb - ta))
                 Rout[j] = slerp(
                     slerp(qᵢ, qᵢ₊₁, τ),
                     slerp(A, B, τ),
@@ -288,76 +317,87 @@ function squad!(
     end
 end
 
+function squad!(
+    Rout::AbstractVector{<:Rotor}, Rin::AbstractVector{<:Rotor}, tin::AbstractVector{<:Real},
+    tout::AbstractVector{<:Real}; unflip=false, validate=false
+)
+    squad!(Rout, nothing, nothing, Rin, tin, tout; unflip=unflip, validate=validate)
+end
 
 
 """
     squad(Rin, tin, tout; [kwargs...])
 
-"Spherical QUADrangle interpolation" of the input `Rotor`s `Rin` with
-corresponding times `tin`, to the output times `tout`.
+"Spherical QUADrangle interpolation" of the input `Rotor`s `Rin` with corresponding times
+`tin`, to the output times `tout`.
 
 This is a slightly generalized version of [Shoemake's "spherical Bézier
-curves"](https://doi.org/10.1145/325165.325242), to allow for time steps of
-varying sizes.
+curves"](https://doi.org/10.1145/325165.325242), to allow for time steps of varying sizes.
 
-The input `Rin` and `tin` must be vectors of the same length.  The output
-`tout` may be either a single real number or a vector of real numbers.  Both
-`tin` and `tout` are assumed to be sorted, and `tout` is assumed to be
-contained entirely within `tin`; no extrapolation will be done.
+The input `Rin` and `tin` must be vectors of the same length.  The output `tout` may be
+either a single real number or a vector of real numbers.  The times `tin` are assumed to be
+strictly increasing, and `tout` must be contained entirely within the range of `tin`; no
+extrapolation will be done.  Sorted `tout` is evaluated most efficiently, but the result is
+correct for any order.
 
 See also [`squad!`](@ref) for in-place versions of this function.
 
 # Keyword arguments
 
-If `unflip=true` is passed as a keyword, the [`unflip`](@ref) function will be
-applied to `Rin`.
+If `unflip=true` is passed as a keyword, the [`unflip`](@ref) function will be applied to
+`Rin`.
 
-If `validate=true` is passed as a keyword, the time ordering of the input `tin`
-and `tout` will be tested to ensure that no extrapolation will be done.
+If `validate=true` is passed as a keyword, the time ordering of the input `tin` and `tout`
+will be tested to ensure that no extrapolation will be done, and an `ArgumentError` will be
+thrown otherwise.  Even without validation, an error is thrown when an element of `tout`
+falls outside the range of `tin`.
 
-If `compute_angular_velocity=true` is passed as a keyword, the return value
-will be a tuple.  The first element of the tuple will be a vector of `Rotor`s
-as before, but the second element will be a vector of `QuatVec`s representing
-the angular velocity.
+If `compute_angular_velocity=true` is passed as a keyword, the return value will be a tuple.
+The first element of the tuple will be a vector of `Rotor`s as before, but the second
+element will be a vector of `QuatVec`s representing the angular velocity.
 
-If `compute_derivative=true` is passed as a keyword, the return value will be
-a tuple.  The first element of the tuple will be a vector of `Rotor`s as
-before, but the last element will be a vector of `Quaternion`s representing the
-time-derivative of the rotors.  Note that if `compute_angular_velocity=true`,
-this tuple will have three elements.
+If `compute_derivative=true` is passed as a keyword, the return value will be a tuple.  The
+first element of the tuple will be a vector of `Rotor`s as before, but the last element will
+be a vector of `Quaternion`s representing the time-derivative of the rotors.  Note that if
+`compute_angular_velocity=true`, this tuple will have three elements.
 
 """
-function squad(
-        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real};
+@inline function squad(
+        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::Union{Real, AbstractVector{<:Real}};
         unflip=false, validate=false, compute_angular_velocity=false, compute_derivative=false
 ) where {T}
+    # The flags are lifted into the type domain, so that the return type can be inferred
+    # whenever they are constants, as they are with the default values.  Inlining this
+    # method lets the compiler see those constants.
+    squad(
+        Rin, tin, tout, Val(compute_angular_velocity), Val(compute_derivative);
+        unflip=unflip, validate=validate
+    )
+end
+
+function squad(
+        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::AbstractVector{<:Real},
+        ::Val{Ω⃗}, ::Val{Ṙ}; unflip=false, validate=false
+) where {T, Ω⃗, Ṙ}
     Rout_eltype = promote_type(eltype(tin), eltype(tout), T)
     Rout = similar(Rin, Rotor{Rout_eltype}, length(tout))
-    Ω⃗out = compute_angular_velocity ? similar(Rin, QuatVec{Rout_eltype}, length(tout)) : nothing
-    Ṙout = compute_derivative ? similar(Rin, Quaternion{Rout_eltype}, length(tout)) : nothing
+    Ω⃗out = Ω⃗ ? similar(Rin, QuatVec{Rout_eltype}, length(tout)) : nothing
+    Ṙout = Ṙ ? similar(Rin, Quaternion{Rout_eltype}, length(tout)) : nothing
     squad!(Rout, Ω⃗out, Ṙout, Rin, tin, tout; unflip=unflip, validate=validate)
-    if compute_angular_velocity && compute_derivative
+    if Ω⃗ && Ṙ
         return (Rout, Ω⃗out, Ṙout)
-    elseif compute_angular_velocity
+    elseif Ω⃗
         return (Rout, Ω⃗out)
-    elseif compute_derivative
+    elseif Ṙ
         return (Rout, Ṙout)
     end
     return Rout
 end
 
-
 function squad(
-        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::Real;
-        unflip=false, validate=false, compute_angular_velocity=false, compute_derivative=false
+        Rin::AbstractVector{Rotor{T}}, tin::AbstractVector{<:Real}, tout::Real,
+        Ω⃗::Val, Ṙ::Val; unflip=false, validate=false
 ) where {T}
-    result = squad(Rin, tin, [tout]; unflip, validate, compute_angular_velocity, compute_derivative)
-    if compute_angular_velocity && compute_derivative
-        return (result[1][1], result[2][1], result[3][1])
-    elseif compute_angular_velocity
-        return (result[1][1], result[2][1])
-    elseif compute_derivative
-        return (result[1][1], result[2][1])
-    end
-    return result[1]
+    result = squad(Rin, tin, [tout], Ω⃗, Ṙ; unflip=unflip, validate=validate)
+    result isa Tuple ? map(first, result) : result[1]
 end
