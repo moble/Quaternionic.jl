@@ -63,14 +63,19 @@ QTypes = [Quaternion, Rotor, QuatVec]
 Base.eps(::Quaternion{T}) where {T} = eps(T)
 Base.eps(T::Type{<:Integer}) = zero(T)
 Base.eps(n::Symbolics.Num) = zero(n)
-Base.:≈(a::Symbolics.Num, b::Symbolics.Num; kwargs...) =
-    iszero(Symbolics.simplify(a-b; expand=true))
 function _sym_iszero(diff)
     d = Symbolics.simplify(diff; expand=true)
     iszero(d) || iszero(Symbolics.simplify(d^2; expand=true))
 end
 Base.:≈(a::Symbolics.Num, b::Number; kwargs...) = _sym_iszero(a - b)
 Base.:≈(a::Number, b::Symbolics.Num; kwargs...) = _sym_iszero(a - b)
+# Symbolics defines `isapprox(::Num, ::Num)` itself, and its method returns `false` unless
+# the difference of the two expressions is already a number.  Redefining that method here
+# would overwrite Symbolics' own, so tests that compare two symbolic expressions that are
+# equal only after expansion use this function instead, which falls back to `isapprox` for
+# every other type.
+isapproxexpanded(a, b; kwargs...) = isapprox(a, b; kwargs...)
+isapproxexpanded(a::Symbolics.Num, b::Symbolics.Num; kwargs...) = _sym_iszero(a - b)
 Base.:≈(a::AbstractQuaternion{Symbolics.Num}, b::AbstractQuaternion{Symbolics.Num}; kwargs...) =
     all(iszero(Symbolics.simplify(x - y; expand=true)) for (x, y) in zip(components(a), components(b)))
 
