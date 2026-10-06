@@ -28,7 +28,7 @@ Base.abs2(q::QuatVec{T}) where {T<:Real} = sum(x->x^2, vec(q))
 Base.abs2(q::QuatVec{Complex{T}}) where {T<:Real} = q[2]*q[2] + q[3]*q[3] + q[4]*q[4]
 Base.abs2(::Rotor{T}) where {T<:Number} = one(real(T))
 
-# WORKAROUND for Enzyme bugs (EnzymeAD/Enzyme.jl#ISSUE_AVX).  `hypotenuse` is just `hypot`
+# WORKAROUND for Enzyme bugs (EnzymeAD/Enzyme.jl#3775).  `hypotenuse` is just `hypot`
 # of three or four numbers.  Except for complex components, `abs` and `absvec` call this
 # function rather than `hypot` itself, only so that `QuaternionicEnzymeExt` can give it
 # rules whose arguments are the components, which are numbers.  Rules on `abs` and `absvec`
