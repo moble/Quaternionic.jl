@@ -453,7 +453,7 @@ end
     end
 end
 
-@testitem "core: reverse-mode gradients with respect to Rotor arguments" tags=[:unit, :fast] begin
+@testitem "core: reverse-mode gradients with respect to Rotor arguments" tags=[:unit, :fast, :ad] begin
     using ForwardDiff, Zygote
     # `convert(Rotor{T}, x)` normalizes, so the projection of a cotangent onto a `Rotor`
     # argument must not use `convert`; a cotangent is not a unit quaternion.  Each gradient

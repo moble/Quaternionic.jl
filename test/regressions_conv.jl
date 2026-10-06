@@ -299,7 +299,7 @@ end
     @test to_float_array(rotor(1.0f0, 0, 0, 0)) isa Vector{Float32}
 end
 
-@testitem "Zygote differentiates the conversions to static arrays" tags=[:unit, :fast] begin
+@testitem "Zygote differentiates the conversions to static arrays" tags=[:unit, :fast, :ad] begin
     using ForwardDiff, Zygote
 
     # Zygote cannot differentiate the `@SVector [...]` and `@SMatrix [...]` literal forms,
