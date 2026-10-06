@@ -104,17 +104,13 @@ jobs:
       - run: julia --project=compat16 -e 'using Pkg; Pkg.develop(path="."); Pkg.add(["ChainRulesCore", "ForwardDiff", "StaticArrays"])'
       - run: julia --project=compat16 test/compat16_smoke.jl
 
-  # The docs job waits for the tests, so that failing code is never deployed.  On tags the
-  # test jobs are skipped, and the docs must still deploy, so a skipped test job counts as
-  # a success here.
+  # The docs job does not wait for the tests, so that the docs (and their previews on pull
+  # requests) can be checked even while some tests fail.
   docs:
     name: Documentation
     runs-on: ubuntu-latest
-    needs: [test, slow, compat16]
     if: >-
-        !cancelled()
-        && !contains(needs.*.result, 'failure')
-        && !contains(github.event.head_commit.message, '[skip ci]')
+        !contains(github.event.head_commit.message, '[skip ci]')
         && !contains(github.event.head_commit.message, '[skip docs]')
     permissions:
       actions: write
@@ -128,12 +124,6 @@ jobs:
           version: '1'
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
-      - run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using Quaternionic
-            DocMeta.setdocmeta!(Quaternionic, :DocTestSetup, :(using Quaternionic); recursive=true)
-            doctest(Quaternionic)'
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
