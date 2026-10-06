@@ -3,6 +3,7 @@
 module FundamentalTests
     using Test: @test
     using Quaternionic
+    import ..isapproxexpanded  # Defined in runtests.jl
 
     # Algebra
     ## Vector space
@@ -61,9 +62,9 @@ module FundamentalTests
     # Normed
     test_norm_maps_to_field(q::Quaternion) = @test typeof(abs2(q)) == basetype(q)
     test_norm_nondegenerate(v::Quaternion) = @test iszero(v) ⊻ !iszero(abs2(v))
-    test_norm_quadratic(v::Quaternion) = @test abs2(2*v) ≈ 4*abs2(v) rtol=eps(v)
-    test_norm_quadratic(a, v::Quaternion) = @test abs2(a*v) ≈ a^2*abs2(v) rtol=eps(v)
-    test_norm_composition(x::Quaternion, y::Quaternion) = @test abs2(x*y) ≈ abs2(x)*abs2(y) rtol=eps(x)
+    test_norm_quadratic(v::Quaternion) = @test isapproxexpanded(abs2(2*v), 4*abs2(v); rtol=eps(v))
+    test_norm_quadratic(a, v::Quaternion) = @test isapproxexpanded(abs2(a*v), a^2*abs2(v); rtol=eps(v))
+    test_norm_composition(x::Quaternion, y::Quaternion) = @test isapproxexpanded(abs2(x*y), abs2(x)*abs2(y); rtol=eps(x))
 
     # Associative
     test_associativity(u::Quaternion, v::Quaternion, w::Quaternion) = @test (u * v) * w ≈ u * (v * w) rtol=eps(v)
