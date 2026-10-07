@@ -52,12 +52,14 @@ function expseriesterms(::Type{T}) where {T<:AbstractFloat}
     end
     return n
 end
-expseriesterms(::Type) = 10
+# Julia replaces a method that returns a constant with that constant, so coverage never
+# counts the lines of these methods, or of the last method of `logseriesterms`, below.
+expseriesterms(::Type) = 10  # COV_EXCL_LINE
 # The values for the IEEE types, which the method above also returns, are given explicitly,
 # so that they cost nothing at run time.
-expseriesterms(::Type{Float64}) = 10
-expseriesterms(::Type{Float32}) = 6
-expseriesterms(::Type{Float16}) = 4
+expseriesterms(::Type{Float64}) = 10  # COV_EXCL_LINE
+expseriesterms(::Type{Float32}) = 6  # COV_EXCL_LINE
+expseriesterms(::Type{Float16}) = 4  # COV_EXCL_LINE
 
 """
     logseriesterms(T)
@@ -67,7 +69,7 @@ truncation error smaller than the precision of `T` for every `0 ≤ x ≤ 1/16`.
 `Float64`.  For types without a precision, it is 24.
 """
 logseriesterms(::Type{T}) where {T<:AbstractFloat} = cld(precision(T) + 3, 4)
-logseriesterms(::Type) = 24
+logseriesterms(::Type) = 24  # COV_EXCL_LINE
 
 """
     rootclosedforms(x)
