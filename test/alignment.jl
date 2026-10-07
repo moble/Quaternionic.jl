@@ -1,9 +1,11 @@
-@testset verbose=true "Alignment" begin
+@testitem "Alignment: QuatVec" tags=[:unit, :fast] begin
+    using DoubleFloats: Double64
+    using Random
     Random.seed!(1234)
 
     # `align` on `QuatVec`s goes through an eigen-decomposition, which uses
     # `GenericLinearAlgebra` (a dependency of Quaternionic) for non-LAPACK types.
-    @testset verbose=true "Align QuatVec{$T}" for T in [Float16, Float32, Float64, Double64, BigFloat]
+    @testset "$T" for T in [Float16, Float32, Float64, Double64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             a⃗ = randn(QuatVec{T}, N)
             R = randn(Rotor{T})
@@ -51,11 +53,17 @@
             end
         end
     end
+end
 
-    # The `Rotor` methods never touch `eigen` — they are a normalized sum — so
-    # they have always been generic.  Swept over the same types as the `QuatVec`
-    # methods so the two stay in step.
-    @testset verbose=true "Align Rotor{$T}" for T in [Float16, Float32, Float64, Double64, BigFloat]
+# The `Rotor` methods never touch `eigen` — they are a normalized sum — so
+# they have always been generic.  Swept over the same types as the `QuatVec`
+# methods so the two stay in step.
+@testitem "Alignment: Rotor" tags=[:unit, :fast] begin
+    using DoubleFloats: Double64
+    using Random
+    Random.seed!(1234)
+
+    @testset "$T" for T in [Float16, Float32, Float64, Double64, BigFloat]
         for N in [1, 2, 3, 4, 5, 10, 20]
             A = randn(Rotor{T}, N)
             R = randn(Rotor{T})
@@ -103,23 +111,26 @@
             end
         end
     end
-    # `align` needs an eigen-decomposition, which is inherently iterative and so
-    # cannot work for symbolic element types.  Check that the caller gets an
-    # actionable message rather than the raw `TypeError: non-boolean (Num) used
-    # in boolean context` thrown from inside a QR sweep.
-    @testset "Informative error for non-float element types" begin
-        a⃗ = [quatvec(a, b, c), quatvec(b, c, d), quatvec(c, d, a)]
-        b⃗ = [quatvec(d, a, b), quatvec(a, c, b), quatvec(b, d, c)]
-        err = try
-            align(a⃗, b⃗)
-            nothing
-        catch e
-            e
-        end
-        @test err isa ArgumentError
-        @test occursin("floating-point element type", err.msg)
-        @test occursin("float.", err.msg)
-        @test occursin("Num", err.msg)
-    end
+end
 
+# `align` needs an eigen-decomposition, which is inherently iterative and so
+# cannot work for symbolic element types.  Check that the caller gets an
+# actionable message rather than the raw `TypeError: non-boolean (Num) used
+# in boolean context` thrown from inside a QR sweep.
+@testitem "Alignment: informative error for non-float element types" tags=[:unit, :fast] begin
+    import Symbolics
+    Symbolics.@variables a b c d
+
+    a⃗ = [quatvec(a, b, c), quatvec(b, c, d), quatvec(c, d, a)]
+    b⃗ = [quatvec(d, a, b), quatvec(a, c, b), quatvec(b, d, c)]
+    err = try
+        align(a⃗, b⃗)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("floating-point element type", err.msg)
+    @test occursin("float.", err.msg)
+    @test occursin("Num", err.msg)
 end

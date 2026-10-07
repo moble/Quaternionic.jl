@@ -1,5 +1,8 @@
-@testset verbose=true "Base" begin
-    @testset "Numbers $T" for T in Types
+@testitem "Base: basis elements, constructors, equality, and predicates" tags=[:unit, :fast] setup=[TestUtils] begin
+    using StaticArrays: SVector
+    import Symbolics
+
+    @testset "$T" for T in Types
         # Note that, because `Symbolics.Num` is a weird type, we have to be a little more
         # explicit below than we normally would be.  Also, because of signed zeros in the
         # float types, we have to take the absolute value of the difference before comparing
@@ -274,98 +277,104 @@
         @test flipsign(k, -1) == -k
 
     end
+end
 
-    @testset "bswap" begin
-        @test bswap(quaternion(1)) == quaternion(2^56)
-        @test bswap(1imx) == (2^56)imx
-        @test bswap(1imy) == (2^56)imy
-        @test bswap(1imz) == (2^56)imz
-        @test bswap(bswap(quaternion(1))) == quaternion(1)
-        @test bswap(bswap(1imx)) == 1imx
-        @test bswap(bswap(1imy)) == 1imy
-        @test bswap(bswap(1imz)) == 1imz
-    end
+@testitem "Base: bswap" tags=[:unit, :fast] begin
+    @test bswap(quaternion(1)) == quaternion(2^56)
+    @test bswap(1imx) == (2^56)imx
+    @test bswap(1imy) == (2^56)imy
+    @test bswap(1imz) == (2^56)imz
+    @test bswap(bswap(quaternion(1))) == quaternion(1)
+    @test bswap(bswap(1imx)) == 1imx
+    @test bswap(bswap(1imy)) == 1imy
+    @test bswap(bswap(1imz)) == 1imz
+end
 
-    @testset "hash" begin
-        for T1 in [FloatTypes...; IntTypes...]
-            for T2 in [FloatTypes...; IntTypes...]
-                q1 = Quaternion{T1}(1, 2, 3, 4)
-                q2 = Quaternion{T2}(1, 2, 3, 4)
-                @test isequal(q1, q2) && hash(q1)==hash(q2)
-            end
-        end
-
-        for T1 in FloatTypes
-            for T2 in FloatTypes
-                q1 = quaternion(T1(0.0))
-                q2 = quaternion(T2(-0.0))
-                @test !isequal(q1, q2) && hash(q1)!=hash(q2)
-                q1 = quaternion(T1(NaN))
-                q2 = quaternion(T2(NaN))
-                @test isequal(q1, q2) && hash(q1)==hash(q2)
-            end
+@testitem "Base: hash agrees with isequal" tags=[:unit, :fast] setup=[TestUtils] begin
+    for T1 in [FloatTypes...; IntTypes...]
+        for T2 in [FloatTypes...; IntTypes...]
+            q1 = Quaternion{T1}(1, 2, 3, 4)
+            q2 = Quaternion{T2}(1, 2, 3, 4)
+            @test isequal(q1, q2) && hash(q1)==hash(q2)
         end
     end
 
-    @testset "io" begin
+    for T1 in FloatTypes
+        for T2 in FloatTypes
+            q1 = quaternion(T1(0.0))
+            q2 = quaternion(T2(-0.0))
+            @test !isequal(q1, q2) && hash(q1)!=hash(q2)
+            q1 = quaternion(T1(NaN))
+            q2 = quaternion(T2(NaN))
+            @test isequal(q1, q2) && hash(q1)==hash(q2)
+        end
+    end
+end
+
+@testitem "Base: display as plain text and LaTeX" tags=[:unit, :fast] begin
+    import Latexify  # Loads the extension that defines the `text/latex` methods
+    import Symbolics
+    Symbolics.@variables a b c d e
+
+    io = IOBuffer()
+
+    Base.show(io, MIME("text/plain"), Quaternion{Float64}(1, 2, 3, 4))
+    @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
+    Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
+    @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
+    Base.show(io, MIME("text/plain"), quaternion(a, b, c, d))
+    @test String(take!(io)) == "a + b𝐢 + c𝐣 + d𝐤"
+    Base.show(io, MIME("text/plain"), quaternion(a-b, b*c, c/d, d+e))
+    @test String(take!(io)) == "a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
+    Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
+    @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4e-9))
+    @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + \\left(4.0e-9\\right)\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
+    @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), quaternion(a, b, c, d))
+    @test String(take!(io)) == "\$a + b\\,\\mathbf{i} + c\\,\\mathbf{j} + d\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
+    @test String(take!(io)) == "\$a - b + b ~ c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+
+    Base.show(io, MIME("text/plain"), QuatVec{Float64}(1, 2, 3, 4))
+    @test String(take!(io)) == " + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
+    Base.show(io, MIME("text/plain"), QuatVec{Int64}(1, 2, 3, 4))
+    @test String(take!(io)) == " + 2𝐢 + 3𝐣 + 4𝐤"
+    Base.show(io, MIME("text/plain"), quatvec(a-b, b*c, c/d, d+e))
+    @test String(take!(io)) == " + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
+    Base.show(io, MIME("text/latex"), QuatVec{Float64}(1, 2, 3, 4))
+    @test String(take!(io)) == "\$ + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), QuatVec{Int64}(1, 2, 3, 4))
+    @test String(take!(io)) == "\$ + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
+    Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
+    @test String(take!(io)) == "\$ + b ~ c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
+
+    Base.show(io, MIME("text/plain"), rotor(1, 5, 5, 7))
+    @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
+    Base.show(io, MIME("text/latex"), rotor(1, 3, 3, 9))
+    @test String(take!(io)) == "\$0.1 + 0.3\\,\\mathbf{i} + 0.3\\,\\mathbf{j} + 0.9\\,\\mathbf{k}\$"
+end
+
+@testitem "Base: binary write and read" tags=[:unit, :fast] setup=[TestUtils] begin
+    for T in PrimitiveTypes
         io = IOBuffer()
-
-        Base.show(io, MIME("text/plain"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1.0 + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
-        Base.show(io, MIME("text/plain"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "1 + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), quaternion(a, b, c, d))
-        @test String(take!(io)) == "a + b𝐢 + c𝐣 + d𝐤"
-        Base.show(io, MIME("text/plain"), quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "a - b + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
-        Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion{Float64}(1, 2, 3, 4e-9))
-        @test String(take!(io)) == "\$1.0 + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + \\left(4.0e-9\\right)\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), Quaternion{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$1 + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), quaternion(a, b, c, d))
-        @test String(take!(io)) == "\$a + b\\,\\mathbf{i} + c\\,\\mathbf{j} + d\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), quaternion(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$a - b + b ~ c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
-
-        Base.show(io, MIME("text/plain"), QuatVec{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == " + 2.0𝐢 + 3.0𝐣 + 4.0𝐤"
-        Base.show(io, MIME("text/plain"), QuatVec{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == " + 2𝐢 + 3𝐣 + 4𝐤"
-        Base.show(io, MIME("text/plain"), quatvec(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == " + b*c𝐢 + (c / d)𝐣 + (d + e)𝐤"
-        Base.show(io, MIME("text/latex"), QuatVec{Float64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$ + 2.0\\,\\mathbf{i} + 3.0\\,\\mathbf{j} + 4.0\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), QuatVec{Int64}(1, 2, 3, 4))
-        @test String(take!(io)) == "\$ + 2\\,\\mathbf{i} + 3\\,\\mathbf{j} + 4\\,\\mathbf{k}\$"
-        Base.show(io, MIME("text/latex"), quatvec(a-b, b*c, c/d, d+e))
-        @test String(take!(io)) == "\$ + b ~ c\\,\\mathbf{i} + \\frac{c}{d}\\,\\mathbf{j} + \\left(d + e\\right)\\,\\mathbf{k}\$"
-
-        Base.show(io, MIME("text/plain"), rotor(1, 5, 5, 7))
-        @test String(take!(io)) == "rotor(0.1 + 0.5𝐢 + 0.5𝐣 + 0.7𝐤)"
-        Base.show(io, MIME("text/latex"), rotor(1, 3, 3, 9))
-        @test String(take!(io)) == "\$0.1 + 0.3\\,\\mathbf{i} + 0.3\\,\\mathbf{j} + 0.9\\,\\mathbf{k}\$"
-
-        for T in PrimitiveTypes
-            io = IOBuffer()
-            q = Quaternion{T}(1, 2, 3, 4)
-            write(io, q)
-            seekstart(io)
-            p = read(io, typeof(q))
-            @test q == p
-        end
+        q = Quaternion{T}(1, 2, 3, 4)
+        write(io, q)
+        seekstart(io)
+        p = read(io, typeof(q))
+        @test q == p
     end
+end
 
-    @testset "Differential" begin
-        Symbolics.@variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
-        ∂ₜ = Symbolics.Differential(t)
-        Q = quaternion(Q...)
-        R = rotor(R...)
-        V = quatvec(V...)
-        @test ∂ₜ(Q) == quaternion(∂ₜ(Q[1]), ∂ₜ(Q[2]), ∂ₜ(Q[3]), ∂ₜ(Q[4]))
-        @test ∂ₜ(R) == quaternion(∂ₜ(R[1]), ∂ₜ(R[2]), ∂ₜ(R[3]), ∂ₜ(R[4]))
-        @test ∂ₜ(V) == quatvec(∂ₜ(V[2]), ∂ₜ(V[3]), ∂ₜ(V[4]))
-    end
-
+@testitem "Base: symbolic Differential" tags=[:unit, :fast] begin
+    import Symbolics
+    Symbolics.@variables t Q(t)[1:4] R(t)[1:4] V(t)[1:3]
+    ∂ₜ = Symbolics.Differential(t)
+    Q = quaternion(Q...)
+    R = rotor(R...)
+    V = quatvec(V...)
+    @test ∂ₜ(Q) == quaternion(∂ₜ(Q[1]), ∂ₜ(Q[2]), ∂ₜ(Q[3]), ∂ₜ(Q[4]))
+    @test ∂ₜ(R) == quaternion(∂ₜ(R[1]), ∂ₜ(R[2]), ∂ₜ(R[3]), ∂ₜ(R[4]))
+    @test ∂ₜ(V) == quatvec(∂ₜ(V[2]), ∂ₜ(V[3]), ∂ₜ(V[4]))
 end

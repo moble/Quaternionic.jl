@@ -1,5 +1,8 @@
-@testset verbose=true "Math" begin
-    components = [:x, :y, :z]
+@testitem "Math: agreement with complex functions" tags=[:unit, :fast] setup=[TestUtils] begin
+    using Random
+    Random.seed!(42)
+
+    imaginary_components = [:x, :y, :z]
 
     basic_functions = [conj, abs2, abs, inv, log, exp, sqrt]
 
@@ -9,9 +12,9 @@
         c = q[1] + im * getproperty(q, component)
     end
     function ℂ_to_ℍ(c::Complex, component)
-        quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in components]...)
+        quaternion(real(c), [comp_i == component ? imag(c) : zero(real(c)) for comp_i in imaginary_components]...)
     end
-    @testset "Complex equivalence $T" for T in FloatTypes
+    @testset "$T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
         scalars = [zero(T), one(T), -one(T), one(T)*7//3, -one(T)*5//2]
         for c in [a+b*im for a in scalars for b in scalars]
@@ -22,7 +25,7 @@
             # exceptions are for `log` and `sqrt` when the complex number is a negative real number,
             # for which we have to arbitrarily choose the "vector" part of the quaternion, which is
             # chosen to be `imz` in the code.
-            for component in components
+            for component in imaginary_components
                 q = ℂ_to_ℍ(c, component)
                 for unary_function in basic_functions
                     if unary_function ∈ [log, sqrt] && component!=:z && real(c) < zero(T) && imag(c) == zero(T)
@@ -97,8 +100,10 @@
             end
         end
     end
+end
 
-    @testset "Special values for abs $T" for T in FloatTypes
+@testitem "Math: abs2 of complexified quaternions" tags=[:unit, :fast] setup=[TestUtils] begin
+    @testset "$T" for T in FloatTypes
         # abs2 and abs2vec now return the spinor norm (Σzᵢ²) for Complex{T} components,
         # not the Euclidean norm (Σ|zᵢ|²).  Rotor always returns one(real(T)) regardless.
         @test abs2(Quaternion{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-10, 28)
@@ -108,8 +113,10 @@
         @test abs2vec(QuatVec{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
         @test abs2vec(Rotor{Complex{T}}(1+2im, 3+4im, false, false)) == Complex{T}(-7, 24)
     end
+end
 
-    @testset "Special values for sqrt $T" for T in FloatTypes
+@testitem "Math: special values of sqrt" tags=[:unit, :fast] setup=[TestUtils] begin
+    @testset "$T" for T in FloatTypes
         ϵ = 4eps(T)
 
         # sqrt(0) = 0
@@ -159,8 +166,10 @@
         end
 
     end
+end
 
-    @testset "Special values for log $T" for T in FloatTypes
+@testitem "Math: special values of log" tags=[:unit, :fast] setup=[TestUtils] begin
+    @testset "$T" for T in FloatTypes
         ϵ = (T === Float16 ? 20eps(T) : 10eps(T))
 
         # log(0) = -Inf
@@ -215,5 +224,4 @@
 
         end
     end
-
 end

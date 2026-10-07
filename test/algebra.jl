@@ -1,10 +1,12 @@
 # The quaternions form an associative normed division algebra
+#
+# The `FundamentalTests` snippet defines one function for each property, with a name
+# beginning with `test_`, and collects them in `fundamental_tests`.  The test items call
+# every method of each function with all combinations of arguments drawn from a set of
+# scalars (for arguments of type `Any`) and quaternions (for arguments of type
+# `Quaternion`).
 
-module FundamentalTests
-    using Test: @test
-    using Quaternionic
-    import ..isapproxexpanded  # Defined in runtests.jl
-
+@testsnippet FundamentalTests begin
     # Algebra
     ## Vector space
     function test_vector_promotion(a, v::Quaternion)
@@ -68,37 +70,40 @@ module FundamentalTests
 
     # Associative
     test_associativity(u::Quaternion, v::Quaternion, w::Quaternion) = @test (u * v) * w ≈ u * (v * w) rtol=eps(v)
+
+    # The functions defined above
+    fundamental_tests = [
+        getfield(@__MODULE__, n) for n in names(@__MODULE__; all=true)
+        if startswith(string(n), "test_")
+    ]
 end
 
-
-@testset verbose=true "Fundamentals" begin
+@testitem "Algebra: fundamental properties for numeric types" tags=[:unit] setup=[TestUtils, FundamentalTests] begin
     @testset "$T" for T in [FloatTypes...; IntTypes...]
-        println("    Testing fundamentals with type $T")
-
         # Construct a variety of arguments
         scalars = [zero(T), one(T), -one(T)]#, 2*one(T), -2*one(T)]#, eps(T), -eps(T)]
         quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
 
-        # Iterate over all tests above
-        for n in names(FundamentalTests, all=true)
-            if T <: Integer && (n == :test_inverse)
+        for f in fundamental_tests
+            if T <: Integer && f === test_inverse
                 continue  # Don't try to invert integer quaternions
             end
-            f = getproperty(FundamentalTests, n)
-            if !isempty(methods(f)) && startswith(string(f), "test_")
-                # Some test functions have more than one method, so every method is run.
-                for m in methods(f)
-                    types = m.sig.parameters[2:end]
-                    args = Base.Iterators.product([type===Any ? scalars : quaternions for type in types]...)
-                    for arg in args
-                        f(arg...)
-                    end
+            # Some test functions have more than one method, so every method is run.
+            for m in methods(f)
+                types = m.sig.parameters[2:end]
+                args = Base.Iterators.product([type===Any ? scalars : quaternions for type in types]...)
+                for arg in args
+                    f(arg...)
                 end
             end
         end
     end
+end
+
+@testitem "Algebra: fundamental properties for symbolic types" tags=[:unit] setup=[TestUtils, FundamentalTests] begin
+    import Symbolics
+
     @testset "$T" for T in SymbolicTypes
-        println("    Testing fundamentals with type $T")
         chars = Iterators.Stateful(Iterators.cycle("abcdefghijkl"))
         function next_scalar!(chars)
             x = Symbol(popfirst!(chars))
@@ -111,22 +116,20 @@ end
             quaternion(xvar[1]...)
         end
 
-        # Iterate over all tests above
-        for n in names(FundamentalTests, all=true)
-            f = getproperty(FundamentalTests, n)
-            if !isempty(methods(f)) && startswith(string(f), "test_")
-                # ≈ with atol/rtol uses <= internally, which doesn't work for Symbolics.Num
-                n === :test_involution_norm_imag && continue
-                # Some test functions have more than one method, so every method is run.
-                for m in methods(f)
-                    types = m.sig.parameters[2:end]
-                    args = [type===Any ? next_scalar!(chars) : next_quaternion!(chars) for type in types]
-                    f(args...)
-                end
+        for f in fundamental_tests
+            # ≈ with atol/rtol uses <= internally, which doesn't work for Symbolics.Num
+            f === test_involution_norm_imag && continue
+            # Some test functions have more than one method, so every method is run.
+            for m in methods(f)
+                types = m.sig.parameters[2:end]
+                args = [type===Any ? next_scalar!(chars) : next_quaternion!(chars) for type in types]
+                f(args...)
             end
         end
     end
+end
 
+@testitem "Algebra: conjugation and negation of a Float16 rotor" tags=[:unit, :fast] begin
     R = Rotor{Float16}(Float16.((-0.3062, 0.09735, -0.1614,  0.933))...)
     @test conj(conj(R)) == R
     @test -(-R) == R

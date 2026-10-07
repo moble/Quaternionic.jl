@@ -1,7 +1,7 @@
 # Just a simple set of tests to ensure that the basis of any given quaternionic
 # type actually obeys the standard quaternion rules.
 
-@testset verbose=true "Basis" begin
+@testitem "Basis: basis elements of every type obey the quaternion rules" tags=[:unit, :fast] setup=[TestUtils] begin
     @testset "$T" for T in Types
 
         # Multiplication/division
