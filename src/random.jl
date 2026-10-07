@@ -18,10 +18,6 @@ If `QT` is a `QuatVec` type, the result has zero scalar part, and its vector par
 and variance 1, corresponding to each of the three vector components having an independent
 normal distribution with mean 0 and variance 1/3.
 
-Note that this function works with `BigFloat` elements, even though `Base.randn` does not
-work with `BigFloat` on Julia versions before 1.9; for those versions, the [Box–Muller
-transform](https://en.wikipedia.org/wiki/Box–Muller_transform) is used instead.
-
 # Examples
 ```julia
 julia> randn(QuaternionF64)
@@ -47,34 +43,4 @@ function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{T}}) where {T<:AbstractFl
         SQRT_ONE_THIRD * randn(rng, T),
         SQRT_ONE_THIRD * randn(rng, T)
     )
-end
-
-if Base.VERSION < v"1.9.0-alpha1"
-    # COV_EXCL_START
-
-    # The fallback method of `randn` for float types only defining `rand` was first added
-    # in Julia v1.9.0-alpha1:
-    # https://github.com/JuliaLang/julia/commit/244ada361432462012835c93d3bac031e8046793
-
-    function Base.randn(rng::AbstractRNG, QT::Type{QuatVec{BigFloat}})
-        # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
-        c = rand(rng, BigFloat, 4)
-        l1 = √(-log(c[1])/2)
-        s2 = sinpi(2*c[2])
-        l3 = √(-log(c[3])/2)
-        s4, c4 = sincospi(2*c[4])
-        quatvec(0, l1*s2, l3*c4, l3*s4)
-    end
-
-    function Base.randn(rng::AbstractRNG, QT::Type{<:AbstractQuaternion{BigFloat}})
-        # Use the Box-Muller transform to get randn BigFloats from rand BigFloat
-        c = rand(rng, BigFloat, 4)
-        l1 = √(-log(c[1])/2)
-        s2, c2 = sincospi(2*c[2])
-        l3 = √(-log(c[3])/2)
-        s4, c4 = sincospi(2*c[4])
-        QT(l1*c2, l1*s2, l3*c4, l3*s4)
-    end
-
-    # COV_EXCL_STOP
 end

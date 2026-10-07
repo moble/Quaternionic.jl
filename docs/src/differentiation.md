@@ -51,25 +51,21 @@ directly.
 | [FastDifferentiation](https://github.com/brianguenter/FastDifferentiation.jl) | Symbolic differentiation of expression graphs built from quaternions with `Node` components. | Arrays of expressions.  Functions that branch on component values are not supported; see below. |
 | [Symbolics](https://docs.sciml.ai/Symbolics/stable/) | Symbolic differentiation (for example, with `Symbolics.Differential`) of quaternions with `Num` components. | Symbolic expressions.  A few functions that branch on component values, such as `sqrt`, are not supported. |
 
-Every package in this table except FastDifferentiation differentiates `exp` and `log`
-correctly, including at the points where their implementations switch to series
-expansions or special formulas: the identity, quaternions with tiny or zero vector
-part, quaternions near the negative real axis, and pure vectors.  (The exceptions for
-second derivatives with Mooncake are listed under [Known limitations](@ref).)  For
-FastDifferentiation, these functions raise an explanatory error.
-
-The extensions for Zygote, Enzyme, Mooncake, and ReverseDiff are loaded only as package
-extensions, so they require Julia 1.9 or later; the compatible versions of Zygote,
-Enzyme, and Mooncake require Julia 1.10 or later.  The ChainRulesCore, ForwardDiff,
-FastDifferentiation, and Symbolics integrations also work on older versions of Julia.
+Every package in this table except FastDifferentiation differentiates
+`exp` and `log` correctly, including at the points where their
+implementations switch to series expansions or special formulas: the
+identity, quaternions with tiny or zero vector part, quaternions near
+the negative real axis, and pure vectors.  (The exceptions for second
+derivatives with Mooncake are listed under [Known limitations](@ref).)
+For FastDifferentiation, these functions raise an explanatory error.
 
 
 ## Tangent conventions
 
-For a `Quaternion` argument, the tangent (and cotangent) is a `Quaternion` whose four
-components are the four partial derivatives, as described in detail in the next
-section.  `Rotor` and `QuatVec` are subsets of the quaternions, and their tangents follow
-from that fact:
+For a `Quaternion` argument, the tangent (and cotangent) is a
+`Quaternion` whose four components are the four partial derivatives,
+as described in detail in the next section.  `Rotor` and `QuatVec` are
+subsets of the quaternions, and their tangents follow from that fact:
 
 | Primal type | Tangent and cotangent type in the ChainRules rules | Notes |
 |:------------|:------------------------------------------|:------|
@@ -80,36 +76,44 @@ from that fact:
 | `AbstractQuaternion{<:Integer}` | `Quaternion{Float64}` or `QuatVec{Float64}` | As for `Integer` in ChainRulesCore. |
 | A `Real` or `Complex` scalar receiving a quaternion cotangent | The scalar part of the cotangent | |
 
-**`Rotor` arguments.**  A `Rotor` is a unit quaternion, so the true tangent space at a
-rotor ``R`` is the three-dimensional space ``\{R\, v : v \in \mathrm{QuatVec}\}``, which
-consists of the quaternions orthogonal to ``R`` in ``\mathbb{R}^4``.  The rules in this
-package do not restrict cotangents to that space.  Instead, a `Rotor` is differentiated
-as the four real numbers it stores, and the gradient with respect to a `Rotor` argument
-is the ambient gradient in ``\mathbb{R}^4`` of whatever the code computes from those
-four numbers.  Its component along ``R`` therefore depends on how the function is
-written: for example, `abs(R)` is identically 1 for a `Rotor`, but `sqrt(R ⋅ R)` has a
-nonzero gradient along ``R``.  When only the part tangent to the unit sphere is
-meaningful, project the gradient ``g`` onto the tangent space with ``g - (g \cdot R)\,
-R``; the projections of the gradients of different implementations of the same function
-agree.  The gradient is returned as a `Quaternion` (or, with Enzyme, a `Rotor` holding
-the raw components), never as a renormalized `Rotor`.  Note that `abs` and `abs2` of a
-`Rotor`-typed gradient return 1, whatever its components are, so read Enzyme's `Rotor`
-gradients with `components(g)`.
+**`Rotor` arguments.**  A `Rotor` is a unit quaternion, so the true
+tangent space at a rotor ``R`` is the three-dimensional space ``\{R\,
+v : v \in \mathrm{QuatVec}\}``, which consists of the quaternions
+orthogonal to ``R`` in ``\mathbb{R}^4``.  The rules in this package do
+not restrict cotangents to that space.  Instead, a `Rotor` is
+differentiated as the four real numbers it stores, and the gradient
+with respect to a `Rotor` argument is the ambient gradient in
+``\mathbb{R}^4`` of whatever the code computes from those four
+numbers.  Its component along ``R`` therefore depends on how the
+function is written: for example, `abs(R)` is identically 1 for a
+`Rotor`, but `sqrt(R ⋅ R)` has a nonzero gradient along ``R``.  When
+only the part tangent to the unit sphere is meaningful, project the
+gradient ``g`` onto the tangent space with ``g - (g \cdot R)\, R``;
+the projections of the gradients of different implementations of the
+same function agree.  The gradient is returned as a `Quaternion` (or,
+with Enzyme, a `Rotor` holding the raw components), never as a
+renormalized `Rotor`.  Note that `abs` and `abs2` of a `Rotor`-typed
+gradient return 1, whatever its components are, so read Enzyme's
+`Rotor` gradients with `components(g)`.
 
-**`QuatVec` arguments and outputs.**  A `QuatVec` has zero scalar part, so tangents and
-cotangents of `QuatVec`s have zero scalar part, and the scalar component of the input is
-treated as a constant.  The ChainRules rules return `QuatVec` cotangents for `QuatVec`
-arguments.  Enzyme and Mooncake differentiate the stored components structurally, so
-the scalar slot of their raw gradient may be nonzero when the code reads it; that slot
-should be ignored (for example, by using `vec(g)`).
+**`QuatVec` arguments and outputs.**  A `QuatVec` has zero scalar
+part, so tangents and cotangents of `QuatVec`s have zero scalar part,
+and the scalar component of the input is treated as a constant.  The
+ChainRules rules return `QuatVec` cotangents for `QuatVec` arguments.
+Enzyme and Mooncake differentiate the stored components structurally,
+so the scalar slot of their raw gradient may be nonzero when the code
+reads it; that slot should be ignored (for example, by using
+`vec(g)`).
 
-**Complex components.**  Quaternions with complex components (such as the [`Lorentz`](@ref)
-transformations) follow ChainRules' convention for complex numbers: a pullback applies
-the conjugate transpose of the Jacobian on ``\mathbb{C}^4``.  Quaternion multiplication is
-bilinear over ``\mathbb{C}``, so the pullback of ``x \mapsto a\, x\, b`` is ``\Delta
-\mapsto a^\dagger\, \Delta\, b^\dagger``, where ``a^\dagger`` is the quaternion
-conjugate of the componentwise complex conjugate of ``a``.  For real components,
-``a^\dagger = \bar{a}``, and this reduces to the real convention.
+**Complex components.**  Quaternions with complex components (such as
+the [`Lorentz`](@ref) transformations) follow ChainRules' convention
+for complex numbers: a pullback applies the conjugate transpose of the
+Jacobian on ``\mathbb{C}^4``.  Quaternion multiplication is bilinear
+over ``\mathbb{C}``, so the pullback of ``x \mapsto a\, x\, b`` is
+``\Delta \mapsto a^\dagger\, \Delta\, b^\dagger``, where ``a^\dagger``
+is the quaternion conjugate of the componentwise complex conjugate of
+``a``.  For real components, ``a^\dagger = \bar{a}``, and this reduces
+to the real convention.
 
 
 ## Simple generalization of complex differentiation
@@ -323,8 +327,8 @@ quaternion
 Similarly, we can extend this with multiple arguments —
 ``\mathbb{R}``, ``\mathbb{H}``, or other — by appending those
 arguments to the arguments of ``s``, ``t``, ``u``, and ``v``, and
-similarly for multiple outputs.  For example, a function
-``\mathbb{R} \times \mathbb{H} \to \mathbb{H}`` would look like
+similarly for multiple outputs.  For example, a function ``\mathbb{R}
+\times \mathbb{H} \to \mathbb{H}`` would look like
 ```math
 f(\sigma, w, x, y, z) =
 s(\sigma, w, x, y, z)
@@ -532,20 +536,3 @@ Quaternionic.value
 Quaternionic.iszerovalue
 ```
 
-
-## Explicit derivatives of `exp` and `log`
-
-This package also provides some very explicit functions for computing
-values and derivatives of `log` and `exp`.  These are older, and may
-be deprecated at some point in favor of AD.  Because of the
-simplifications that result from using the right types, these
-derivatives are more strict about input types than the main functions
-themselves: the derivatives of `exp` are defined only for `QuatVec`
-arguments, and the derivatives of `log` are defined only for `Rotor`
-arguments.  Analytic derivatives of `slerp` and `squad` are described
-in [Functions of time](@ref).
-
-```@autodocs
-Modules = [Quaternionic]
-Pages   = ["gradients_exp_log.jl"]
-```

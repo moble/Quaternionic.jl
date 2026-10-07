@@ -39,7 +39,6 @@ export distance, distance2
 export align
 export Lorentz, Boost, ga_components
 export unflip, unflip!, slerp, squad, squad!
-export ∂log, log∂log, ∂exp, exp∂exp, slerp∂slerp, slerp∂slerp∂τ, squad∂squad∂t
 export precessing_nutating_example
 
 abstract type AbstractQuaternion{T<:Number} <: Number end
@@ -50,39 +49,15 @@ include("quaternion.jl")
 include("base.jl")
 include("algebra.jl")
 include("math.jl")
-include("gradients_exp_log.jl")
+include("exp_log_derivatives.jl")
 include("random.jl")
 include("conversion.jl")
 include("distance.jl")
 include("alignment.jl")
 include("interpolation.jl")
-include("gradients_interpolation.jl")
 include("examples.jl")
 include("Lorentz.jl")
 
 include("precompilation.jl")
-
-# This symbol is only defined on Julia versions that support extensions
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
-@static if !isdefined(Base, :get_extension)
-    # COV_EXCL_START
-
-    # Julia 1.6 through 1.8 do not support package extensions, so Requires loads them.
-    # Zygote 0.7, Enzyme 0.13, and Mooncake need Julia 1.10 or later, so their extensions
-    # are not listed here, and neither is the ReverseDiff extension, which is written to be
-    # loaded only as a package extension.
-    function __init__()
-        @require ChainRulesCore="d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" include("../ext/QuaternionicChainRulesCoreExt/QuaternionicChainRulesCoreExt.jl")
-        @require FastDifferentiation="eb9bf01b-bf85-4b60-bf87-ee5de06c00be" include("../ext/QuaternionicFastDifferentiationExt.jl")
-        @require ForwardDiff="f6369f11-7733-5829-9624-2563aa707210" include("../ext/QuaternionicForwardDiffExt.jl")
-        @require Symbolics="0c5d862f-8b57-4792-8d23-62f2024744c7" include("../ext/QuaternionicSymbolicsExt.jl")
-        @require Latexify="23fbe1c1-3f47-55db-b15f-69d7ec21a316" include("../ext/QuaternionicLatexifyExt.jl")
-    end
-
-    # COV_EXCL_STOP
-end
 
 end  # module

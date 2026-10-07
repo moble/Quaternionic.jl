@@ -249,7 +249,7 @@ function distance2_gradient(P::Quaternion{<:Real})
     # These are the threshold and the comparison of the source, applied to the values.
     w₀ = value(w)
     T = w₀ isa AbstractFloat ? typeof(w₀) : Float64
-    small = value(v²) ≤ (sqrt(sqrt(eps(T))) / 2) * value(w²)
+    small = value(v²) ≤ (∜eps(T) / 2) * value(w²)
     if small === true
         x = v² / w²
         # The derivative of the series with respect to `x`, and the chain rule through

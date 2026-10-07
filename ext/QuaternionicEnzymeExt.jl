@@ -14,9 +14,6 @@
 #   * rules that work around a bug in Enzyme's own reverse rule for `hypot` with three or
 #     more arguments, on `Quaternionic.hypotenuse`, through which `abs` and `absvec` of
 #     real quaternions call `hypot`.
-#
-# This file is loaded only as a package extension (Julia 1.9 and later); Requires never
-# loads it.
 module QuaternionicEnzymeExt
 
 import Enzyme

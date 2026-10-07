@@ -4,8 +4,7 @@ module QuaternionicReverseDiffExt
 # recording the scalar operations on their components, so this extension provides no
 # derivative rules.  It only makes the source take the same branches as it does for plain
 # numbers, fixes broadcasting of a `TrackedReal` with an array of quaternions, and keeps
-# replayed tapes of `from_rotation_matrix` and `align` correct.  It is loaded only as a
-# package extension (Julia 1.9 and later), never through Requires.
+# replayed tapes of `from_rotation_matrix` and `align` correct.
 
 import Quaternionic
 import Quaternionic: AbstractQuaternion

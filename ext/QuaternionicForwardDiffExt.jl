@@ -3,10 +3,7 @@ module QuaternionicForwardDiffExt
 using Quaternionic
 import Quaternionic: AbstractQuaternion, Quaternion, QuatVec, quaternion, quatvec, components,
     wrapper, basetype
-# Under Requires (Julia < 1.9), ForwardDiff must be reached relative to the parent module;
-# an absolute `using ForwardDiff` works there but warns that Quaternionic does not depend
-# on ForwardDiff.
-isdefined(Base, :get_extension) ? (using ForwardDiff) : (using ..ForwardDiff)
+using ForwardDiff
 
 # Recurse so that nested duals, as in higher-order derivatives, are stripped to the
 # innermost value.  Since ForwardDiff 1.0, `iszero(::Dual)` also checks the partials, so

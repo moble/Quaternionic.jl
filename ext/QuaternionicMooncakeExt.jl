@@ -17,9 +17,6 @@
 # mode.  That is why this extension is triggered by ChainRulesCore as well as by Mooncake;
 # Mooncake depends on ChainRulesCore, so the second trigger is always present.  Real
 # arguments of `csqrt` are left to Mooncake's own rule for `sqrt`.
-#
-# This extension is loaded only as a package extension (Julia 1.9 and later), never by
-# Requires.
 module QuaternionicMooncakeExt
 
 import Mooncake

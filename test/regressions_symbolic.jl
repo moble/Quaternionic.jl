@@ -33,19 +33,17 @@ end
 
 @testitem "Symbolics: no method ambiguities involving the extension" tags=[:unit] setup=[SymbolicReference] begin
     import Symbolics, FastDifferentiation, Latexify
-    if isdefined(Base, :get_extension)
-        extensions = [
-            Base.get_extension(Quaternionic, name)
-            for name ∈ (
-                :QuaternionicSymbolicsExt,
-                :QuaternionicFastDifferentiationExt,
-                :QuaternionicLatexifyExt,
-            )
-        ]
-        modules = (extensions..., Symbolics, FastDifferentiation, Latexify)
-        ambiguities = SymbolicReference.ambiguities_involving(modules, Quaternionic, extensions...)
-        @test isempty(ambiguities)
-    end
+    extensions = [
+        Base.get_extension(Quaternionic, name)
+        for name ∈ (
+            :QuaternionicSymbolicsExt,
+            :QuaternionicFastDifferentiationExt,
+            :QuaternionicLatexifyExt,
+        )
+    ]
+    modules = (extensions..., Symbolics, FastDifferentiation, Latexify)
+    ambiguities = SymbolicReference.ambiguities_involving(modules, Quaternionic, extensions...)
+    @test isempty(ambiguities)
 end
 
 @testitem "Symbolics: mixed == with numeric values" tags=[:unit] begin

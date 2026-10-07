@@ -49,49 +49,31 @@ which can also be called automatically by passing the corresponding
 keywords to `slerp` and `squad`.
 
 It can be very useful to compute the derivative of various functions
-with respect to their arguments — for example, when computing angular
-velocity of a `squad` interpolant.[^1]  See [Differentiating by
-quaternionic arguments](@ref) for more details.  The value *and
-derivative* of `slerp` can be simultaneously evaluated and
-differentiated analytically with [`slerp∂slerp∂τ`](@ref) (or
-automatically with `ForwardDiff`).  While `squad` and its derivative
-can be evaluated with [`squad∂squad∂t`](@ref), this is a relatively
-low-level function; it is easier to use the relevant keyword arguments
-to [`squad`](@ref).
-
-[^1]: Essentially, we treat each quaternionic argument as a series of
-    four real arguments.  For each input argument, the output is
-    generally a quaternion; interpreting those outputs as also being a
-    series of four real quantities, these derivatives could also be
-    thought of as [Jacobian
-    matrices](https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant)
-    of the relevant functions, though the actual return types are
-    collections of `Quaternion` objects.
+with respect to their arguments — for example, when computing the
+angular velocity of a `squad` interpolant.  That angular velocity and
+the time derivative of the interpolant are computed analytically when
+the corresponding keyword arguments are passed to [`squad`](@ref).
+Other derivatives, such as those of `slerp`, can be
+computed by automatic differentiation; see [Differentiating by
+quaternionic arguments](@ref) for details.
 
 ```@autodocs
 Modules = [Quaternionic]
-Pages   = ["src/interpolation.jl", "src/gradients_interpolation.jl"]
+Pages   = ["src/interpolation.jl"]
 Filter  = f -> f !== Quaternionic.squad_control_points
 ```
 
-Note that gradients can also be calculated automatically using
-[`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/).[^2] For
-example, we could compute the derivative of `slerp` with respect to
-the `y` component of the first input quaternion as
+For example, with
+[`ForwardDiff.jl`](https://juliadiff.org/ForwardDiff.jl/),[^1] the
+derivatives of `slerp` with respect to `τ` and with respect to the `y`
+component of the first input quaternion are
 ```julia
-∂slerp∂q₁y(q₁, q₂, τ) = ForwardDiff.derivative(ϵ->slerp(q₁+ϵ*imy, q₂, τ), 0)
+∂slerp∂τ(q₁, q₂, τ) = ForwardDiff.derivative(t -> slerp(q₁, q₂, t), τ)
+∂slerp∂q₁y(q₁, q₂, τ) = ForwardDiff.derivative(ϵ -> slerp(q₁ + ϵ*imy, q₂, τ), 0)
 ```
-This is equal to
-```julia
-s, ∂s∂q₁, ∂s∂q₂, ∂s∂τ = slerp∂slerp(q₁, q₂, τ)
-∂s∂q₁[3]
-```
-though `slerp∂slerp` computes the value and all derivatives of `slerp`
-simultaneously, and is at least as fast as most AD systems would be.
-Nonetheless, it is useful to know that `ForwardDiff` can process
-functions *involving* `Quaternionic` methods.
+Each of these functions returns a `Quaternion`.
 
-[^2]: Other AD systems are also supported, with some limitations that
+[^1]: Other AD systems are also supported, with some limitations that
     are described in [Differentiating by quaternionic
     arguments](@ref).  Please open [an
     issue](https://github.com/moble/Quaternionic.jl/issues) (or pull

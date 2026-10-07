@@ -110,7 +110,7 @@ Base.round(q::QT, r::RoundingMode=RoundNearest; kwargs...) where {QT<:AbstractQu
 Base.round(q::Rotor{T}, r::RoundingMode=RoundNearest; kwargs...) where {T} = Quaternion(round.(components(q), r; kwargs...))
 # Rounding to an integer type, as for real numbers.  This throws an `InexactError` unless
 # the quaternion is real.  (Julia 1.11 and later would reach the same result through a
-# generic method in `Base`, but Julia 1.10 and earlier have none for `Number`s.)
+# generic method in `Base`, but Julia 1.10 has none for `Number`s.)
 Base.round(::Type{T}, q::AbstractQuaternion, r::RoundingMode=RoundNearest) where {T<:Integer} =
     T(round(q, r))
 

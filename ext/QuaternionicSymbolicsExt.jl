@@ -7,7 +7,7 @@ import Quaternionic: absvec,
     QuatVecF64, RotorF64, QuaternionF64,
     wrapper, components, basetype, _pm_ascii
 using PrecompileTools
-isdefined(Base, :get_extension) ? (using Symbolics) : (using ..Symbolics)
+using Symbolics
 
 
 Base.abs(q::AbstractQuaternion{Symbolics.Num}) = √sum(x->x^2, components(q))
@@ -220,7 +220,7 @@ end
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to
-        # this package or not (on Julia 1.8 and higher)
+        # this package or not
         r(v)
         Symbolics.simplify.(𝓇(𝓋))
         # Tuples, unlike vectors, keep the type of each element, so that mixed operations

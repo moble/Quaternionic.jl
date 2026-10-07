@@ -309,7 +309,7 @@
     onto the original must recover `R` itself.
     """
     function align_recovers_rotation(R, a, b, c)
-        ε = sqrt(sqrt(eps(basetype(R))))
+        ε = ∜eps(basetype(R))
         # Reject near-degenerate frames, where the problem is ill-conditioned
         # and no tolerance in ulps is meaningful.
         assume!(absvec(a × b) > ε && absvec(b × c) > ε && absvec(a × c) > ε)

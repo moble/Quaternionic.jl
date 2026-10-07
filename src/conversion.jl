@@ -425,8 +425,7 @@ from_spherical_coordinates(θϕ) = from_spherical_coordinates(θϕ...)
 #     and scanning four eigenvalues costs nothing beside the decomposition itself.
 #
 # The generic method converts static storage to a dense `Matrix` first with `_dense`,
-# because the generic backends have no `eigen` method for static storage, and on Julia 1.6
-# through 1.8 neither does LAPACK's range form.
+# because the generic backends have no `eigen` method for static storage.
 #
 # Element types that wrap a float, such as the dual numbers of ForwardDiff, are handled by
 # `refined_dominant_eigenvector` instead.  The generic `eigen` would propagate derivatives
@@ -613,10 +612,9 @@ end
 #
 # The generic backends implement `eigen` only against dense storage:
 # `eigen(::Symmetric{Double64,<:SMatrix})` raises a `MethodError`, even though the same
-# matrix decomposes fine once it is dense.  On Julia 1.6 through 1.8, the LAPACK range form
-# `eigen(::Symmetric{Float64,<:SMatrix}, n:n)` fails in the same way.  A 4×4 copy is
-# negligible beside an eigendecomposition, and it is what lets `from_rotation_matrix` and
-# `align` — which build an `SMatrix` — accept the full range of float types.
+# matrix decomposes fine once it is dense.  A 4×4 copy is negligible beside an
+# eigendecomposition, and it is what lets `from_rotation_matrix` and `align` — which build
+# an `SMatrix` — accept the full range of float types.
 _dense(M::Symmetric) = M
 _dense(M::Symmetric{<:Any,<:SMatrix}) = Symmetric(Matrix(M))
 

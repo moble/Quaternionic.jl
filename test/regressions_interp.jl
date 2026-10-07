@@ -1,11 +1,12 @@
-# Regression tests for the analytic gradients of `log` and `exp`, for `slerp∂slerp`, and
-# for `unflip` and `squad`.  The references are either high-precision finite differences in
-# `BigFloat` or ForwardDiff applied to the plain functions.
+# Regression tests for the pushforwards of `log` and `exp`, on which the derivatives that
+# `squad` computes are built, and for `unflip` and `squad`.  The references are either
+# high-precision finite differences in `BigFloat` or ForwardDiff applied to the plain
+# functions.
 
 @testmodule InterpReference begin
     using Quaternionic
 
-    # The off-shell extension of `log` that `∂log` differentiates, written out explicitly.
+    # The extension of `log` to general quaternions, written out explicitly.
     function log_reference(q::Quaternion{BigFloat})
         w = q[1]
         a = sqrt(q[2]^2 + q[3]^2 + q[4]^2)
@@ -13,7 +14,7 @@
         log(abs(q)) + f * Quaternion{BigFloat}(0, q[2], q[3], q[4])
     end
 
-    # The off-shell extension of `exp` that `∂exp` differentiates, written out explicitly.
+    # The extension of `exp` to general quaternions, written out explicitly.
     function exp_reference(q::Quaternion{BigFloat})
         a = sqrt(q[2]^2 + q[3]^2 + q[4]^2)
         g = iszero(a) ? one(a) : sin(a) / a
@@ -30,6 +31,12 @@
         end
     end
 
+    # The pushforward `F(q, q̇)` applied to each of the four basis quaternions, which gives
+    # the four partial derivatives that `gradient_reference` approximates.
+    function pushforward_columns(F, q::Quaternion{T}) where {T}
+        [F(q, Quaternion{T}((1:4 .== k)...)) for k in 1:4]
+    end
+
     maxabs(q::AbstractQuaternion) = maximum(abs, components(q))
     maxerr(a, b) = maximum(maxabs(Quaternion{BigFloat}(components(x)...) - y) for (x, y) in zip(a, b))
 
@@ -37,82 +44,64 @@
     working_eps(::Type{T}) where {T} = eps(T)
     working_eps(::Type{BigFloat}) = big(2.0)^-255
 
-    export log_reference, exp_reference, gradient_reference, maxabs, maxerr, working_eps
+    export log_reference, exp_reference, gradient_reference, pushforward_columns, maxabs,
+        maxerr, working_eps
 end
 
 
-@testitem "∂log and log∂log are accurate near the identity and the antipode" setup=[InterpReference] tags=[:unit, :validation] begin
+@testitem "log_pushforward is accurate near the identity and the antipode" setup=[InterpReference] tags=[:unit, :validation] begin
+    import Quaternionic: log_pushforward
     n̂ = normalize(QuatVecF64(0, 0.3, -0.5, 0.8))
     for T in (Float64, Float32, BigFloat)
         ϵ = working_eps(T)
         for size in (1, 1e-2, 1e-4, 1e-8, 1e-12, 0), antipode in (false, true)
             # The exact antipode is a singular point of the logarithm.
             antipode && size == 0 && continue
-            Z, (l, ∂l), ∂l′ = setprecision(BigFloat, 256) do
+            Z, ∂l = setprecision(BigFloat, 256) do
                 R = exp(T(size) * QuatVec{T}(n̂))
                 Z = antipode ? -R : R
-                Z, log∂log(Z), ∂log(Z)
+                Z, pushforward_columns(log_pushforward, quaternion(Z))
             end
             ref = gradient_reference(log_reference, Z)
             scale = maximum(maxabs, ref)
             @test maxerr(∂l, ref) ≤ 10ϵ * scale
-            @test maxerr(∂l′, ref) ≤ 10ϵ * scale
-            lref = setprecision(BigFloat, 1024) do
-                quatvec(log_reference(Quaternion{BigFloat}(components(Z)...)))
-            end
-            @test l isa QuatVec
-            @test maxerr([quaternion(l)], [quaternion(lref)]) ≤ 10ϵ * max(maxabs(lref), floatmin(T))
         end
     end
-    # The identity itself
-    @test ∂log(rotor(1)) == QuaternionF64[1, imx, imy, imz]
-    l, ∂l = log∂log(rotor(1.0))
-    @test iszero(l)
-    @test ∂l == QuaternionF64[1, imx, imy, imz]
-    # The antipode returns the same value as `log`
-    @test log∂log(-rotor(1.0))[1] == log(-rotor(1.0))
+    # At the identity, log(1 + δ) = δ to first order.
+    @test pushforward_columns(log_pushforward, quaternion(1.0)) ==
+        QuaternionF64[1, imx, imy, imz]
 end
 
 
-@testitem "∂exp and exp∂exp are accurate near zero" setup=[InterpReference] tags=[:unit, :validation] begin
+@testitem "exp_pushforward is accurate near zero" setup=[InterpReference] tags=[:unit, :validation] begin
+    import Quaternionic: exp_pushforward
     n̂ = normalize(QuatVecF64(0, 0.3, -0.5, 0.8))
     for T in (Float64, Float32, BigFloat)
         ϵ = working_eps(T)
         for size in (3, 1, 1e-1, 1e-2, 1e-4, 1e-8, 1e-12, 0)
-            Z, (e, ∂e), ∂e′ = setprecision(BigFloat, 256) do
+            Z, ∂e = setprecision(BigFloat, 256) do
                 Z = T(size) * QuatVec{T}(n̂)
-                Z, exp∂exp(Z), ∂exp(Z)
+                Z, pushforward_columns(exp_pushforward, quaternion(Z))
             end
             ref = gradient_reference(exp_reference, Z)
             @test maxerr(∂e, ref) ≤ 10ϵ
-            @test maxerr(∂e′, ref) ≤ 10ϵ
-            eref = setprecision(BigFloat, 1024) do
-                exp_reference(Quaternion{BigFloat}(components(Z)...))
-            end
-            @test e isa Rotor
-            @test maxerr([e], [eref]) ≤ 10ϵ
-            # The tiny vector part is kept, rather than being rounded to zero
-            @test maxerr([quaternion(quatvec(e))], [quaternion(quatvec(eref))]) ≤ 10ϵ * max(maxabs(quatvec(eref)), floatmin(T))
         end
     end
 end
 
 
-@testitem "Nested ForwardDiff through the analytic gradients at the identity" setup=[InterpReference] tags=[:unit, :validation] begin
+@testitem "Nested ForwardDiff through the pushforwards at the identity" setup=[InterpReference] tags=[:unit, :validation] begin
     using ForwardDiff
+    import Quaternionic: log_pushforward, exp_pushforward
     D = ForwardDiff.derivative
     v = QuatVecF64(0, 0.3, -0.5, 0.8)
     c = QuatVecF64(0, 0.1, 0.2, -0.3)
 
-    # The values carry the partials of the input
-    @test D(t -> log∂log(exp(t*v))[1], 0.0) ≈ v atol=2eps()
-    @test D(t -> exp∂exp(t*v)[1], 0.0) ≈ v atol=2eps()
-
-    # Derivatives of the gradients along curves through the special points, compared with
+    # Derivatives of the pushforwards along curves through the special points, compared with
     # finite differences of the BigFloat finite-difference gradients
-    Zcurve(t) = Rotor{typeof(t)}(1 + t/5, 3t/10, -t/2, 4t/5)  # Not normalized: off shell
+    Zcurve(t) = Quaternion{typeof(t)}(1 + t/5, 3t/10, -t/2, 4t/5)  # Not of unit norm
     for t₀ in (0.0, 1e-12, 1e-8, 1e-4, 0.5)
-        d = D(t -> ∂log(Zcurve(t)), t₀)
+        d = D(t -> pushforward_columns(log_pushforward, Zcurve(t)), t₀)
         ref = setprecision(BigFloat, 1024) do
             h = big"1e-50"
             (gradient_reference(log_reference, Zcurve(big(t₀)+h)) .- gradient_reference(log_reference, Zcurve(big(t₀)-h))) ./ (2h)
@@ -120,7 +109,7 @@ end
         @test maxerr(d, ref) ≤ 10eps()
     end
     for t₀ in (0.0, 1e-12, 1e-8, 1e-4, 0.5), offset in (0, 1)
-        d = D(t -> ∂exp(t*v + offset*c), t₀)
+        d = D(t -> pushforward_columns(exp_pushforward, quaternion(t*v + offset*c)), t₀)
         ref = setprecision(BigFloat, 1024) do
             h = big"1e-50"
             vb, cb = QuatVec{BigFloat}(components(v)...), QuatVec{BigFloat}(components(c)...)
@@ -131,27 +120,18 @@ end
 end
 
 
-@testitem "slerp∂slerp for nearly equal rotors" tags=[:unit, :validation] begin
-    using ForwardDiff, Random
-    D = ForwardDiff.derivative
-    Random.seed!(1234)
-    one_ = Quaternion{Bool}(true, false, false, false)
-    n̂ = normalize(QuatVecF64(0, 0.3, -0.5, 0.8))
-    for q₁ in randn(RotorF64, 3), size in (1, 1e-2, 1e-4, 1e-8, 1e-12, 0), τ in (0.0, 0.3, 1.0)
-        q₂ = exp(size * n̂) * q₁
-        s, ∂s∂q₁, ∂s∂q₂, ∂s∂τ = slerp∂slerp(q₁, q₂, τ)
-        @test s isa Rotor
-        @test distance(s, slerp(q₁, q₂, τ)) ≤ 4eps()
-        for (k, b) in enumerate((one_, imx, imy, imz))
-            @test ∂s∂q₁[k] ≈ D(ϵ -> slerp(q₁ + ϵ*b, q₂, τ), 0.0) atol=10eps()
-            @test ∂s∂q₂[k] ≈ D(ϵ -> slerp(q₁, q₂ + ϵ*b, τ), 0.0) atol=10eps()
-        end
-        @test ∂s∂τ ≈ slerp∂slerp∂τ(q₁, q₂, τ)[2] atol=4eps()
+@testitem "squad derivatives agree with ForwardDiff for large rotations" tags=[:unit, :validation] begin
+    using ForwardDiff
+    # Successive rotors differ by rotations through π, so the logarithms in the derivative
+    # are evaluated far from the identity.
+    qs = Rotor{Float64}[1, imx, imy, imz, -imy, -imz, -imx, -rotor(1)]
+    ts = Float64.(1:length(qs))
+    for i ∈ 1:length(ts)-1, τ ∈ (0.001, 0.1, 0.49, 0.5, 0.51, 0.9, 0.999)
+        t = ts[i] + τ * (ts[i+1] - ts[i])
+        R, Ṙ = squad(qs, ts, t; compute_derivative=true)
+        @test R == squad(qs, ts, t)
+        @test Ṙ ≈ ForwardDiff.derivative(t′ -> squad(qs, ts, t′), t) atol=20eps()
     end
-    # The value at τ = 0 carries the partials of τ
-    q₁, q₂ = randn(RotorF64, 2)
-    @test D(τ -> slerp∂slerp(q₁, q₂, τ)[1], 0.0) ≈ D(τ -> slerp(q₁, q₂, τ), 0.0) atol=10eps()
-    @test D(τ -> slerp∂slerp(q₁, q₁, τ)[1], 0.0) ≈ zero(QuaternionF64) atol=10eps()
 end
 
 
@@ -171,13 +151,13 @@ end
         Ω⃗FD = [2quatvec(ṘFD[k] / Rplain[k]) for k in eachindex(tout)]
         # Both derivatives are limited by the conditioning of the interpolant: rounding
         # errors of size eps in the input rotors become relative errors of about eps/(|Ω| dt)
-        # in Ṙ, with |Ω| ≈ 6e-3.  Before the accuracy of `log∂log` was fixed, the analytic
-        # derivative had relative errors of about 1e-6 here.
+        # in Ṙ, with |Ω| ≈ 6e-3.  An earlier, less accurate derivative of `log` gave
+        # relative errors of about 1e-6 here.
         scale = maximum(abs, ṘFD)
         @test maximum(abs, Ṙ₁ .- ṘFD) ≤ 1e-13 * N * scale
         @test maximum(abs, Ω⃗₁ .- Ω⃗FD) ≤ 2e-13 * N * scale
-        # The rotors agree with those computed without derivatives
-        @test maximum(distance.(Rplain, R₁)) ≤ 4eps()
+        # The rotors are those computed without derivatives
+        @test R₁ == Rplain
         @test R₁ == R₂ == R₃
         @test Ṙ₁ == Ṙ₂
         @test Ω⃗₁ == Ω⃗₃
@@ -266,13 +246,11 @@ end
     # The control point past the end extrapolates linearly
     @test squad_control_points(qs, ts, 6)[2] ≈ qs[6] * conj(qs[5]) * qs[6]
     @test (@inferred squad_control_points(qs, 1:6, 3)) isa Tuple{RotorF64, RotorF64}
-    if VERSION ≥ v"1.10"
-        sq(R, t, τ) = squad(R, t, τ)
-        sqΩṘ(R, t, τ) = squad(R, t, τ; compute_angular_velocity=true, compute_derivative=true)
-        @test (@inferred sq(qs, ts, [1.5, 2.5])) isa Vector{RotorF64}
-        @test (@inferred sq(qs, ts, 2.5)) isa RotorF64
-        @test (@inferred sqΩṘ(qs, ts, 2.5)) isa Tuple{RotorF64, QuatVecF64, QuaternionF64}
-    end
+    sq(R, t, τ) = squad(R, t, τ)
+    sqΩṘ(R, t, τ) = squad(R, t, τ; compute_angular_velocity=true, compute_derivative=true)
+    @test (@inferred sq(qs, ts, [1.5, 2.5])) isa Vector{RotorF64}
+    @test (@inferred sq(qs, ts, 2.5)) isa RotorF64
+    @test (@inferred sqΩṘ(qs, ts, 2.5)) isa Tuple{RotorF64, QuatVecF64, QuaternionF64}
 end
 
 
@@ -300,23 +278,14 @@ end
 end
 
 
-@testitem "Analytic-gradient docstring examples run" tags=[:unit, :fast] begin
-    ∂log∂w, ∂log∂x, ∂log∂y, ∂log∂z = ∂log(randn(RotorF64))
-    @test ∂log∂w isa Quaternion
-    (q₁, q₂), τ = randn(RotorF64, 2), rand()
-    s, ∂s∂q₁, ∂s∂q₂, ∂s∂τ = slerp∂slerp(q₁, q₂, τ)
-    @test length(∂s∂q₁) == length(∂s∂q₂) == 4
-end
-
-
-@testitem "log∂log near the antipode with an underflowing vector norm" setup=[InterpReference] tags=[:unit, :validation] begin
-    # For vector parts below about 1.5e-154, `abs2vec` underflows to zero, but the logarithm
-    # still points along the vector part, as `log` does.
+@testitem "log_pushforward near the antipode with an underflowing vector norm" setup=[InterpReference] tags=[:unit, :validation] begin
+    import Quaternionic: log_pushforward
+    # For vector parts below about 1.5e-154, `abs2vec` underflows to zero, but the
+    # derivatives of the logarithm are still finite.
     for s in (1e-100, 1e-170, 1e-200, 1e-300)
-        Z = Rotor{Float64}(-1, 3s, -5s, 8s)
-        l, ∂l = log∂log(Z)
-        @test maxabs(quaternion(l) - quaternion(log(Z))) ≤ 4eps()
-        @test all(isfinite, components(quaternion(l)))
+        Z = Quaternion{Float64}(-1, 3s, -5s, 8s)
+        ∂l = pushforward_columns(log_pushforward, Z)
+        @test all(d -> all(isfinite, components(d)), ∂l)
         ref = setprecision(BigFloat, 4096) do
             Q = Quaternion{BigFloat}(components(Z)...)
             h = absvec(Q) * big"1e-60"

@@ -7,9 +7,7 @@ import Quaternionic: Quaternionic, absvec,
     QuatVecF64, RotorF64, QuaternionF64,
     wrapper, components, basetype
 using PrecompileTools
-isdefined(Base, :get_extension) ?
-    (using FastDifferentiation: FastDifferentiation, Node) :
-    (using ..FastDifferentiation: FastDifferentiation, Node)
+using FastDifferentiation: FastDifferentiation, Node
 
 
 Base.abs(q::AbstractQuaternion{Node}) = √sum(x->x^2, components(q))
@@ -174,7 +172,7 @@ end
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to
-        # this package or not (on Julia 1.8 and higher)
+        # this package or not
         r(v)
         𝓇(𝓋)
         # Tuples, unlike vectors, keep the type of each element, so that mixed operations
