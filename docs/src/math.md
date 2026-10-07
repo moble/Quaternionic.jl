@@ -68,8 +68,12 @@ silently give wrong results for quaternions, so they throw an
     does reverse products.
   * `inv` of a `Symmetric` matrix, whose inverse need not be symmetric
     for quaternions.  Use `inv(Matrix(A))`.
-  * Solving systems with `Tridiagonal` and `SymTridiagonal` matrices.
-    Convert them with `Matrix(A)` first.
+  * Solving with the factorization `lu!(A)` of a `Tridiagonal` matrix,
+    and `ldlt` of a `SymTridiagonal` matrix.  Use `lu(A)` or `A \ b`
+    instead.  Systems with `Tridiagonal` and `SymTridiagonal` matrices
+    are otherwise solved correctly, with a dense factorization, which
+    costs O(n³) rather than the O(n) of LinearAlgebra's specialized
+    solvers.
 
 Functions such as `exp`, `log`, and `sqrt` of quaternion matrices, and
 `eigen` and `eigvals` of non-`Hermitian` ones, are not supported;

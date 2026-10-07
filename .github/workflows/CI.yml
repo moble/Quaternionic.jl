@@ -23,9 +23,13 @@ jobs:
   # spend most of their time compiling the AD packages, run only on Ubuntu, because the AD
   # code paths do not depend on the operating system.  Coverage is uploaded only from the
   # Ubuntu job with the latest Julia and the `slow` job, which together run the whole suite.
+  # The job with the latest pre-release of Julia is allowed to fail; it is there to show
+  # changes in Julia and LinearAlgebra, such as new methods that assume that the entries of
+  # a matrix commute, before they are released.
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.version == 'pre' }}
     if: >-
         !contains(github.ref, 'refs/tags/')
         && !contains(github.event.head_commit.message, '[skip ci]')
@@ -41,6 +45,8 @@ jobs:
           - windows-latest
         include:
           - version: 'lts'
+            os: ubuntu-latest
+          - version: 'pre'
             os: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
