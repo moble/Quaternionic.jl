@@ -17,8 +17,9 @@
 #     GenericLinearAlgebra uses transposed rows of quaternion matrices correctly.
 #   * `inv(transpose(A))` is computed as `transpose(inv(A))`, and the inverse of a
 #     `Symmetric` matrix is assumed to be symmetric, for the same reason.
-#   * The specialized solvers for `Tridiagonal` and `SymTridiagonal` matrices multiply some
-#     factors in the wrong order.
+#   * Solving with the factorization `lu!(A)` of a `Tridiagonal` matrix, which uses
+#     LinearAlgebra's specialized solver, and `ldlt` of a `SymTridiagonal` matrix.  Other
+#     solves with these matrices use a dense factorization instead (see below).
 #
 # LinearAlgebra and StaticArrays define methods of some of these functions for particular
 # types of matrices, so each of those types needs a method here as well, to avoid
@@ -129,24 +130,48 @@ Base.inv(::Symmetric{<:AbstractQuaternion,<:StridedMatrix}) = noncommutative_err
     * "`inv(Matrix(A))`."
 )
 
-## Tridiagonal solvers
+## Tridiagonal matrices
 
-const tridiagonal_alternative = "Convert the matrix with `Matrix(A)` first."
+# LinearAlgebra's specialized solvers for `Tridiagonal` and `SymTridiagonal` matrices
+# multiply some factors in the wrong order for quaternions.  So `lu` and `factorize` of
+# these matrices factorize a dense copy instead, `\` with a `SymTridiagonal` matrix uses
+# that factorization rather than `ldlt`, and `ldiv!` with either type solves with a dense
+# copy.  Every solve then goes through a correct factorization, at a cost of O(n³) rather
+# than O(n).  Each method is defined for the two types separately, because a method for
+# their union would be ambiguous with LinearAlgebra's methods for each of them.
+for M ∈ (:Tridiagonal, :SymTridiagonal)
+    @eval begin
+        LinearAlgebra.lu(
+            A::$M{<:AbstractQuaternion},
+            pivot::Union{RowMaximum,NoPivot}=RowMaximum();
+            kwargs...
+        ) = LinearAlgebra.lu(Matrix(A), pivot; kwargs...)
+        LinearAlgebra.factorize(A::$M{<:AbstractQuaternion}) = LinearAlgebra.lu(A)
+        LinearAlgebra.ldiv!(A::$M{<:AbstractQuaternion}, B::AbstractVecOrMat) =
+            copyto!(B, LinearAlgebra.lu(A) \ B)
+    end
+end
+Base.:\(A::SymTridiagonal{<:AbstractQuaternion}, B::AbstractVecOrMat) =
+    LinearAlgebra.lu(A) \ B
+
+# `lu!` still computes the factors in the storage of the `Tridiagonal` matrix, and those
+# factors are correct, but LinearAlgebra's solvers that use them are not.  `ldlt` assumes
+# that transposition reverses products, which it does not for quaternions.
+const tridiagonal_alternative = "Use `lu(A)`, which factorizes a dense copy of `A`."
+
+const tridiagonal_lu_operation =
+    "Solving with the factorization `lu!(A)` of a `Tridiagonal` matrix"
 
 LinearAlgebra.ldiv!(
     ::LU{T,Tridiagonal{T,V}}, ::AbstractVecOrMat
 ) where {T<:AbstractQuaternion,V} =
-    noncommutative_error("Solving a `Tridiagonal` system", tridiagonal_alternative)
+    noncommutative_error(tridiagonal_lu_operation, tridiagonal_alternative)
 for W ∈ (:AdjointFactorization, :TransposeFactorization)
     @eval LinearAlgebra.ldiv!(
         ::LinearAlgebra.$W{<:Any,<:LU{T,Tridiagonal{T,V}}}, ::AbstractVecOrMat
     ) where {T<:AbstractQuaternion,V} =
-        noncommutative_error("Solving a `Tridiagonal` system", tridiagonal_alternative)
+        noncommutative_error(tridiagonal_lu_operation, tridiagonal_alternative)
 end
-LinearAlgebra.ldiv!(::Tridiagonal{<:AbstractQuaternion}, ::AbstractVecOrMat) =
-    noncommutative_error("Solving a `Tridiagonal` system", tridiagonal_alternative)
-LinearAlgebra.ldiv!(::SymTridiagonal{<:AbstractQuaternion}, ::AbstractVecOrMat) =
-    noncommutative_error("Solving a `SymTridiagonal` system", tridiagonal_alternative)
 LinearAlgebra.ldlt!(::SymTridiagonal{<:AbstractQuaternion}) =
     noncommutative_error("`ldlt` of a `SymTridiagonal` matrix", tridiagonal_alternative)
 

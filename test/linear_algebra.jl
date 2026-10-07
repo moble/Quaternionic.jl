@@ -113,6 +113,26 @@ end
         Fe = eigen(Hermitian(H))
         @test relerr(H * Fe.vectors, Fe.vectors * Diagonal(Fe.values)) < tol
     end
+
+    # Systems with `Tridiagonal` and `SymTridiagonal` matrices are solved with a dense
+    # factorization.
+    for n ∈ (2, 5)
+        d = randn(rng, QuaternionF64, n) .+ 3
+        e, f = randn(rng, QuaternionF64, n - 1), randn(rng, QuaternionF64, n - 1)
+        x, B = randn(rng, QuaternionF64, n), randn(rng, QuaternionF64, n, n)
+        for M ∈ (Tridiagonal(e, d, f), SymTridiagonal(d, e))
+            D = Matrix(M)
+            @test relerr(D * (M \ x), x) < tol
+            @test relerr(D * (M \ B), B) < tol
+            @test relerr((B / M) * D, B) < tol
+            @test relerr((x' / M) * D, x') < tol
+            @test relerr(transpose(D) * (transpose(M) \ x), x) < tol
+            @test relerr(D' * (M' \ x), x) < tol
+            @test relerr(inv(M) * D, Matrix(I, n, n)) < tol
+            @test relerr(D * (lu(M) \ x), x) < tol
+            @test relerr(D * ldiv!(copy(M), copy(x)), x) < tol
+        end
+    end
 end
 
 
@@ -169,14 +189,10 @@ end
     @test relerr(inv(copy(transpose(A))) * permutedims(A), Matrix(I, n, n)) < 1e-10
     @test relerr(inv(Matrix(Symmetric(A))) * Matrix(Symmetric(A)), Matrix(I, n, n)) < 1e-10
 
-    # Tridiagonal solvers
+    # Tridiagonal matrices are solved with a dense factorization (see the test item for
+    # generic algorithms), except with the factorization `lu!(A)` or with `ldlt`.
     T, ST = Tridiagonal(e, d, e), SymTridiagonal(d, e)
-    for M ∈ (T, ST)
-        @test_throws ArgumentError M \ x
-        @test_throws ArgumentError x' / M
-        @test_throws ArgumentError inv(M)
-        @test_throws ArgumentError ldiv!(copy(M), copy(x))
-        @test relerr(Matrix(M) * (Matrix(M) \ x), x) < 1e-10
-    end
+    @test_throws ArgumentError lu!(copy(T)) \ x
+    @test_throws ArgumentError lu!(copy(T))' \ x
     @test_throws ArgumentError ldlt(ST)
 end
