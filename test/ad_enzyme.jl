@@ -409,7 +409,7 @@ end
     function g1(x)
         Rx = R(x)
         Rf = from_rotation_matrix(to_rotation_matrix(Rx))
-        sc(Rf) * sign(Rf ⋅ Rx)
+        sc(Rf) * sign(real(Rf ⋅ Rx))
     end
     # Non-orthogonal matrices
     g2(x) = sc(from_rotation_matrix(reshape(x[1:9], 3, 3) + I))

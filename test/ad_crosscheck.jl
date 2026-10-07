@@ -362,7 +362,7 @@
         # A sequence of quaternions in which some signs need flipping
         u = [normalize(randq()) for _ ∈ 1:4]
         for i ∈ 2:4
-            if dot(u[i], u[i-1]) * (iseven(i) ? 1 : -1) < 0
+            if real(dot(u[i], u[i-1])) * (iseven(i) ? 1 : -1) < 0
                 u[i] = -u[i]
             end
         end

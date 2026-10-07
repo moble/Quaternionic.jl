@@ -22,11 +22,18 @@
     end
 
     # The ambiguities among the methods of `checked_modules` that involve a method defined
-    # in any of `modules`
+    # in any of `modules`.  The methods in `src/matrices.jl` are excluded: they only throw,
+    # for operations such as `transpose(x) * A` that would be wrong for quaternions, and
+    # they are necessarily ambiguous with the methods that other packages, Symbolics among
+    # them, define for those operations with their own types of arrays.  An ambiguous call
+    # throws a `MethodError` instead of the `ArgumentError`, and Aqua checks these methods
+    # for ambiguities with Base, LinearAlgebra, and StaticArrays.
     function ambiguities_involving(modules, checked_modules...)
         ambiguities = Test.detect_ambiguities(checked_modules...; recursive=true)
+        isguard(m) = endswith(String(m.file), joinpath("src", "matrices.jl"))
         filter(ambiguities) do (m1, m2)
-            parentmodule(m1) ∈ modules || parentmodule(m2) ∈ modules
+            (parentmodule(m1) ∈ modules || parentmodule(m2) ∈ modules) &&
+                !isguard(m1) && !isguard(m2)
         end
     end
 end

@@ -60,7 +60,7 @@ function DI._value_and_pushforward_via_pullback(
             D(ntuple(k -> complex(real(dot(a[k], dx)), real(dot(b[k], dx))), 4)...)
         end
     else
-        map(dx -> D(ntuple(k -> dot(a[k], dx), 4)...), tx)
+        map(dx -> D(ntuple(k -> real(dot(a[k], dx)), 4)...), tx)
     end
     return y, ty
 end

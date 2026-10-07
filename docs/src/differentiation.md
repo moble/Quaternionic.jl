@@ -86,15 +86,16 @@ with respect to a `Rotor` argument is the ambient gradient in
 ``\mathbb{R}^4`` of whatever the code computes from those four
 numbers.  Its component along ``R`` therefore depends on how the
 function is written: for example, `abs(R)` is identically 1 for a
-`Rotor`, but `sqrt(R ⋅ R)` has a nonzero gradient along ``R``.  When
-only the part tangent to the unit sphere is meaningful, project the
-gradient ``g`` onto the tangent space with ``g - (g \cdot R)\, R``;
-the projections of the gradients of different implementations of the
-same function agree.  The gradient is returned as a `Quaternion` (or,
-with Enzyme, a `Rotor` holding the raw components), never as a
-renormalized `Rotor`.  Note that `abs` and `abs2` of a `Rotor`-typed
-gradient return 1, whatever its components are, so read Enzyme's
-`Rotor` gradients with `components(g)`.
+`Rotor`, but `sqrt(sum(abs2, components(R)))` has a nonzero gradient
+along ``R``.  When only the part tangent to the unit sphere is
+meaningful, project the gradient ``g`` onto the tangent space with
+``g-(g \cdot R)\, R``, where ``g \cdot R`` is the dot product in
+``\mathbb{R}^4``; the projections of the gradients of different
+implementations of the same function agree.  The gradient is returned
+as a `Quaternion` (or, with Enzyme, a `Rotor` holding the raw
+components), never as a renormalized `Rotor`.  Note that `abs` and
+`abs2` of a `Rotor`-typed gradient return 1, whatever its components
+are, so read Enzyme's `Rotor` gradients with `components(g)`.
 
 **`QuatVec` arguments and outputs.**  A `QuatVec` has zero scalar
 part, so tangents and cotangents of `QuatVec`s have zero scalar part,

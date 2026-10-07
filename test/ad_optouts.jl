@@ -161,8 +161,8 @@
         isin(f, (+, *, Base.FastMath.add_fast, Base.FastMath.mul_fast)) && length(c) == 1 && return true
         # The frule of `dot(x, y)` is `dot(ẋ, y) + dot(x, ẏ)`, which keeps the order of the
         # factors of Base's `dot(x::Number, y::Number) = conj(x) * y`, so it is correct when
-        # one argument is not a quaternion.  (The extension supplies the rule for two
-        # quaternions, whose `dot` is the componentwise product.)
+        # one argument is not a quaternion.  (The extension supplies the rules for two
+        # quaternions.)
         isin(f, (LinearAlgebra.dot,)) && !all(T -> T <: AbstractQuaternion, c) && return true
         # The known gap of section 2: the n-ary sum of ChainRules is reached when the first
         # quaternion is the fourth argument or later (the ninth or later under Zygote, whose

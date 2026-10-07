@@ -205,7 +205,8 @@ end
         rotor(1e-8, 0.6, -0.48, 0.64),
     ]
     @testset "$R₀" for R₀ ∈ rotors
-        f = x -> (S = from_rotation_matrix(reshape(x, 3, 3)); sign(value(S ⋅ R₀)) * sc(S))
+        f = x -> (S = from_rotation_matrix(reshape(x, 3, 3));
+                  sign(value(real(S ⋅ R₀))) * sc(S))
         x₀ = vec(Matrix(to_rotation_matrix(R₀)))
         # The matrix `x₁` is near the rotation, but not orthogonal.
         x₁ = x₀ .+ 1e-3 .* sin.(1:9)
@@ -264,12 +265,12 @@ end
     end
 
     # The sign chosen by `positive_hemisphere` is frozen on the tape.  A replay at a rotation
-    # in the other hemisphere of the recording (here, `R(x₀) ⋅ R(x) < 0`) therefore returns
-    # the derivative of the negated rotor, not an unrelated value.
+    # in the other hemisphere of the recording (here, `real(R(x₀) ⋅ R(x)) < 0`) therefore
+    # returns the derivative of the negated rotor, not an unrelated value.
     f = x -> sc(from_rotation_matrix(to_rotation_matrix(Q(x))))
     compiled = ReverseDiff.compile(ReverseDiff.GradientTape(f, x₀))
     x = [0.3, 0.8, -0.2, 0.5]
-    @test R(x₀) ⋅ R(x) < 0
+    @test real(R(x₀) ⋅ R(x)) < 0
     @test relerr(ReverseDiff.gradient!(similar(x), compiled, x), -bigfd(f, x)) < 1e-13
 
     # A `HessianTape` records the inner gradient tape onto an outer tape, so the starting
