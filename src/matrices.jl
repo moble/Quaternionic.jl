@@ -178,9 +178,11 @@ LinearAlgebra.ldlt!(::SymTridiagonal{<:AbstractQuaternion}) =
 ## Cholesky factorization on Julia 1.10
 
 @static if VERSION < v"1.11"
+    # COV_EXCL_START
     # Julia 1.10's `cholesky!` handles only `Hermitian` matrices of real or complex numbers;
     # for other element types, its generic method calls itself until the stack overflows.
-    # This is the method of later versions, which works for quaternions.
+    # This is the method of later versions, which works for quaternions.  (Coverage is
+    # measured with the latest Julia, where this method is not defined.)
     function LinearAlgebra.cholesky!(
         A::Hermitian{<:AbstractQuaternion}, ::LinearAlgebra.NoPivot=LinearAlgebra.NoPivot();
         check::Bool=true
@@ -190,4 +192,5 @@ LinearAlgebra.ldlt!(::SymTridiagonal{<:AbstractQuaternion}) =
         check && LinearAlgebra.checkpositivedefinite(info)
         return LinearAlgebra.Cholesky(C.data, A.uplo, info)
     end
+    # COV_EXCL_STOP
 end

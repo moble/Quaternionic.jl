@@ -73,6 +73,43 @@ end
 end
 
 
+@testitem "Lengths of the power series in the derivatives of exp and log" tags=[:unit, :fast] begin
+    import Quaternionic: expseriesterms, logseriesterms
+    # The explicit values for the IEEE types are those of the general formula.
+    general(T) = invoke(expseriesterms, Tuple{Type{<:AbstractFloat}}, T)
+    for T ∈ (Float16, Float32, Float64)
+        @test expseriesterms(T) == general(T)
+    end
+    @test expseriesterms(Float64) == 10
+    @test logseriesterms(Float64) == 14
+    @test expseriesterms(BigFloat) > expseriesterms(Float64)
+    @test logseriesterms(BigFloat) > logseriesterms(Float64)
+    # Types without a precision
+    @test expseriesterms(Int) == 10
+    @test logseriesterms(Int) == 24
+end
+
+
+@testitem "log_pullback is the adjoint of log_pushforward" tags=[:unit, :fast] begin
+    import Quaternionic: log_pullback, log_pushforward
+    using Random: Xoshiro
+    rng = Xoshiro(4)
+    inner(a, b) = sum(components(a) .* components(b))
+    # Zero, near the identity (where the series are used), generic points, and near the
+    # antipode with a tiny vector part
+    qs = [
+        quaternion(0.0), quaternion(1.0, 1e-3, -2e-3, 1e-3), quaternion(-0.5, 0.3, 0.2, -0.1),
+        quaternion(-1.0, 1e-100, 0.0, 0.0), randn(rng, QuaternionF64, 3)...,
+    ]
+    for q ∈ qs, _ ∈ 1:3
+        q̇, Δ = randn(rng, QuaternionF64), randn(rng, QuaternionF64)
+        a, b = inner(Δ, log_pushforward(q, q̇)), inner(log_pullback(q, Δ), q̇)
+        @test a ≈ b rtol=1e-13 atol=1e-15
+    end
+    @test iszero(log_pullback(quaternion(0.0), quaternion(1.0, 2.0, 3.0, 4.0)))
+end
+
+
 @testitem "exp_pushforward is accurate near zero" setup=[InterpReference] tags=[:unit, :validation] begin
     import Quaternionic: exp_pushforward
     n̂ = normalize(QuatVecF64(0, 0.3, -0.5, 0.8))
