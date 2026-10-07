@@ -1,33 +1,39 @@
-@testset verbose=true "Quaternion" begin
+@testitem "Quaternion: element type of mixed arrays" tags=[:unit, :fast] begin
     @test eltype([1.0, imx]) === QuaternionF64
     @test [1.0, imx] == QuaternionF64[
         QuaternionF64(1.0, 0.0, 0.0, 0.0),
         QuaternionF64(0.0, 1.0, 0.0, 0.0)
     ]
+end
 
-    @testset "wrappers(::T)" begin
-        for T in FloatTypes
-            @test typeof(randn(Rotor{T}) + randn(Rotor{T})) === Quaternion{T}
-            @test typeof(randn(Rotor{T}) - randn(Rotor{T})) === Quaternion{T}
-            @test typeof(randn(Rotor{T}) * randn(Rotor{T})) === Rotor{T}
-            @test typeof(randn(Rotor{T}) / randn(Rotor{T})) === Rotor{T}
+@testitem "Quaternion: wrapper types of arithmetic results" tags=[:unit, :fast] setup=[TestUtils] begin
+    for T in FloatTypes
+        @test typeof(randn(Rotor{T}) + randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) - randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) * randn(Rotor{T})) === Rotor{T}
+        @test typeof(randn(Rotor{T}) / randn(Rotor{T})) === Rotor{T}
 
-            @test typeof(randn(Rotor{T}) * randn(QuatVec{T})) === Quaternion{T}
-            @test typeof(randn(QuatVec{T}) * randn(Rotor{T})) === Quaternion{T}
-            @test typeof(randn(Rotor{T}) / randn(QuatVec{T})) === Quaternion{T}
-            @test typeof(randn(QuatVec{T}) / randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) * randn(QuatVec{T})) === Quaternion{T}
+        @test typeof(randn(QuatVec{T}) * randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) / randn(QuatVec{T})) === Quaternion{T}
+        @test typeof(randn(QuatVec{T}) / randn(Rotor{T})) === Quaternion{T}
 
-            @test typeof(randn(Rotor{T}) + randn(QuatVec{T})) === Quaternion{T}
-            @test typeof(randn(QuatVec{T}) + randn(Rotor{T})) === Quaternion{T}
-            @test typeof(randn(Rotor{T}) - randn(QuatVec{T})) === Quaternion{T}
-            @test typeof(randn(QuatVec{T}) - randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) + randn(QuatVec{T})) === Quaternion{T}
+        @test typeof(randn(QuatVec{T}) + randn(Rotor{T})) === Quaternion{T}
+        @test typeof(randn(Rotor{T}) - randn(QuatVec{T})) === Quaternion{T}
+        @test typeof(randn(QuatVec{T}) - randn(Rotor{T})) === Quaternion{T}
 
-            @test typeof(randn(QuatVec{T}) + randn(QuatVec{T})) === QuatVec{T}
-            @test typeof(randn(QuatVec{T}) - randn(QuatVec{T})) === QuatVec{T}
-            @test typeof(randn(QuatVec{T}) * randn(QuatVec{T})) === Quaternion{T}
-            @test typeof(randn(QuatVec{T}) / randn(QuatVec{T})) === Quaternion{T}
-        end
+        @test typeof(randn(QuatVec{T}) + randn(QuatVec{T})) === QuatVec{T}
+        @test typeof(randn(QuatVec{T}) - randn(QuatVec{T})) === QuatVec{T}
+        @test typeof(randn(QuatVec{T}) * randn(QuatVec{T})) === Quaternion{T}
+        @test typeof(randn(QuatVec{T}) / randn(QuatVec{T})) === Quaternion{T}
     end
+end
+
+@testitem "Quaternion: promotion and conversion of types" tags=[:unit, :fast] setup=[TestUtils] begin
+    using StaticArrays: SVector
+    import Symbolics
+    Symbolics.@variables a b c d w x y z
 
     @testset "$Q{T}" for (Q,q) in ((Quaternion, quaternion), (Rotor,rotor), (QuatVec,quatvec))
         for T in Types
@@ -152,5 +158,4 @@
             @test typeof(QuatVec{T}(a,b,c,d) / QuatVec{T}(w,x,y,z)) === Quaternion{T}
         end
     end
-
 end

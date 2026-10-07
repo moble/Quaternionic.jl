@@ -1,4 +1,4 @@
-@testset verbose=true "Random" begin
+@testitem "Random: randn for quaternionic types" tags=[:unit, :fast] setup=[TestUtils] begin
     using Random
     Random.seed!(1234)
     rng = MersenneTwister(1234)

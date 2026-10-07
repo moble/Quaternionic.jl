@@ -1,34 +1,38 @@
-@testset verbose=true "Distance" begin
-    @testset "Int" begin
-        scalars = Int[0, 1, -1]
-        quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
-        d(q₁, q₂) = distance2(q₁, q₂)
-        for q₁ in quaternions
-            for q₂ in quaternions
-                d₁₁ = d(q₁, q₁)
-                d₁₂ = d(q₁, q₂)
-                d₂₂ = d(q₂, q₂)
-                d₂₁ = d(q₂, q₁)
-                # Real-valued:
-                @test d₁₁ isa Int
-                @test d₁₂ isa Int
-                @test d₂₁ isa Int
-                @test d₂₂ isa Int
-                # Symmetry:
-                @test d₁₂ == d₂₁
-                # Invariance:
-                for q₃ in [quaternion(1), 1imx, 1imy, 1imz]
-                    @test d₁₂ == d(q₃*q₁, q₃*q₂)
-                    @test d₁₂ == d(q₁*q₃, q₂*q₃)
-                end
-                # Identity:
-                @test d₁₁ == 0
-                @test d₂₂ == 0
-                # Positive-definiteness
-                @test (q₁==q₂) ⊻ (d₁₂>0)
+@testitem "Distance: integer quaternions" tags=[:unit, :fast] begin
+    scalars = Int[0, 1, -1]
+    quaternions = [quaternion(a, b, c, d) for a in scalars for b in scalars for c in scalars for d in scalars]
+    d(q₁, q₂) = distance2(q₁, q₂)
+    for q₁ in quaternions
+        for q₂ in quaternions
+            d₁₁ = d(q₁, q₁)
+            d₁₂ = d(q₁, q₂)
+            d₂₂ = d(q₂, q₂)
+            d₂₁ = d(q₂, q₁)
+            # Real-valued:
+            @test d₁₁ isa Int
+            @test d₁₂ isa Int
+            @test d₂₁ isa Int
+            @test d₂₂ isa Int
+            # Symmetry:
+            @test d₁₂ == d₂₁
+            # Invariance:
+            for q₃ in [quaternion(1), 1imx, 1imy, 1imz]
+                @test d₁₂ == d(q₃*q₁, q₃*q₂)
+                @test d₁₂ == d(q₁*q₃, q₂*q₃)
             end
+            # Identity:
+            @test d₁₁ == 0
+            @test d₂₂ == 0
+            # Positive-definiteness
+            @test (q₁==q₂) ⊻ (d₁₂>0)
         end
     end
+end
+
+@testitem "Distance: floating-point quaternions and rotors" tags=[:unit] begin
+    using Random
+    Random.seed!(42)
+
     @testset "$T" for T in [BigFloat, Float64]  # FloatTypes
         scalars = [zero(T), one(T), -one(T)]
         quaternions = [a + b*imn for a in scalars for b in scalars for imn in [imx, imy, imz]]

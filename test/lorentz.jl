@@ -1,23 +1,26 @@
 # Tests for normalization of complexified quaternions as Lorentz spinors in the STA.
 
-@testset "Lorentz/STA normalization" begin
-
+@testsnippet LorentzTypes begin
     # Use Float64 and Float32 only.  Float16 lacks precision for cosh/sinh near the
     # cancellation cosh² - sinh² = 1.  Complex{BigFloat} is covered by the multi-precision
     # items in lorentz_decomposition.jl and regressions_lorentz.jl, not here.
     LorentzTypes = [Float64, Float32]
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 1.  The spinor norm differs from the Euclidean norm on ℂ⁴
-    #
-    # Use a scaled boost rotor: v = λ·(cosh(φ/2), -im·sinh(φ/2), 0, 0), λ ∈ ℝ.
-    #   Spinor norm² = λ²(cosh² - sinh²) = λ²  →  _hypot = λ  (real, positive)
-    #   Euclidean norm = λ√(cosh² + sinh²) > λ  for φ ≠ 0
-    #
-    # After spinor-normalization we recover the original unit boost rotor.
-    # With the Euclidean norm instead, the imaginary component would be too small.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "_hypot is spinor norm, not Euclidean norm, for $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 1.  The spinor norm differs from the Euclidean norm on ℂ⁴
+#
+# Use a scaled boost rotor: v = λ·(cosh(φ/2), -im·sinh(φ/2), 0, 0), λ ∈ ℝ.
+#   Spinor norm² = λ²(cosh² - sinh²) = λ²  →  _hypot = λ  (real, positive)
+#   Euclidean norm = λ√(cosh² + sinh²) > λ  for φ ≠ 0
+#
+# After spinor-normalization we recover the original unit boost rotor.
+# With the Euclidean norm instead, the imaginary component would be too small.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: _hypot is the spinor norm, not the Euclidean norm" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    using StaticArrays: SVector
+
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -47,17 +50,19 @@
             end
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 2.  Spatial rotation rotors: all-real components
-    #
-    # A rotation by θ about axis n̂ = (nx, ny, nz):
-    #   R = cos(θ/2) + sin(θ/2) (nx𝐢 + ny𝐣 + nz𝐤)
-    #
-    # With real components, the spinor norm² = cos²(θ/2) + sin²(θ/2) = 1, so these are
-    # already unit.  When passed as Complex{T}, rotor() should return the same values.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "Spatial rotation rotors, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 2.  Spatial rotation rotors: all-real components
+#
+# A rotation by θ about axis n̂ = (nx, ny, nz):
+#   R = cos(θ/2) + sin(θ/2) (nx𝐢 + ny𝐣 + nz𝐤)
+#
+# With real components, the spinor norm² = cos²(θ/2) + sin²(θ/2) = 1, so these are
+# already unit.  When passed as Complex{T}, rotor() should return the same values.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: spatial rotation rotors" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for θ ∈ T[0, π/7, π/4, π/3, π/2, 2π/3, π, 4π/3, 7π/4, 2π]
@@ -85,20 +90,22 @@
             end
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 3.  Boost rotors: imaginary quaternion components
-    #
-    # A Lorentz boost in the j-direction with rapidity φ:
-    #   R = exp(φ/2 · Bⱼ)
-    # where Bⱼ is the corresponding spacetime bivector.  Using the STA mapping:
-    #   R_x = cosh(φ/2) + im·sinh(φ/2)·𝐢    [tx ↔ im𝐢]
-    #   R_y = cosh(φ/2) + im·sinh(φ/2)·𝐣    [ty ↔ im𝐣]
-    #   R_z = cosh(φ/2) + im·sinh(φ/2)·𝐤    [tz ↔ im𝐤]
-    #
-    # The spinor norm² for each is cosh²(φ/2) + (im)²sinh²(φ/2) = cosh² - sinh² = 1.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "Boost rotors, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 3.  Boost rotors: imaginary quaternion components
+#
+# A Lorentz boost in the j-direction with rapidity φ:
+#   R = exp(φ/2 · Bⱼ)
+# where Bⱼ is the corresponding spacetime bivector.  Using the STA mapping:
+#   R_x = cosh(φ/2) + im·sinh(φ/2)·𝐢    [tx ↔ im𝐢]
+#   R_y = cosh(φ/2) + im·sinh(φ/2)·𝐣    [ty ↔ im𝐣]
+#   R_z = cosh(φ/2) + im·sinh(φ/2)·𝐤    [tz ↔ im𝐤]
+#
+# The spinor norm² for each is cosh²(φ/2) + (im)²sinh²(φ/2) = cosh² - sinh² = 1.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: boost rotors" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[0, 0.5, 1.0, 1.5, 2.0]
@@ -129,15 +136,17 @@
             @test r[4] ≈ zero(Complex{T}) atol=ϵ*ch
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 4.  rotor() normalizes by the spinor norm
-    #
-    # If we scale a (physically unit) rotor by an arbitrary complex factor λ, then call
-    # rotor(), the result should recover the original (up to an overall sign/phase that
-    # still leaves it a valid unit rotor, i.e. gives q*conj(q) = 1).
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "rotor() normalizes by spinor norm, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 4.  rotor() normalizes by the spinor norm
+#
+# If we scale a (physically unit) rotor by an arbitrary complex factor λ, then call
+# rotor(), the result should recover the original (up to an overall sign/phase that
+# still leaves it a valid unit rotor, i.e. gives q*conj(q) = 1).
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: rotor() normalizes by the spinor norm" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         # Base unit rotors to scale
@@ -159,23 +168,27 @@
             end
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 4b. Pure complex-phase factors exp[Iφ] — the tightest test
-    #
-    # I = txyz (grade 4) reverses to itself: Ĩ = +I.  Therefore exp[Iφ]·R₀ satisfies
-    #   (exp[Iφ]·R₀)~ = exp[Iφ]·R̃₀   →   R R̃ = exp[2Iφ] ≠ 1  for φ ∉ πℤ
-    #
-    # In ℍ(ℂ) this is a pure complex scalar factor e^{imφ}, with |e^{imφ}| = 1.
-    # For a rotation rotor R₀ (real components, Euclidean-unit):
-    #
-    #   Euclidean norm of e^{imφ}·R₀  = |e^{imφ}| · ‖R₀‖_euc = 1  →  no-op (wrong)
-    #   Spinor norm of e^{imφ}·R₀     = e^{imφ} ≠ 1             →  divide out (correct)
-    #
-    # NOTE: Rotor*Rotor re-normalizes (the outer Rotor(...) constructor calls rotor(...)).
-    # So "not unit" must be verified via _hypot, not via q*conj(q).
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "Pure phase exp[Iφ] is not a Lorentz transformation, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 4b. Pure complex-phase factors exp[Iφ] — the tightest test
+#
+# I = txyz (grade 4) reverses to itself: Ĩ = +I.  Therefore exp[Iφ]·R₀ satisfies
+#   (exp[Iφ]·R₀)~ = exp[Iφ]·R̃₀   →   R R̃ = exp[2Iφ] ≠ 1  for φ ∉ πℤ
+#
+# In ℍ(ℂ) this is a pure complex scalar factor e^{imφ}, with |e^{imφ}| = 1.
+# For a rotation rotor R₀ (real components, Euclidean-unit):
+#
+#   Euclidean norm of e^{imφ}·R₀  = |e^{imφ}| · ‖R₀‖_euc = 1  →  no-op (wrong)
+#   Spinor norm of e^{imφ}·R₀     = e^{imφ} ≠ 1             →  divide out (correct)
+#
+# NOTE: Rotor*Rotor re-normalizes (the outer Rotor(...) constructor calls rotor(...)).
+# So "not unit" must be verified via _hypot, not via q*conj(q).
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: a pure phase exp[Iφ] is not a Lorentz transformation" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    using StaticArrays: SVector
+
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         θ = T(π/5)
@@ -206,16 +219,18 @@
             @test r[4] ≈ zero(Complex{T}) atol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 5.  The spinor norm is multiplicative: ‖R₁ R₂‖ = ‖R₁‖ · ‖R₂‖
-    #
-    # Equivalently, the composition of two unit rotors is a unit rotor.
-    # Proof: (R₁R₂)(R₁R₂)̃ = R₁R₂R̃₂R̃₁ = R₁(1)R̃₁ = 1.
-    #
-    # We test rotation ∘ boost and boost ∘ rotation for several angles/rapidities.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "Spinor norm is multiplicative (rotation ∘ boost), $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 5.  The spinor norm is multiplicative: ‖R₁ R₂‖ = ‖R₁‖ · ‖R₂‖
+#
+# Equivalently, the composition of two unit rotors is a unit rotor.
+# Proof: (R₁R₂)(R₁R₂)̃ = R₁R₂R̃₂R̃₁ = R₁(1)R̃₁ = 1.
+#
+# We test rotation ∘ boost and boost ∘ rotation for several angles/rapidities.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: the spinor norm is multiplicative (rotation ∘ boost)" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for θ ∈ T[π/6, π/4, π/3, 2π/3]
@@ -243,8 +258,10 @@
             end
         end
     end
+end
 
-    @testset "Spinor norm is multiplicative (boost ∘ boost), $T" for T in LorentzTypes
+@testitem "Lorentz/STA: the spinor norm is multiplicative (boost ∘ boost)" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ₁ ∈ T[0.4, 1.0, 1.6]
@@ -266,15 +283,17 @@
             end
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 6.  exp of boost bivectors
-    #
-    # A boost bivector in the x-direction is im*(φ/2)·𝐢, i.e. the QuatVec (0, im*φ/2, 0, 0).
-    # Exponentiating gives the boost rotor because cos(ix) = cosh(x) and sin(ix) = i·sinh(x):
-    #   exp(im*φ/2·𝐢) = cosh(φ/2) + im·sinh(φ/2)·𝐢
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "exp of boost bivectors, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 6.  exp of boost bivectors
+#
+# A boost bivector in the x-direction is im*(φ/2)·𝐢, i.e. the QuatVec (0, im*φ/2, 0, 0).
+# Exponentiating gives the boost rotor because cos(ix) = cosh(x) and sin(ix) = i·sinh(x):
+#   exp(im*φ/2·𝐢) = cosh(φ/2) + im·sinh(φ/2)·𝐢
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: exp of boost bivectors" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -302,14 +321,16 @@
             @test r_z[4] ≈ Complex{T}(0, sh) rtol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 7.  log of boost rotors
-    #
-    # The inverse of §6: log recovers the boost bivector.
-    #   log(cosh(φ/2) + im·sinh(φ/2)·𝐢) = im*(φ/2)·𝐢
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "log of boost rotors, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 7.  log of boost rotors
+#
+# The inverse of §6: log recovers the boost bivector.
+#   log(cosh(φ/2) + im·sinh(φ/2)·𝐢) = im*(φ/2)·𝐢
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: log of boost rotors" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -338,13 +359,15 @@
             @test lq[2] ≈ Complex{T}(0, φ/2) rtol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 8.  exp/log round-trips
-    #
-    # exp(log(q)) ≈ q  and  log(exp(v)) ≈ v  for boost and rotation rotors.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "exp/log round-trips, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 8.  exp/log round-trips
+#
+# exp(log(q)) ≈ q  and  log(exp(v)) ≈ v  for boost and rotation rotors.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: exp/log round trips" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 128eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -372,14 +395,16 @@
             @test eq[4] ≈ q[4] rtol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 9.  sqrt of boost and rotation rotors
-    #
-    # sqrt(boost(φ)) = boost(φ/2) and sqrt(rotation(θ)) = rotation(θ/2).
-    # Equivalently, sqrt(q)^2 ≈ q.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "sqrt of boost and rotation rotors, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 9.  sqrt of boost and rotation rotors
+#
+# sqrt(boost(φ)) = boost(φ/2) and sqrt(rotation(θ)) = rotation(θ/2).
+# Equivalently, sqrt(q)^2 ≈ q.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: sqrt of boost and rotation rotors" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 64eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -409,15 +434,17 @@
             @test sq2[4] ≈ q[4] rtol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 10.  inv of unit complexified quaternions
-    #
-    # For a unit spinor norm, inv(q) = conj(q): the scalar is unchanged and the vector
-    # components are negated — without conjugating the complex coefficients.
-    # Therefore q * inv(q) = inv(q) * q = 1.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "inv of unit complexified quaternions, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 10.  inv of unit complexified quaternions
+#
+# For a unit spinor norm, inv(q) = conj(q): the scalar is unchanged and the vector
+# components are negated — without conjugating the complex coefficients.
+# Therefore q * inv(q) = inv(q) * q = 1.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: inv of unit complexified quaternions" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[0.5, 1.0, 1.5, 2.0]
@@ -447,19 +474,21 @@
             end
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 11.  angle and ^ for complexified quaternions
-    #
-    # For a rotation rotor cast to Complex{T}: angle(q) = Complex{T}(θ).
-    # For a boost rotor with rapidity φ: angle(q) = Complex{T}(0, φ).
-    # A Lorentz boost is a "rotation by imaginary angle" in the STA.
-    #
-    # q ^ s uses exp(s·log(q)) and gives:
-    #   rotation^s = rotation by s·θ
-    #   boost^s    = boost with rapidity s·φ
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "angle and ^ for complexified quaternions, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 11.  angle and ^ for complexified quaternions
+#
+# For a rotation rotor cast to Complex{T}: angle(q) = Complex{T}(θ).
+# For a boost rotor with rapidity φ: angle(q) = Complex{T}(0, φ).
+# A Lorentz boost is a "rotation by imaginary angle" in the STA.
+#
+# q ^ s uses exp(s·log(q)) and gives:
+#   rotation^s = rotation by s·θ
+#   boost^s    = boost with rapidity s·φ
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: angle and ^ for complexified quaternions" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 64eps(T)
 
         for θ ∈ T[π/7, π/4, π/3, 2π/3]
@@ -483,16 +512,18 @@
             @test qs[4] ≈ zero(Complex{T})        atol=ϵ
         end
     end
+end
 
-    # ────────────────────────────────────────────────────────────────────────────────
-    # 12.  log and exp of pure-phase scalar quaternions
-    #
-    # A pure phase embedded as q = (exp(im*φ), 0, 0, 0) ∈ ℍ(ℂ) is NOT a Lorentz
-    # rotor (spinor norm = exp(im*φ) ≠ 1), but log and exp still invert each other:
-    #   log(exp(im*φ), 0, 0, 0) = (im*φ, 0, 0, 0)
-    # Restricted to φ ∈ (0, π/2) to stay in the principal branch.
-    # ────────────────────────────────────────────────────────────────────────────────
-    @testset "log/exp of pure-phase scalar quaternions, $T" for T in LorentzTypes
+# ────────────────────────────────────────────────────────────────────────────────
+# 12.  log and exp of pure-phase scalar quaternions
+#
+# A pure phase embedded as q = (exp(im*φ), 0, 0, 0) ∈ ℍ(ℂ) is NOT a Lorentz
+# rotor (spinor norm = exp(im*φ) ≠ 1), but log and exp still invert each other:
+#   log(exp(im*φ), 0, 0, 0) = (im*φ, 0, 0, 0)
+# Restricted to φ ∈ (0, π/2) to stay in the principal branch.
+# ────────────────────────────────────────────────────────────────────────────────
+@testitem "Lorentz/STA: log/exp of pure-phase scalar quaternions" tags=[:unit, :fast] setup=[LorentzTypes] begin
+    @testset "$T" for T in LorentzTypes
         ϵ = 32eps(T)
 
         for φ ∈ T[π/6, π/4, π/3]
@@ -514,5 +545,4 @@
             @test lv[2] ≈ zero(Complex{T}) atol=ϵ
         end
     end
-
-end  # @testset "Lorentz/STA normalization"
+end
