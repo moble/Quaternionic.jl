@@ -326,7 +326,6 @@ else
         addtests("distance.jl")
         addtests("alignment.jl")
         addtests("interpolation.jl")
-        addtests("gradients.jl")
         addtests("doctests.jl")
     end
 end

@@ -11,7 +11,7 @@
 
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether they belong to
-        # your package or not (on Julia 1.8 and higher)
+        # your package or not
         r(v)
         for a ∈ (s, v, r, q)
             conj(a)

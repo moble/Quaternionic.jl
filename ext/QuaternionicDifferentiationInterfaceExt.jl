@@ -22,8 +22,7 @@
 # ambiguous with the in-place methods of `_value_and_pushforward_via_pullback`, exactly as
 # it does for DifferentiationInterface's own `Number` and `Complex` methods; no call can
 # reach those ambiguities, because their first argument would have to be a quaternion and a
-# function at once.  This extension is loaded only as a package extension; the compatible
-# versions of DifferentiationInterface require Julia 1.10 or later.
+# function at once.
 module QuaternionicDifferentiationInterfaceExt
 
 import Quaternionic: AbstractQuaternion, Quaternion, QuatVec, basetype

@@ -673,8 +673,8 @@ end
         @test all(d -> unthunk(d) isa AbstractZero || iszero(unthunk(d)), ∂[2:3])
     end
     @testset "distance2 near the series threshold" begin
-        # The source switches to a series in x = a²/w² when x ≤ √√eps/2.
-        x₀ = sqrt(sqrt(eps(Float64))) / 2
+        # The source switches to a series in x = a²/w² when x ≤ ∜eps/2.
+        x₀ = ∜eps(Float64) / 2
         for x ∈ (0.99x₀, 1.01x₀, 1e-12, 1e-30)
             a = sqrt(x)
             checkrule(distance2, Rotor{Float64}(1.0, a, 0, 0), Rotor{Float64}(1.0, 0, 0, 0))
@@ -937,20 +937,13 @@ end
 @testitem "ChainRules: method ambiguities" tags=[:ad, :chainrules] begin
     import ChainRulesCore, ChainRules
     using Test
-    # Before Julia 1.9, Requires loads the rules into a submodule of Quaternionic.
-    ext = if isdefined(Base, :get_extension)
-        Base.get_extension(Quaternionic, :QuaternionicChainRulesCoreExt)
-    else
-        Quaternionic.QuaternionicChainRulesCoreExt
-    end
+    import Zygote
+    ext = Base.get_extension(Quaternionic, :QuaternionicChainRulesCoreExt)
     @test ext !== nothing
-    @test isempty(Test.detect_ambiguities(ext))
-    if isdefined(Base, :get_extension)
-        import Zygote
-        zext = Base.get_extension(Quaternionic, :QuaternionicZygoteExt)
-        @test zext !== nothing
-        zext === nothing || @test isempty(Test.detect_ambiguities(zext))
-    end
+    ext === nothing || @test isempty(Test.detect_ambiguities(ext))
+    zext = Base.get_extension(Quaternionic, :QuaternionicZygoteExt)
+    @test zext !== nothing
+    zext === nothing || @test isempty(Test.detect_ambiguities(zext))
 end
 
 

@@ -59,7 +59,7 @@ _abs2_small_vec_log(q::Rotor) = _abs2_small_vec_log(value(q[1]), q)
     # for `Float64` is used.  For symbolic types, the comparison does not evaluate to a
     # `Bool`, so the closed form is used.
     T = w isa AbstractFloat ? typeof(w) : Float64
-    small = value(v²) ≤ (sqrt(sqrt(eps(T))) / 2) * value(w²)
+    small = value(v²) ≤ (∜eps(T) / 2) * value(w²)
     if small === true
         # Near the identity, `absvec` is the square root of a tiny number, whose derivatives
         # are huge and lose all accuracy when they cancel, or are NaN when it is exactly 0.

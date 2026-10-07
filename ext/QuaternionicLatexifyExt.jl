@@ -1,7 +1,7 @@
 module QuaternionicLatexifyExt
 
 import Quaternionic: AbstractQuaternion, QuatVec
-isdefined(Base, :get_extension) ? (using Latexify) : (using ..Latexify)
+using Latexify
 
 function latexraw_component(x::Number)
     # Utility function to print one component of a quaternion in raw LaTeX.  Latexify

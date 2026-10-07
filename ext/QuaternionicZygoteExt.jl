@@ -5,9 +5,7 @@
 # multiplication or complex-number semantics, because `AbstractQuaternion <: Number`.  They
 # are overridden here for quaternion arguments.
 #
-# This extension is loaded only as a package extension, when both Zygote and ChainRulesCore
-# are loaded; Requires never loads it.  (The compatible versions of Zygote require Julia 1.10
-# or later.)
+# This extension is loaded when both Zygote and ChainRulesCore are loaded.
 module QuaternionicZygoteExt
 
 import Quaternionic: Quaternionic, AbstractQuaternion

@@ -125,10 +125,6 @@ If `unflip=true` is passed as a keyword, and the input quaternions are more
 anti-parallel than parallel, the sign of `q₂` will be flipped before the result
 is computed.
 
-See also [`slerp∂slerp∂τ`](@ref), to simultaneously evaluate this function and
-its derivative with respect to `τ`, or [`slerp∂slerp`](@ref) to evaluate this
-function and its derivative with respect to each parameter of the input.
-
 """
 function slerp(q₁::R1, q₂::R2, τ::Real; unflip::Bool=false) where {R1<:Rotator, R2<:Rotator}
     if unflip && real(q₁⋅q₂) < 0
@@ -209,6 +205,40 @@ function squad_control_points(R::AbstractVector{<:Rotor}, t::AbstractVector{<:Re
         B = R[n] * conj(R[n-1]) * R[n]  # COV_EXCL_LINE
     end
     RT(A), RT(B)
+end
+
+
+# The value of `squad` at time `t` on the segment from `ta` to `tb`, and its derivative with
+# respect to `t`.  With τ = (t - ta) / (tb - ta), the value is
+#
+#   s = slerp(X, Y, σ) = r^σ X,  where  X = slerp(qᵢ, qᵢ₊₁, τ),  Y = slerp(A, B, τ),
+#   σ = 2τ(1 - τ),  and  r = Y / X.
+#
+# Since slerp(q₁, q₂, τ) = exp(τ L) q₁ with the constant L = log(q₂ / q₁), the derivatives
+# with respect to τ (written with a dot) are Ẋ = L₁ X and Ẏ = L₂ Y, where
+# L₁ = log(qᵢ₊₁ / qᵢ) and L₂ = log(B / A).  Then ṙ = L₂ r - r L₁, and with l = log(r), the
+# derivative of r^σ = exp(σ l) follows from the pushforwards of `log` and `exp`:
+#
+#   l̇ = log_pushforward(r, ṙ),   (r^σ)˙ = exp_pushforward(σ l, σ̇ l + σ l̇),
+#
+# so that ṡ = (r^σ)˙ X + r^σ Ẋ, and the derivative with respect to `t` is ṡ / (tb - ta).
+# The value is computed exactly as `squad!` computes it when no derivatives are requested.
+function squad_with_derivative(qᵢ, A, B, qᵢ₊₁, ta, tb, t)
+    # `float` keeps rational times away from `^(::Rotor, ::Rational)`.
+    τ = float((t - ta) / (tb - ta))
+    X = slerp(qᵢ, qᵢ₊₁, τ)
+    Y = slerp(A, B, τ)
+    σ = 2τ*(1-τ)
+    r = Y / X
+    e = r^σ
+    s = e * X
+    L₁ = log(qᵢ₊₁ / qᵢ)
+    L₂ = log(B / A)
+    l = quaternion(log(r))
+    l̇ = log_pushforward(quaternion(r), L₂ * r - r * L₁)
+    ė = exp_pushforward(σ * l, (2 - 4τ) * l + σ * l̇)
+    ṡ = ė * X + e * (L₁ * X)
+    (s, ṡ / (tb - ta))
 end
 
 
@@ -295,7 +325,7 @@ function squad!(
         # the segment search instead of being extrapolated from the current segment.
         while j ≤ length(Rout) && value(ta) ≤ value(tout[j]) ≤ value(tb)
             if evaluate_Ω⃗ || evaluate_Ṙ
-                s, ∂s∂t = squad∂squad∂t(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
+                s, ∂s∂t = squad_with_derivative(qᵢ, A, B, qᵢ₊₁, ta, tb, tout[j])
                 Rout[j] = s
                 if evaluate_Ω⃗
                     Ω⃗out[j] = 2 * eltype(Ω⃗out)(∂s∂t / s)

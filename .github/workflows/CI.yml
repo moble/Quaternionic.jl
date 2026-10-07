@@ -86,24 +86,6 @@ jobs:
           flags: slow
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  # The workspace test environment cannot be instantiated before Julia 1.9, so the oldest
-  # supported Julia runs a few smoke tests in a fresh environment instead.
-  compat16:
-    name: Smoke tests - Julia 1.6 - ubuntu-latest - ${{ github.event_name }}
-    runs-on: ubuntu-latest
-    if: >-
-        !contains(github.ref, 'refs/tags/')
-        && !contains(github.event.head_commit.message, '[skip ci]')
-        && !contains(github.event.head_commit.message, '[skip tests]')
-    steps:
-      - uses: actions/checkout@v7
-      - uses: julia-actions/setup-julia@v3
-        with:
-          version: '1.6'
-      - uses: julia-actions/cache@v3
-      - run: julia --project=compat16 -e 'using Pkg; Pkg.develop(path="."); Pkg.add(["ChainRulesCore", "ForwardDiff", "StaticArrays"])'
-      - run: julia --project=compat16 test/compat16_smoke.jl
-
   # The docs job does not wait for the tests, so that the docs (and their previews on pull
   # requests) can be checked even while some tests fail.
   docs:

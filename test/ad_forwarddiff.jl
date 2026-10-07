@@ -373,7 +373,7 @@ end
         end
 
         # `distance2` switches on x ≤ ε^(1/4)/2, with x = abs2vec(q) / q[1]² for q = R₁ / R₂.
-        dtol = sqrt(sqrt(eps(Float64))) / 2
+        dtol = ∜eps(Float64) / 2
         θ = atan(sqrt(dtol * (1 + δ)))
         R₁ = Rotor(cos(θ), sin(θ) * n...) * R₂
         q = R₁ / R₂
