@@ -1,0 +1,13 @@
+# Coverage is measured in two CI jobs (see .github/workflows/CI.yml), each of which uploads
+# its own report: the Ubuntu job with the latest Julia, which runs every test item except
+# those tagged `slow` (flag `fast`), and the `slow` job, which runs the rest (flag `slow`).
+# The two jobs take different times to finish, and by default Codecov reports as soon as the
+# first upload arrives.  A report made from one upload alone shows much of the package as
+# uncovered, so these settings make Codecov wait for both uploads before it sets the
+# statuses or comments on a pull request.  If the number of jobs that upload coverage
+# changes, change these numbers to match.
+codecov:
+  notify:
+    after_n_builds: 2
+comment:
+  after_n_builds: 2
