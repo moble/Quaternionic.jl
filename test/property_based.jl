@@ -270,9 +270,9 @@
     `distance(R, slerp(R, S, τ)) == τ · distance(R, S)`.
 
     This needs `unflip=true`.  Without it, slerp takes the *long* way around
-    whenever `R⋅S < 0`, while `distance` always reports the short way — so the
+    whenever `real(R ⋅ S) < 0`, while `distance` always reports the short way — so the
     identity fails for half of all rotor pairs.  Supposition walks straight to
-    that boundary: stated without `unflip`, it shrinks to a pair with `R⋅S`
+    that boundary: stated without `unflip`, it shrinks to a pair with `real(R ⋅ S)`
     just barely negative (≈ -2e-4 when this was first written).
     """
     function slerp_constant_speed(R, S, τ)
@@ -284,7 +284,7 @@
     end
 
     """
-    The `unflip=false` default really does take the long way when R⋅S < 0.
+    The `unflip=false` default really does take the long way when `real(R ⋅ S) < 0`.
 
     Written as `a - b ≤ ε` rather than the more natural `a ≤ b + ε`, because the
     latter is not reliable at `Double64`: adding a tolerance of order `100eps` to

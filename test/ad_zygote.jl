@@ -177,7 +177,7 @@ end
         ("Rotor", x -> sc(Rotor(Q(x))), pts),
         ("angle R", x -> angle(R(x)), nonreal),
         ("angle q", x -> angle(Q(x)), nonreal),
-        ("q⋅p", x -> Q(x) ⋅ P0 + Q(x) ⋅ Q(x), pts),
+        ("q⋅p", x -> sc(Q(x) ⋅ P0 + Q(x) ⋅ Q(x)), pts),
         ("abs2 R", x -> abs2(R(x)) + abs(Ru(x)), pts),
     ])
 end

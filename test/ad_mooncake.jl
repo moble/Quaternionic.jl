@@ -123,7 +123,7 @@ end
         ("absvec", x -> absvec(Q(x)), nonreal),
         ("normalize", x -> sc(normalize(Q(x))), pts),
         ("angle R", x -> angle(R(x)), nonreal),
-        ("q⋅p", x -> Q(x) ⋅ P0 + Q(x) ⋅ Q(x), pts),
+        ("q⋅p", x -> sc(Q(x) ⋅ P0 + Q(x) ⋅ Q(x)), pts),
         ("abs2 R", x -> abs2(R(x)) + abs(Ru(x)), pts),
         ("slerp(R0,R)", x -> sc(slerp(R0, R(x), 0.3)), pts),
         ("slerp(R,R)", x -> sc(slerp(R(x), R(x), 0.3)), pts),

@@ -1,9 +1,13 @@
 module Quaternionic
 
 import LinearAlgebra: LinearAlgebra, Symmetric, eigen, norm, normalize, (⋅), (×)
+import LinearAlgebra: Adjoint, Bidiagonal, Diagonal, Hermitian, LowerTriangular, LU,
+    SymTridiagonal, Transpose, Tridiagonal, UnitLowerTriangular, UnitUpperTriangular,
+    UpperHessenberg, UpperTriangular
 import GenericLinearAlgebra
 import PrecompileTools: PrecompileTools, @compile_workload, @setup_workload
-import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector
+import StaticArrays: StaticArrays, @SMatrix, @SVector, SA, SMatrix, SVector, StaticMatrix,
+    StaticVector
 import Random: AbstractRNG, default_rng
 
 # The `public` keyword is a syntax error before Julia 1.11, so we wrap it in a macro that
@@ -48,6 +52,7 @@ include("utilities.jl")
 include("quaternion.jl")
 include("base.jl")
 include("algebra.jl")
+include("matrices.jl")
 include("math.jl")
 include("exp_log_derivatives.jl")
 include("random.jl")

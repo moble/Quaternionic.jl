@@ -121,7 +121,7 @@ qadjoint(x::Number) = conj(x)
 
 Return the Hermitian inner product `Σᵢ conj(aᵢ) bᵢ` of the components of `a` and `b`.  A
 number that is not a quaternion is treated as a quaternion with only a scalar part.  For
-real components, this is the same as `a ⋅ b`.
+real components, this is the same as `real(a ⋅ b)`.
 """
 inner(a::AbstractQuaternion, b::AbstractQuaternion) =
     conj(a[1]) * b[1] + conj(a[2]) * b[2] + conj(a[3]) * b[3] + conj(a[4]) * b[4]
@@ -134,7 +134,7 @@ inner(a::Number, b::Number) = conj(a) * b
 
 Return the bilinear product `Σᵢ aᵢ bᵢ` of the components of `a` and `b`, without complex
 conjugation.  A number that is not a quaternion is treated as a quaternion with only a
-scalar part.  For real components, this is the same as `inner(a, b)` and `a ⋅ b`.
+scalar part.  For real components, this is the same as `inner(a, b)` and `real(a ⋅ b)`.
 """
 bilinear(a::AbstractQuaternion, b::AbstractQuaternion) =
     a[1] * b[1] + a[2] * b[2] + a[3] * b[3] + a[4] * b[4]

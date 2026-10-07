@@ -157,27 +157,37 @@ end
 
 @doc raw"""
     p ⋅ q
+    dot(p, q)
 
-Evaluate the inner ("dot") product between two quaternions.  Equal to the
-scalar part of `p * conj(q)`.
+Return the quaternion `conj(p) * q`, or, if `p` and `q` are both `QuatVec`s, the usual dot
+product `p[2]*q[2] + p[3]*q[3] + p[4]*q[4]` of their vector parts.
 
-Note that this function is not very commonly used, except as a quick way to
-determine whether the two quaternions are more anti-parallel than parallel, for
-functions like [`unflip`](@ref).
+For general quaternions, this is the definition that LinearAlgebra assumes for the `dot` of
+two numbers, as for `Complex` numbers, so generic linear algebra works for arrays of
+quaternions.  For example, `x' * y` for vectors `x` and `y` of quaternions is `sum(conj.(x)
+.* y)`, and `qr`, `svd`, least-squares solutions with `\`, and `eigen` of a `Hermitian`
+matrix all give the quaternionic results.  A few functions of LinearAlgebra assume that the
+entries of a matrix commute, and throw an error for matrices of quaternions; see [Matrices
+of quaternions](@ref).
 
-This method extends `LinearAlgebra.dot`, of which `⋅` is an alias, and returns only the
-componentwise sum `p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]`, which is the Euclidean
-inner product for real components.  Generic linear-algebra code written for
-`Complex` numbers usually assumes instead that the `dot` of two scalars is the full product
-`conj(p) * q`.  Consequently, functions that rely on that assumption, such as `x' * y` for
-vectors, `qr`, `svd`, and least-squares solutions with `\`, do not give the quaternionic
-results for arrays of quaternions.
+For two `QuatVec`s, which represent vectors in three dimensions, the dot product of vectors
+is more useful.  It is the scalar part of `conj(p) * q`.  To compare the directions of two
+general quaternions as vectors in four dimensions — for example, to decide whether two
+rotors are more anti-parallel than parallel — use `real(p ⋅ q)`, which is the scalar part of
+`p ⋅ q`.
 
-This can be typed as `\cdot<tab>` in a Julia-aware editor.
+This method extends `LinearAlgebra.dot`, of which `⋅` is an alias.  It can be typed as
+`\cdot<tab>` in a Julia-aware editor.
 """
-@inline function LinearAlgebra.:⋅(p::AbstractQuaternion, q::AbstractQuaternion)
+@inline LinearAlgebra.:⋅(p::AbstractQuaternion, q::AbstractQuaternion) = conj(p) * q
+@inline LinearAlgebra.:⋅(p::QuatVec, q::QuatVec) = p[2]*q[2] + p[3]*q[3] + p[4]*q[4]
+
+# The sum of the products of corresponding components, without complex conjugation.  This is
+# the scalar part of `conj(p) * q`, so for real components it is the Euclidean inner product
+# of `p` and `q` as vectors in four dimensions.  `unflip` and `slerp` use its real part to
+# decide whether two quaternions are more anti-parallel than parallel.
+componentdot(p::AbstractQuaternion, q::AbstractQuaternion) =
     p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]
-end
 
 @doc raw"""
     a × b

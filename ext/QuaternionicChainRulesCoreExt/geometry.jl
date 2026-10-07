@@ -314,7 +314,7 @@ function frule((_, Ṙ₁, Ṙ₂)::Tuple, ::typeof(distance2), R₁::Rotor{<:Re
     Ṗ = rotorquotient_pushforward(R₁, R₂, Ṙ₁, Ṙ₂)
     Ṗ isa AbstractZero && return Ω, Ṗ
     P = quaternion(R₁) * conj(quaternion(R₂))
-    return Ω, distance2_gradient(P) ⋅ Ṗ
+    return Ω, bilinear(distance2_gradient(P), Ṗ)
 end
 
 # `distance(R₁, R₂)` is `√distance2(R₁, R₂)`.  Where it vanishes (by value), as at
@@ -337,17 +337,35 @@ function frule((_, Ṙ₁, Ṙ₂)::Tuple, ::typeof(distance), R₁::Rotor{<:Rea
     Ṗ = rotorquotient_pushforward(R₁, R₂, Ṙ₁, Ṙ₂)
     Ṗ isa AbstractZero && return Ω, Ṗ
     P = quaternion(R₁) * conj(quaternion(R₂))
-    return Ω, hypotfactor(distance2_gradient(P) ⋅ Ṗ, 2Ω)
+    return Ω, hypotfactor(bilinear(distance2_gradient(P), Ṗ), 2Ω)
 end
 
 ########################################################################################
-## The componentwise dot product
+## The dot product
 ########################################################################################
 
-# `p ⋅ q` is the bilinear sum `Σᵢ pᵢ qᵢ` of the components (without complex conjugation), so
-# its partial derivatives are `qᵢ` and `pᵢ`, and the pullback multiplies the conjugated
-# components by the cotangent.
+# For general quaternions, `p ⋅ q` is `conj(p) * q`, so the rules are compositions of the
+# rules for `conj` and for the product, which account for how the source multiplies rotors
+# that do not have unit norm.
 function rrule(::typeof(dot), p::AQ, q::AQ)
+    c, conj_pullback = rrule(conj, p)
+    Ω, product_pullback = rrule(*, c, q)
+    function dot_pullback(ΔΩ)
+        _, ∂c, ∂q = product_pullback(ΔΩ)
+        _, ∂p = conj_pullback(∂c)
+        return NoTangent(), ∂p, ∂q
+    end
+    return Ω, dot_pullback
+end
+function frule((_, ṗ, q̇)::Tuple, ::typeof(dot), p::AQ, q::AQ)
+    c, ċ = frule((NoTangent(), ṗ), conj, p)
+    return frule((NoTangent(), ċ, q̇), *, c, q)
+end
+
+# For two `QuatVec`s, `p ⋅ q` is the bilinear sum `Σᵢ pᵢ qᵢ` of the components (without
+# complex conjugation), so its partial derivatives are `qᵢ` and `pᵢ`, and the pullback
+# multiplies the conjugated components by the cotangent.
+function rrule(::typeof(dot), p::QuatVec, q::QuatVec)
     projp, projq = ProjectTo(p), ProjectTo(q)
     function dot_pullback(ΔΩ)
         Δ = scalarcot(ΔΩ)
@@ -356,7 +374,7 @@ function rrule(::typeof(dot), p::AQ, q::AQ)
     end
     return dot(p, q), dot_pullback
 end
-function frule((_, ṗ, q̇)::Tuple, ::typeof(dot), p::AQ, q::AQ)
+function frule((_, ṗ, q̇)::Tuple, ::typeof(dot), p::QuatVec, q::QuatVec)
     Ω = dot(p, q)
     Δp = cot(ṗ)
     Δq = cot(q̇)

@@ -40,15 +40,39 @@ is a `Quaternion` rather than a `QuatVec`.
 
 ## Matrices of quaternions
 
-Arrays of quaternions work with most generic code, but some generic
-linear-algebra and statistics routines assume that multiplication of
-scalars commutes, and give silently wrong answers for quaternions.
-Products of matrices and vectors, `inv`, solutions of square systems
-with `\` and `/`, `lu`, `cholesky`, and operations on `Diagonal`,
-`Bidiagonal`, and triangular matrices preserve the order of products,
-and are correct.  On the other hand, `det` and `logabsdet` return a
-quaternion whose phase is arbitrary (only `abs(det(A))` is
-meaningful), solving a system with a `Tridiagonal` matrix gives wrong
-results, and `Statistics.cov` and `Statistics.cor` are not meaningful
-for quaternions.  Functions such as `exp`, `log`, `sqrt`, and `eigen`
-of a quaternion matrix are not supported.
+Matrices and vectors of quaternions work with LinearAlgebra's generic
+algorithms, as long as those algorithms keep the factors of every
+product in order.  Because `x ⋅ y` is `conj(x) * y` for quaternions,
+the conjugate transpose `x'` behaves as it does for complex numbers:
+`x' * y` is `sum(conj.(x) .* y)` for vectors `x` and `y`.  Products of
+matrices and vectors, `inv`, solutions with `\` and `/`, `lu`,
+`cholesky`, `qr`, least-squares solutions, `svd`, `svdvals`, `opnorm`,
+`cond`, `rank`, `pinv`, and `eigen` and `eigvals` of `Hermitian`
+matrices all give the quaternionic results.  (The singular-value and
+Hermitian eigenvalue routines come from GenericLinearAlgebra, which
+this package loads.)
+
+A few functions assume that the entries of a matrix commute, and would
+silently give wrong results for quaternions, so they throw an
+`ArgumentError` instead:
+
+  * `det`, `logdet`, and `logabsdet`.  A determinant of quaternion
+    matrices, such as the Study determinant, may be added later; see
+    [issue #119](https://github.com/moble/Quaternionic.jl/issues/119).
+  * `transpose(x) * A`, `transpose(x) / A`, `transpose(x) * A * y`,
+    and `muladd(transpose(x), A, z)` for a vector `x`, and
+    `inv(transpose(A))`.  For quaternion matrices, the transpose of a
+    product is not the product of the transposes in reverse order, but
+    LinearAlgebra computes these as if it were.  Use `permutedims(x)`
+    in place of `transpose(x)`, or the conjugate transpose `x'`, which
+    does reverse products.
+  * `inv` of a `Symmetric` matrix, whose inverse need not be symmetric
+    for quaternions.  Use `inv(Matrix(A))`.
+  * Solving systems with `Tridiagonal` and `SymTridiagonal` matrices.
+    Convert them with `Matrix(A)` first.
+
+Functions such as `exp`, `log`, and `sqrt` of quaternion matrices, and
+`eigen` and `eigvals` of non-`Hermitian` ones, are not supported;
+issue #119 describes how they could be.  `Statistics.cov` and
+`Statistics.cor` of two quaternion vectors are not meaningful either,
+because they assume that multiplication commutes.

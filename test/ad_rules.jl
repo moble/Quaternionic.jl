@@ -489,7 +489,7 @@ end
                     @test relerr(zero(Ω̇ref), Ω̇ref) < 1e-12
                 else
                     @test ∂ isa Quaternion
-                    @test ∂[1] ≈ Ω̇ref ⋅ Δ atol=1e-14
+                    @test ∂[1] ≈ real(Ω̇ref ⋅ Δ) atol=1e-14
                     @test iszero(∂[2]) && iszero(∂[3]) && iszero(∂[4])
                 end
             end
@@ -576,7 +576,7 @@ end
             _, ∂q, ∂s = pb(Δ)
             ∂q = unthunk(∂q)
             @test ∂q isa AbstractZero || iszero(∂q)
-            @test unthunk(∂s) ≈ (π * 𝐤 * quaternion(Ω)) ⋅ Δ
+            @test unthunk(∂s) ≈ real((π * 𝐤 * quaternion(Ω)) ⋅ Δ)
             @test unthunk(∂s) ≈ bigvjp(t -> q^t, s, Δ)
             # Integer powers at -1 are exact products, differentiable in every direction.
             checkrule(^, q, 3)
@@ -809,6 +809,7 @@ end
         (exp, (q,)), (exp, (v,)), (log, (q,)), (sqrt, (q,)), (inv, (q,)), (-, (q,)), (conj, (r1,)),
         (*, (q, p)), (/, (q, p)), (*, (2.0, q)), (+, (q, 2.0)), (*, (r1, r2)), (/, (q, r1)),
         (^, (q, 3)), (^, (q, 0.3)), (^, (r1, 0.3)), (^, (r1, 2)), (normalize, (q,)), (rotor, (q,)),
+        (dot, (q, p)), (dot, (q, v)), (dot, (r1, r2)),
         (quaternion, (1.2, -0.7, 0.5, 0.3)), (Quaternion{Float64}, (1.2, -0.7, 0.5, 0.3)),
         (Rotor{Float64}, (1.2, -0.7, 0.5, 0.3)), (rotor, (1.2, -0.7, 0.5, 0.3)),
         (quaternion, ([1.2, -0.7, 0.5, 0.3],)), (r1, (v,)), (muladd, (q, p, r1)), (*, (q, p, r1)),
@@ -832,7 +833,7 @@ end
     end
 
     # Scalar outputs accept thunks, `nothing`, and zeros.
-    for (f, args) ∈ ((abs2, (q,)), (abs, (q,)), (absvec, (q,)), (angle, (q,)), (dot, (q, p)),
+    for (f, args) ∈ ((abs2, (q,)), (abs, (q,)), (absvec, (q,)), (angle, (q,)), (dot, (v, v)),
                      (distance2, (r1, r2)), (real, (q,)), (getindex, (q, 2)))
         pbs = rrule(f, args...)[2]
         @test all(map(same, pbs(@thunk(0.7)), pbs(0.7)))

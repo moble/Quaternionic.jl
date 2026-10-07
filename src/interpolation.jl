@@ -7,8 +7,8 @@
 const Rotator = Union{Quaternion, Rotor}
 
 
-# The sign test uses the real part of the inner product, so that complex quaternions are
-# also supported.  For a Lorentz rotor, the real part of the scalar part of the relative
+# The sign test uses the real part of `componentdot`, so that complex quaternions are also
+# supported.  For a Lorentz rotor, the real part of the scalar part of the relative
 # transformation is cos(θ/2) cosh(η/2), which selects the hemisphere just as in the real
 # case.
 
@@ -18,7 +18,7 @@ function unflip!(q::AbstractArray, Rpre::CartesianIndices, I::AbstractUnitRange,
     @inbounds for Ipost in Rpost
         for i in first(I)+1:last(I)
             for Ipre in Rpre
-                if real(q[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost]) < 0
+                if real(componentdot(q[Ipre, i-1, Ipost], q[Ipre, i, Ipost])) < 0
                     # Unary minus is exact and keeps the element type; multiplying a
                     # `Rotor` by -1 would give a `Quaternion`, which is renormalized when
                     # it is stored back.
@@ -42,7 +42,7 @@ function unflip!(p::AbstractArray, q::AbstractArray, Rpre::CartesianIndices, I::
         end
         for i in first(I)+1:last(I)
             for Ipre in Rpre
-                if real(p[Ipre, i-1, Ipost] ⋅ q[Ipre, i, Ipost]) < 0
+                if real(componentdot(p[Ipre, i-1, Ipost], q[Ipre, i, Ipost])) < 0
                     p[Ipre, i, Ipost] = -q[Ipre, i, Ipost]
                 else
                     p[Ipre, i, Ipost] = q[Ipre, i, Ipost]
@@ -66,9 +66,10 @@ for certain purposes — such as interpolation and differentiation — the conti
 quaternions matters, and so we want the *quaternions* to be as continuous as possible
 without changing the *rotations* that they represent.
 
-The first element along `dim` is never changed.  Each subsequent element is negated if the
-real part of its inner product with the (possibly negated) preceding element is negative.
-`unflip` returns a new array, while `unflip!` modifies `q` in place and returns it.
+The first element along `dim` is never changed.  Each subsequent element `q` is negated if
+the real part of `p[1]*q[1] + p[2]*q[2] + p[3]*q[3] + p[4]*q[4]` is negative, where `p` is
+the (possibly negated) preceding element.  `unflip` returns a new array, while `unflip!`
+modifies `q` in place and returns it.
 
 # Examples
 ```jldoctest
@@ -127,7 +128,7 @@ is computed.
 
 """
 function slerp(q₁::R1, q₂::R2, τ::Real; unflip::Bool=false) where {R1<:Rotator, R2<:Rotator}
-    if unflip && real(q₁⋅q₂) < 0
+    if unflip && real(componentdot(q₁, q₂)) < 0
         return (-q₂ / q₁)^τ * q₁
     end
     (q₂ / q₁)^τ * q₁
